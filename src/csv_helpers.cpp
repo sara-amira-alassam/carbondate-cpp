@@ -2,7 +2,7 @@
 #include <vector>
 #include <sstream>
 
-std::vector<double> get_csv_data_from_column(const std::string& filename, unsigned column_index) {
+std::vector<double> get_csv_data_from_column(const std::string& filename,int column_index) {
 
     std::vector<double> data_column;
     double val;
@@ -15,7 +15,7 @@ std::vector<double> get_csv_data_from_column(const std::string& filename, unsign
 
     while (getline(file, line)) {
         std::stringstream str(line);
-        unsigned ind = 0;
+       int ind = 0;
         while (getline(str, word, ',')) {
             if (ind++ == column_index) {
                 val = std::strtod(word.c_str(), &ptr);

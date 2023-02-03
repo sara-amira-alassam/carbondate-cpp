@@ -4,17 +4,26 @@
 #include "Rmath.h"
 #include "helpers.h"
 
+
+double mean(const std::vector<double>& vec) {
+    double mean = 0.0;
+    for (double elem : vec) {
+        mean += elem;
+    }
+    mean /= (double) vec.size();
+    return mean;
+}
+
 double median(std::vector <double> vec) {
-    unsigned n = vec.size(), half = n/2;
+   unsigned n = vec.size(), half = n/2;
 
     if (n % 2 == 0) {
         std::nth_element(vec.begin(), vec.begin() + half - 1, vec.end());
         std::nth_element(vec.begin() + half, vec.begin() + half, vec.end());
         return (vec[half - 1] + vec[half])/2.;
-    } else {
-        std::nth_element(vec.begin(), vec.begin() + half, vec.end());
-        return vec[half];
     }
+    std::nth_element(vec.begin(), vec.begin() + half, vec.end());
+    return vec[half];
 }
 
 double mad(std::vector <double> vec) {
@@ -69,7 +78,7 @@ void edge_quantiles(
 }
 
 // Adapted from do_sample in R/src/main/sample.c and from EmpiricalSample in Rcpp package
-void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index, unsigned size) {
+void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index,int size) {
 
     ans.resize(size);
     int n = finish_index - start_index + 1;
@@ -98,7 +107,7 @@ void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index, un
 // in Rcpp package, but substantially simplified since we know we're only ever
 // going to be calling this with sz = 1. Tested that it gives the same result as
 // calling sample.int from R.
-int sample_integer(int n, std::vector<double> prob, bool one_based) {
+int sample_integer(unsigned n, std::vector<double> prob, bool one_based) {
 
     int adj = one_based ? 0 : 1;
     double rT, mass, sum_p = 0.;
@@ -115,7 +124,7 @@ int sample_integer(int n, std::vector<double> prob, bool one_based) {
             p[i] = 0.0;
         }
     }
-    revsort(&p[0], &perm[0], n);
+    revsort(&p[0], &perm[0], (int) n);
 
     rT = unif_rand() * sum_p;
     mass = 0.0;
