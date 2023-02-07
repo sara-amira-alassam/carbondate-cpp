@@ -1,7 +1,7 @@
 library(readr)
 
-output_file = "output/buchanan_predictive_density.csv"
-data_file = "data/buchanan.csv"
+output_file = "output/kerr_predictive_density.csv"
+data_file = "data/kerr.csv"
 intcal_file = "data/intcal20.14c"
 
 input_data <- read.csv(data_file)

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <ctime>
 #include <utility>
 #include "WalkerDPMM.h"
 #include "helpers.h"
@@ -8,8 +9,18 @@ void WalkerDPMM::initialise(
         std::vector<double> i_c14_sig,
         std::vector<double> cc_cal_age,
         std::vector<double> cc_c14_age,
-        std::vector<double> cc_c14_sig
+        std::vector<double> cc_c14_sig,
+        int rng_seed
 ) {
+    if (rng_seed == 0) {
+        std::time_t t1, t2;
+        t1 = time(nullptr);
+        t2 = time(nullptr);
+        set_seed(t1, t2);
+    } else {
+        set_seed(rng_seed, 1);
+    }
+
     c14_age = std::move(i_c14_age);
     c14_sig = std::move(i_c14_sig);
 

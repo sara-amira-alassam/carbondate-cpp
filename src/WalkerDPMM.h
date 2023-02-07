@@ -80,7 +80,8 @@ public:
             std::vector<double> i_c14_sig,
             std::vector<double> cc_cal_age,
             std::vector<double> cc_c14_age,
-            std::vector<double> cc_c14_sig
+            std::vector<double> cc_c14_sig,
+            int rng_seed = 0
     );
     void calibrate(int n_iter, int n_thin);
     DensityData get_predictive_density(
