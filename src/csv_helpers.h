@@ -1,0 +1,12 @@
+//
+// Created by Sara Al-Assam on 07/02/2023.
+//
+
+#ifndef CARBONDATE_CSV_HELPERS_H
+#define CARBONDATE_CSV_HELPERS_H
+std::vector<double> get_csv_data_from_column(const std::string& filename,int column_index);
+void write_columns_to_csv(
+        const std::string& filename,
+        std::vector<std::string> headers,
+        std::vector<std::vector<double>> data);
+#endif //CARBONDATE_CSV_HELPERS_H

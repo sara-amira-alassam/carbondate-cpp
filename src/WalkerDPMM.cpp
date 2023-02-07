@@ -160,9 +160,11 @@ void WalkerDPMM::calibrate(int n_iter, int n_thin) {
     for (int i = 1; i <= n_iter; i++) {
         perform_update_step();
         if (i % n_thin == 0) {
+            update_progress_bar(i * 1. / n_iter);
             store_current_values(i / n_thin);
         }
     }
+    printf("\n");
 }
 
 void WalkerDPMM::perform_update_step() {

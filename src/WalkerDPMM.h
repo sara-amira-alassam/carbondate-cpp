@@ -24,7 +24,7 @@ class WalkerDPMM {
     CalCurve yearwise_calcurve;   // calibration curve interpolated for every year of calendar age
     int max_year_bp = 50000;      // maximum year for interpolated calendar age
 
-   int n_obs, n_out;
+    int n_obs, n_out;
 
     // Hyperparameters
     double lambda, nu1, nu2;

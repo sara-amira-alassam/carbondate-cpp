@@ -16,5 +16,6 @@ void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index,int
 int sample_integer(unsigned n, std::vector<double> prob, bool one_based);
 void rsort_with_index(double *x, int *indx,int n);
 void revsort(double *a, int *ib, int n);
+void update_progress_bar(double progress);
 
 #endif //CARBONDATE_HELPERS_H

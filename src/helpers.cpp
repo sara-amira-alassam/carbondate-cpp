@@ -1,5 +1,6 @@
 #include <vector>
 #include <algorithm>
+#include <string>
 #define MATHLIB_STANDALONE
 #include "Rmath.h"
 #include "helpers.h"
@@ -133,4 +134,15 @@ int sample_integer(unsigned n, std::vector<double> prob, bool one_based) {
         if (rT <= mass) break;
     }
     return perm[j] - adj;
+}
+
+void update_progress_bar(double progress) {
+    int bar_width = 100;
+    std::string bar_string(bar_width, '=');
+
+    int val = (int) (progress * 100);
+    int left_padding = (int) (progress * bar_width);
+    int right_padding = bar_width - left_padding;
+    printf("\r%3d%% [%.*s%*s]", val, left_padding, bar_string.c_str(), right_padding, "");
+    fflush(stdout);
 }
