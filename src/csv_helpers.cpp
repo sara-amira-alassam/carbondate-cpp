@@ -16,7 +16,7 @@ std::vector<double> get_csv_data_from_column(const std::string& filename, int co
 
     while (getline(file, line)) {
         std::stringstream str(line);
-       int ind = 0;
+        int ind = 0;
         while (getline(str, word, ',')) {
             if (ind++ == column_index) {
                 val = std::strtod(word.c_str(), &ptr);
