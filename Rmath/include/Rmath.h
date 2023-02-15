@@ -197,153 +197,6 @@ double  Rlog1p(double);
 # include <R_ext/Boolean.h>
 #endif
 
-
-#if !defined(MATHLIB_STANDALONE) && !defined(R_NO_REMAP_RMATH)
-#define bessel_i	Rf_bessel_i
-#define bessel_j	Rf_bessel_j
-#define bessel_k	Rf_bessel_k
-#define bessel_y	Rf_bessel_y
-#define bessel_i_ex	Rf_bessel_i_ex
-#define bessel_j_ex	Rf_bessel_j_ex
-#define bessel_k_ex	Rf_bessel_k_ex
-#define bessel_y_ex	Rf_bessel_y_ex
-#define beta		Rf_beta
-#define choose		Rf_choose
-#define dbeta		Rf_dbeta
-#define dbinom		Rf_dbinom
-#define dbinom_raw	Rf_dbinom_raw
-#define dcauchy		Rf_dcauchy
-#define dchisq		Rf_dchisq
-#define dexp		Rf_dexp
-#define df		Rf_df
-#define dgamma		Rf_dgamma
-#define dgeom		Rf_dgeom
-#define dhyper		Rf_dhyper
-#define digamma		Rf_digamma
-#define dlnorm		Rf_dlnorm
-#define dlogis		Rf_dlogis
-#define dnbeta		Rf_dnbeta
-#define dnbinom		Rf_dnbinom
-#define dnbinom_mu	Rf_dnbinom_mu
-#define dnchisq		Rf_dnchisq
-#define dnf		Rf_dnf
-#define dnorm4		Rf_dnorm4
-#define dnt		Rf_dnt
-#define dpois_raw	Rf_dpois_raw
-#define dpois		Rf_dpois
-#define dpsifn		Rf_dpsifn
-#define dsignrank	Rf_dsignrank
-#define dt		Rf_dt
-#define dtukey		Rf_dtukey
-#define dunif		Rf_dunif
-#define dweibull	Rf_dweibull
-#define dwilcox		Rf_dwilcox
-#define fmax2		Rf_fmax2
-#define fmin2		Rf_fmin2
-#define fprec		Rf_fprec
-#define fround		Rf_fround
-#define ftrunc		Rf_ftrunc
-#define fsign		Rf_fsign
-#define gammafn		Rf_gammafn
-#define imax2		Rf_imax2
-#define imin2		Rf_imin2
-#define lbeta		Rf_lbeta
-#define lchoose		Rf_lchoose
-#define lgammafn	Rf_lgammafn
-#define lgammafn_sign	Rf_lgammafn_sign
-#define lgamma1p	Rf_lgamma1p
-#define log1mexp       	Rf_log1mexp
-#define log1pexp       	Rf_log1pexp
-#define log1pmx		Rf_log1pmx
-#define logspace_add	Rf_logspace_add
-#define logspace_sub	Rf_logspace_sub
-#define logspace_sum	Rf_logspace_sum
-#define pbeta		Rf_pbeta
-#define pbeta_raw	Rf_pbeta_raw
-#define pbinom		Rf_pbinom
-#define pcauchy		Rf_pcauchy
-#define pchisq		Rf_pchisq
-#define pentagamma	Rf_pentagamma
-#define pexp		Rf_pexp
-#define pf		Rf_pf
-#define pgamma		Rf_pgamma
-#define pgeom		Rf_pgeom
-#define phyper		Rf_phyper
-#define plnorm		Rf_plnorm
-#define plogis		Rf_plogis
-#define pnbeta		Rf_pnbeta
-#define pnbinom		Rf_pnbinom
-#define pnbinom_mu     	Rf_pnbinom_mu
-#define pnchisq		Rf_pnchisq
-#define pnf		Rf_pnf
-#define pnorm5		Rf_pnorm5
-#define pnorm_both	Rf_pnorm_both
-#define pnt		Rf_pnt
-#define ppois		Rf_ppois
-#define psignrank	Rf_psignrank
-#define psigamma	Rf_psigamma
-#define pt		Rf_pt
-#define ptukey		Rf_ptukey
-#define punif		Rf_punif
-#define pweibull	Rf_pweibull
-#define pwilcox		Rf_pwilcox
-#define qbeta		Rf_qbeta
-#define qbinom		Rf_qbinom
-#define qcauchy		Rf_qcauchy
-#define qchisq		Rf_qchisq
-#define qchisq_appr	Rf_qchisq_appr
-#define qexp		Rf_qexp
-#define qf		Rf_qf
-#define qgamma		Rf_qgamma
-#define qgeom		Rf_qgeom
-#define qhyper		Rf_qhyper
-#define qlnorm		Rf_qlnorm
-#define qlogis		Rf_qlogis
-#define qnbeta		Rf_qnbeta
-#define qnbinom		Rf_qnbinom
-#define qnbinom_mu     	Rf_qnbinom_mu
-#define qnchisq		Rf_qnchisq
-#define qnf		Rf_qnf
-#define qnorm5		Rf_qnorm5
-#define qnt		Rf_qnt
-#define qpois		Rf_qpois
-#define qsignrank	Rf_qsignrank
-#define qt		Rf_qt
-#define qtukey		Rf_qtukey
-#define qunif		Rf_qunif
-#define qweibull	Rf_qweibull
-#define qwilcox		Rf_qwilcox
-#define rbeta		Rf_rbeta
-#define rbinom		Rf_rbinom
-#define rcauchy		Rf_rcauchy
-#define rchisq		Rf_rchisq
-#define rexp		Rf_rexp
-#define rf		Rf_rf
-#define rgamma		Rf_rgamma
-#define rgeom		Rf_rgeom
-#define rhyper		Rf_rhyper
-#define rlnorm		Rf_rlnorm
-#define rlogis		Rf_rlogis
-#define rmultinom	Rf_rmultinom
-#define rnbeta		Rf_rnbeta
-#define rnbinom		Rf_rnbinom
-#define rnbinom_mu     	Rf_rnbinom_mu
-#define rnchisq		Rf_rnchisq
-#define rnf		Rf_rnf
-#define rnorm		Rf_rnorm
-#define rnt		Rf_rnt
-#define rpois		Rf_rpois
-#define rsignrank	Rf_rsignrank
-#define rt		Rf_rt
-#define rtukey		Rf_rtukey
-#define runif		Rf_runif
-#define rweibull	Rf_rweibull
-#define rwilcox		Rf_rwilcox
-#define sign		Rf_sign
-#define tetragamma	Rf_tetragamma
-#define trigamma	Rf_trigamma
-#endif
-
 #define dnorm dnorm4
 #define pnorm pnorm5
 #define qnorm qnorm5
@@ -405,13 +258,6 @@ double	pbeta(double, double, double, int, int);
 double	qbeta(double, double, double, int, int);
 double	rbeta(double, double);
 
-	/* Lognormal Distribution */
-
-double	dlnorm(double, double, double, int);
-double	plnorm(double, double, double, int, int);
-double	qlnorm(double, double, double, int, int);
-double	rlnorm(double, double);
-
 	/* Chi-squared Distribution */
 
 double	dchisq(double, double, int);
@@ -452,13 +298,6 @@ double	rbinom(double, double);
 
 void	rmultinom(int, double*, int, int*);
 
-	/* Cauchy Distribution */
-
-double	dcauchy(double, double, double, int);
-double	pcauchy(double, double, double, int, int);
-double	qcauchy(double, double, double, int, int);
-double	rcauchy(double, double);
-
 	/* Exponential Distribution */
 
 double	dexp(double, double, int);
@@ -466,31 +305,12 @@ double	pexp(double, double, int, int);
 double	qexp(double, double, int, int);
 double	rexp(double);
 
-	/* Geometric Distribution */
-
-double	dgeom(double, double, int);
-double	pgeom(double, double, int, int);
-double	qgeom(double, double, int, int);
-double	rgeom(double);
-
 	/* Hypergeometric Distibution */
 
 double	dhyper(double, double, double, double, int);
 double	phyper(double, double, double, double, int, int);
 double	qhyper(double, double, double, double, int, int);
 double	rhyper(double, double, double);
-
-	/* Negative Binomial Distribution */
-
-double	dnbinom(double, double, double, int);
-double	pnbinom(double, double, double, int, int);
-double	qnbinom(double, double, double, int, int);
-double	rnbinom(double, double);
-
-double	dnbinom_mu(double, double, double, int);
-double	pnbinom_mu(double, double, double, int, int);
-double	qnbinom_mu(double, double, double, int, int);
-double	rnbinom_mu(double, double);
 
 	/* Poisson Distribution */
 
@@ -500,20 +320,6 @@ double	ppois(double, double, int, int);
 double	qpois(double, double, int, int);
 double	rpois(double);
 
-	/* Weibull Distribution */
-
-double	dweibull(double, double, double, int);
-double	pweibull(double, double, double, int, int);
-double	qweibull(double, double, double, int, int);
-double	rweibull(double, double);
-
-	/* Logistic Distribution */
-
-double	dlogis(double, double, double, int);
-double	plogis(double, double, double, int, int);
-double	qlogis(double, double, double, int, int);
-double	rlogis(double, double);
-
 	/* Non-central Beta Distribution */
 
 double	dnbeta(double, double, double, double, int);
@@ -521,48 +327,19 @@ double	pnbeta(double, double, double, double, int, int);
 double	qnbeta(double, double, double, double, int, int);
 double	rnbeta(double, double, double);
 
-	/* Non-central F Distribution */
-
-double  dnf(double, double, double, double, int);
-double	pnf(double, double, double, double, int, int);
-double	qnf(double, double, double, double, int, int);
-
 	/* Non-central Student t Distribution */
 
-double	dnt(double, double, double, int);
 double	pnt(double, double, double, int, int);
-double	qnt(double, double, double, int, int);
 
 	/* Studentized Range Distribution */
 
 double	ptukey(double, double, double, double, int, int);
 double	qtukey(double, double, double, double, int, int);
 
-	/* Wilcoxon Rank Sum Distribution */
-
-double dwilcox(double, double, double, int);
-double pwilcox(double, double, double, int, int);
-double qwilcox(double, double, double, int, int);
-double rwilcox(double, double);
-void wilcox_free(void);
-	/* Wilcoxon Signed Rank Distribution */
-
-double dsignrank(double, double, int);
-double psignrank(double, double, int, int);
-double qsignrank(double, double, int, int);
-double rsignrank(double);
-void signrank_free(void);
-
 	/* Gamma and Related Functions */
 double	gammafn(double);
 double	lgammafn(double);
 double	lgammafn_sign(double, int*);
-void    dpsifn(double, int, int, int, double*, int*, int*);
-double	psigamma(double, double);
-double	digamma(double);
-double	trigamma(double);
-double	tetragamma(double);
-double	pentagamma(double);
 
 double	beta(double, double);
 double	lbeta(double, double);
@@ -588,11 +365,7 @@ int	imax2(int, int);
 int	imin2(int, int);
 double	fmax2(double, double);
 double	fmin2(double, double);
-double	sign(double);
-double	fprec(double, double);
-double	fround(double, double);
 double	fsign(double, double);
-double	ftrunc(double);
 
 /* More accurate cos(pi*x), sin(pi*x), tan(pi*x)
 

@@ -61,43 +61,7 @@ double	Rf_gamma_cody(double);
 //R >= 3.1.0:  previously, was defined as  (fabs((x) - R_forceint(x)) > 1e-7)
 # define R_nonint(x) 	  (fabs((x) - R_forceint(x)) > 1e-7*fmax2(1., fabs(x)))
 
-#ifndef MATHLIB_STANDALONE
 
-#include <R_ext/Error.h>
-# define MATHLIB_ERROR(fmt,x)		error(fmt,x);
-# define MATHLIB_WARNING(fmt,x)		warning(fmt,x)
-# define MATHLIB_WARNING2(fmt,x,x2)	warning(fmt,x,x2)
-# define MATHLIB_WARNING3(fmt,x,x2,x3)	warning(fmt,x,x2,x3)
-# define MATHLIB_WARNING4(fmt,x,x2,x3,x4) warning(fmt,x,x2,x3,x4)
-# define MATHLIB_WARNING5(fmt,x,x2,x3,x4,x5) warning(fmt,x,x2,x3,x4,x5)
-# define MATHLIB_WARNING6(fmt,x,x2,x3,x4,x5,x6) warning(fmt,x,x2,x3,x4,x5,x6)
-
-#include <R_ext/Arith.h>
-#define ML_POSINF	R_PosInf
-#define ML_NEGINF	R_NegInf
-#define ML_NAN		R_NaN
-
-
-void R_CheckUserInterrupt(void);
-/* Ei-ji Nakama reported that AIX 5.2 has calloc as a macro and objected
-   to redefining it.  Tests added for 2.2.1 */
-#ifdef calloc
-# undef calloc
-#endif
-#define calloc R_chk_calloc
-#ifdef free
-# undef free
-#endif
-#define free R_chk_free
-
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#define _(String) gettext (String)
-#else
-#define _(String) (String)
-#endif
-
-#else
 /* Mathlib standalone */
 
 #include <stdio.h>
@@ -127,7 +91,7 @@ int R_finite(double);
 #define ML_NAN		(0.0 / 0.0)
 
 #define _(String) String
-#endif /* standalone */
+
 
 #define ML_VALID(x)	(!ISNAN(x))
 

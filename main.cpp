@@ -11,8 +11,8 @@ int main() {
     WalkerDPMM dpmm;
 
     dpmm.initialise(c14_age, c14_sig, cc_cal_age, cc_c14_age, cc_c14_sig);
-    dpmm.calibrate(1e5, 10);
-    DensityData predictive_density = dpmm.get_predictive_density(5000, 1001, 0.025);
+    dpmm.calibrate(1e3, 10);
+    DensityData predictive_density = dpmm.get_predictive_density(500, 101, 0.025);
 
     std::vector<std::vector<double>> density_data = {
         predictive_density.cal_age,

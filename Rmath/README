@@ -1,0 +1,7 @@
+These files have all been extracted from R, MacOSX version 4.2.2 - see https://cloud.r-project.org/
+
+The source code has been taken from the R-standalone library in /R-4.2.2/src/nmath.
+
+The header files in the directory `include` have been extracted from R-4.2.2/src/include.
+
+Any of the files that were not required for the functionality we need have been deleted.
