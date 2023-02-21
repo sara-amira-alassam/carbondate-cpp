@@ -559,3 +559,39 @@ DensityData WalkerDPMM::get_predictive_density(
     }
     return density_data;
 }
+
+DensityOutput WalkerDPMM::get_posterior_density(int output_offset, int ident, int resolution) {
+
+    DensityOutput density_output("ocd", ident + output_offset, "posterior");
+    int n_burn = n_out / 2;
+    int n_count = n_out - n_burn;
+
+    double min_calendar_age = calendar_age[n_burn][ident];
+    double max_calendar_age = calendar_age[n_burn][ident];
+    for (int i = n_burn + 1; i < n_out; i++) {
+        if (calendar_age[i][ident] < min_calendar_age) {
+            min_calendar_age = calendar_age[i][ident];
+        } else if (calendar_age[i][ident] > max_calendar_age) {
+            max_calendar_age = calendar_age[i][ident];
+        }
+    }
+
+    int start_break = (int) min_calendar_age;
+    while (start_break % resolution != 0) start_break--;
+
+    int num_breaks = (int) floor((max_calendar_age - start_break) / resolution) + 1;
+    int bin;
+    double max_density = 0.;
+    density_output.prob.resize(num_breaks, 0);
+    for (int i = n_burn; i < n_out; i++) {
+        bin = (int) ((calendar_age[i][ident] - start_break) / resolution);
+        density_output.prob[bin] += 1.;
+        if (density_output.prob[bin] > max_density) max_density = density_output.prob[bin];
+    }
+    for (int i = 0; i < num_breaks; i ++) density_output.prob[i] /= max_density;
+    density_output.start = start_break + resolution / 2.;
+    density_output.resolution = resolution;
+    density_output.prob_norm = max_density / (n_count * resolution);
+
+    return density_output;
+}

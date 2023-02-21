@@ -23,5 +23,8 @@ int main() {
     std::vector<std::string> density_headers = {"calendar_age", "ci_lower", "mean", "ci_upper"};
     write_columns_to_csv("../output/kerr_predictive_density.csv", density_headers, density_data);
 
+    DensityOutput density_output = dpmm.get_posterior_density(1, 10, 5);
+    density_output.print();
+
     return 0;
 }

@@ -3,6 +3,7 @@
 #include <vector>
 #define MATHLIB_STANDALONE
 #include <Rmath.h>
+#include "DensityOutput.h"
 
 struct CalCurve {
     std::vector<double> cal_age;
@@ -86,6 +87,7 @@ public:
     void calibrate(int n_iter, int n_thin);
     DensityData get_predictive_density(
             int n_posterior_samples, int n_points, double quantile_edge_width);
+    DensityOutput get_posterior_density(int output_offset, int ident, int resolution);
 
     std::vector<double> get_c14_age() { return c14_age; }
     std::vector<double> get_c14_sig() { return c14_sig; }
