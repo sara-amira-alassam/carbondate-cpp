@@ -36,3 +36,12 @@ std::string DensityOutput::output_line(
     output_line += std::to_string(var[var.size() - 1]) + "];";
     return output_line;
 }
+
+std::vector<std::vector<double>> DensityOutput::as_columns() {
+    std::vector<std::vector<double>> output(2, std::vector<double>(prob.size()));
+    for (int i = 0; i < prob.size(); i++) {
+        output[0][i] = start + i * resolution;
+        output[1][i] = prob[i] * prob_norm;
+    }
+    return output;
+}

@@ -1,4 +1,5 @@
 library(readr)
+library(carbondate)
 
 output_file = "output/kerr_predictive_density.csv"
 data_file = "data/kerr.csv"
@@ -9,8 +10,7 @@ input_data <- read.csv(data_file)
 intcal20 <- read.table(intcal_file, sep = ",", header = FALSE, skip = 11)
 intcal20 = data.frame(calendar_age = intcal20[, 1], c14_age = intcal20[, 2], c14_sig = intcal20[, 3])
 
-predictive_density <- read_csv(output_file)
-
+predictive_density <- read_csv(output_file, show_col_types = FALSE)
 
 ##############################################################################
 # Initialise plotting parameters
@@ -97,3 +97,10 @@ graphics::lines(
   predictive_density$ci_upper,
   col = output_colour,
   lty = 2)
+
+graphics::par(new = FALSE)
+
+wo = WalkerBivarDirichlet(kerr$c14_ages, kerr$c14_sig, intcal20, 1e5, 10)
+pd = FindPredictiveCalendarAgeDensity(wo, predictive_density$calendar_age, n_posterior_samples = 5000)
+lines(pd$calendar_age, pd$density_mean, col="red", lty=3)
+legend("topright", c("C++ executable", "R package"), col = c("purple", "red"), lty= c(1, 3))

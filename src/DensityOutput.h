@@ -27,6 +27,7 @@ private:
 public:
     DensityOutput(std::string output_var, int index, std::string output_name);
     void print();
+    std::vector<std::vector<double>> as_columns();
 };
 
 

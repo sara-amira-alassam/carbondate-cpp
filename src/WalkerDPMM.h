@@ -108,7 +108,11 @@ public:
     std::vector<double> get_phi() { return phi_i; }
     std::vector<double> get_tau() { return tau_i; }
     std::vector<double> get_weight() { return weight_i; }
-    std::vector<double> get_calendar_age() { return calendar_age_i; }
+    std::vector<double> get_calendar_age(int ident) {
+        std::vector<double> output(n_out);
+        for (int i = 0; i < n_out; i++) output[i] = calendar_age[i][ident];
+        return output;
+    }
     std::vector<int> get_cluster_ids() { return cluster_ids_i; }
 };
 
