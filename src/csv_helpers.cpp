@@ -62,3 +62,17 @@ void write_columns_to_csv(
         file << line;
     }
 }
+
+void write_column_to_csv(
+        const std::string& filename, const std::string& header, const std::vector<double>& data) {
+    // TODO: Should check all the columns are the same size
+    std::ofstream file;
+    file.open(filename);
+
+    file << header + "\n";
+    for (double i : data) {
+        char line[256];
+        sprintf(line, "%.10e\n", i);
+        file << line;
+    }
+}

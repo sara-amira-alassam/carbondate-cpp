@@ -43,6 +43,7 @@ double max_diff(std::vector<double> vec) {
     return *(minmax.second) - *(minmax.first);
 }
 
+// Finds the point yi that corresponds to xi, given known points (x1, y1) and (x2, y2)
 double interpolate_linear(double xi, double x1, double x2, double y1, double y2) {
     return y1 + (y2 - y1) * ((xi - x1)/(x2 - x1));
 }
