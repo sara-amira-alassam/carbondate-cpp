@@ -19,10 +19,17 @@ std::string DensityOutput::output_prefix() {
 }
 
 void DensityOutput::print() {
+    std::cout << output_line("mean", mean_calAD);
+    std::cout << output_line("sigma", sigma);
+    std::cout << output_line("median", median_calAD);
     std::cout << output_line("probNorm", prob_norm);
-    std::cout << output_line("start", start);
+    std::cout << output_line("start", start_calAD);
     std::cout << output_line("resolution", resolution);
     std::cout << output_line("prob", prob);
+}
+
+std::string DensityOutput::output_line(const std::string& var_name, int var) {
+    return output_prefix() + "." + var_name + "=" +  std::to_string(var) + ";\n";
 }
 
 std::string DensityOutput::output_line(const std::string& var_name, double var) {
@@ -33,14 +40,14 @@ std::string DensityOutput::output_line(
         const std::string& var_name, const std::vector<double>& var) {
     std::string output_line = output_prefix() + "." + var_name + "=[";
     for (int i = 0; i < var.size() - 1; i++) output_line += std::to_string(var[i]) + ", ";
-    output_line += std::to_string(var[var.size() - 1]) + "];";
+    output_line += std::to_string(var[var.size() - 1]) + "];\n";
     return output_line;
 }
 
 std::vector<std::vector<double>> DensityOutput::as_columns() {
     std::vector<std::vector<double>> output(2, std::vector<double>(prob.size()));
     for (int i = 0; i < prob.size(); i++) {
-        output[0][i] = start + i * resolution;
+        output[0][i] = start_calAD + i * resolution;
         output[1][i] = prob[i] * prob_norm;
     }
     return output;

@@ -6,6 +6,7 @@
 #include "helpers.h"
 
 
+// Mean of elements in a vector
 double mean(const std::vector<double>& vec) {
     double mean = 0.0;
     for (double elem : vec) {
@@ -15,6 +16,29 @@ double mean(const std::vector<double>& vec) {
     return mean;
 }
 
+// Mean of a probability distribution
+double mean(const std::vector<double>& vec, const std::vector<double>& probability) {
+    double mean = 0., sum_probability = 0.;
+    for (int i = 0; i < vec.size(); i++) {
+        mean += vec[i] * probability[i];
+        sum_probability += probability[i];
+    }
+    mean /= sum_probability;
+    return mean;
+}
+
+// Standard deviation of a probability distribution
+double sigma(const std::vector<double>& vec, const std::vector<double>& probability, double mean) {
+    double sigma_squared = 0., sum_probability = 0.;
+    for (int i = 0; i < vec.size(); i++) {
+        sigma_squared += pow(vec[i] - mean, 2) * probability[i];
+        sum_probability += probability[i];
+    }
+    sigma_squared /= sum_probability;
+    return sqrt(sigma_squared);
+}
+
+// Middle value of sorted elements in a vector
 double median(std::vector <double> vec) {
    unsigned n = vec.size(), half = n/2;
 
@@ -25,6 +49,20 @@ double median(std::vector <double> vec) {
     }
     std::nth_element(vec.begin(), vec.begin() + half, vec.end());
     return vec[half];
+}
+
+// Median of a probability distribution
+double median(const std::vector<double>& vec, const std::vector<double>& probability) {
+    double sum_probability = 0., cumulative_probability = 0;
+    int i;
+    for (i = 0; i < vec.size(); i++) sum_probability += probability[i];
+    for (i = 0; i < vec.size(); i++) {
+        cumulative_probability += probability[i];
+        if (cumulative_probability >= sum_probability/2.) {
+            return vec[i];
+        }
+    }
+    return 0.;
 }
 
 double mad(std::vector <double> vec) {
@@ -146,4 +184,8 @@ void update_progress_bar(double progress) {
     int right_padding = bar_width - left_padding;
     printf("\r%3d%% [%.*s%*s]", val, left_padding, bar_string.c_str(), right_padding, "");
     fflush(stdout);
+}
+
+double to_calAD(double year_calPB) {
+    return 1950 - year_calPB;
 }

@@ -15,12 +15,16 @@ class DensityOutput {
 
 public:
     std::vector<double> prob;
-    double prob_norm{};
-    double start{};
-    int resolution{};
+    double prob_norm = 0;
+    double start_calAD = 0;
+    int resolution = 0;
+    double mean_calAD = 0;
+    double sigma = 0;
+    double median_calAD = 0;
 
 private:
     std::string output_prefix();
+    std::string output_line(const std::string& var_name, int var);
     std::string output_line(const std::string& var_name, double var);
     std::string output_line(const std::string& var_name, const std::vector<double>& var);
 
