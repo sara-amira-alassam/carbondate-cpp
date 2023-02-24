@@ -9,32 +9,29 @@
 // Mean of elements in a vector
 double mean(const std::vector<double>& vec) {
     double mean = 0.0;
-    for (double elem : vec) {
-        mean += elem;
-    }
+    for (double elem : vec) mean += elem;
     mean /= (double) vec.size();
     return mean;
 }
 
 // Mean of a probability distribution, assumes normalised
 double mean(const std::vector<double>& vec, const std::vector<double>& probability) {
-    double mean = 0., sum_probability = 0.;
-    for (int i = 0; i < vec.size(); i++) {
-        mean += vec[i] * probability[i];
-        sum_probability += probability[i];
-    }
-    mean /= sum_probability;
+    double mean = 0.;
+    for (int i = 0; i < vec.size(); i++) mean += vec[i] * probability[i];
     return mean;
+}
+
+// Standard deviation of elements in a vector
+double sigma(const std::vector<double>& vec, double mean) {
+    double sigma_squared = 0.;
+    for (double elem : vec) sigma_squared += pow(elem - mean, 2);
+    return sqrt(sigma_squared / (double) vec.size());
 }
 
 // Standard deviation of a probability distribution, assumes normalised
 double sigma(const std::vector<double>& vec, const std::vector<double>& probability, double mean) {
-    double sigma_squared = 0., sum_probability = 0.;
-    for (int i = 0; i < vec.size(); i++) {
-        sigma_squared += pow(vec[i] - mean, 2) * probability[i];
-        sum_probability += probability[i];
-    }
-    sigma_squared /= sum_probability;
+    double sigma_squared = 0.;
+    for (int i = 0; i < vec.size(); i++) sigma_squared += pow(vec[i] - mean, 2) * probability[i];
     return sqrt(sigma_squared);
 }
 

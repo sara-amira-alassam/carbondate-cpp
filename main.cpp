@@ -15,7 +15,7 @@ int main() {
     DensityOutput density_output = dpmm.get_single_calendar_age_likelihood(1, ident, 5);
     density_output.print();
 
-    dpmm.calibrate(1e3, 10);
+    dpmm.calibrate(1e5, 10);
     write_column_to_csv(
             "../output/kerr_calendar_age_" + std::to_string(ident) + ".csv",
             "calendar age",

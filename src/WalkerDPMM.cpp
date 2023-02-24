@@ -566,13 +566,15 @@ DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int output_offset, 
     int n_burn = n_out / 2;
     int n_count = n_out - n_burn;
 
-    double min_calendar_age = calendar_age[n_burn][ident];
-    double max_calendar_age = calendar_age[n_burn][ident];
-    for (int i = n_burn + 1; i < n_out; i++) {
-        if (calendar_age[i][ident] < min_calendar_age) {
-            min_calendar_age = calendar_age[i][ident];
-        } else if (calendar_age[i][ident] > max_calendar_age) {
-            max_calendar_age = calendar_age[i][ident];
+    double min_calendar_age = std::numeric_limits<double>::infinity();
+    double max_calendar_age = -std::numeric_limits<double>::infinity();
+    std::vector<double> posterior_calendar_ages(n_count);
+    for (int i = 0; i < n_count; i++) {
+        posterior_calendar_ages[i] = to_calAD(calendar_age[i + n_burn][ident]);
+        if (posterior_calendar_ages[i] < min_calendar_age) {
+            min_calendar_age = posterior_calendar_ages[i];
+        } else if (posterior_calendar_ages[i] > max_calendar_age) {
+            max_calendar_age = posterior_calendar_ages[i];
         }
     }
 
@@ -583,8 +585,8 @@ DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int output_offset, 
     int bin;
     double max_density = 0.;
     density_output.prob.resize(num_breaks, 0);
-    for (int i = n_burn; i < n_out; i++) {
-        bin = (int) ((calendar_age[i][ident] - start_break) / resolution);
+    for (int i = 0; i < n_count; i++) {
+        bin = (int) ((posterior_calendar_ages[i] - start_break) / resolution);
         density_output.prob[bin] += 1.;
         if (density_output.prob[bin] > max_density) max_density = density_output.prob[bin];
     }
@@ -592,7 +594,9 @@ DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int output_offset, 
     density_output.start_calAD = start_break + resolution / 2.;
     density_output.resolution = resolution;
     density_output.prob_norm = max_density / (n_count * resolution);
-
+    density_output.mean_calAD = mean(posterior_calendar_ages);
+    density_output.median_calAD = median(posterior_calendar_ages);
+    density_output.sigma = sigma(posterior_calendar_ages, density_output.median_calAD);
     return density_output;
 }
 

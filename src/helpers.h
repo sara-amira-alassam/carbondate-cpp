@@ -7,6 +7,7 @@
 
 double mean(const std::vector<double>& vec);
 double mean(const std::vector<double>& vec, const std::vector<double>& probability);
+double sigma(const std::vector<double>& vec, double mean);
 double sigma(const std::vector<double>& vec, const std::vector<double>& probability, double mean);
 double median(std::vector <double> vec);
 double median(const std::vector<double>& vec, const std::vector<double>& probability);
