@@ -11,7 +11,7 @@ int main() {
     WalkerDPMM dpmm;
     dpmm.initialise(c14_age, c14_sig, cc_cal_age, cc_c14_age, cc_c14_sig);
 
-    int ident = 2;
+    int ident = 7;
     DensityOutput density_output = dpmm.get_single_calendar_age_likelihood(1, ident, 5);
     density_output.print();
 

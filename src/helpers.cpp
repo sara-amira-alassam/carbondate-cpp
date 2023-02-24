@@ -16,7 +16,7 @@ double mean(const std::vector<double>& vec) {
     return mean;
 }
 
-// Mean of a probability distribution
+// Mean of a probability distribution, assumes normalised
 double mean(const std::vector<double>& vec, const std::vector<double>& probability) {
     double mean = 0., sum_probability = 0.;
     for (int i = 0; i < vec.size(); i++) {
@@ -27,7 +27,7 @@ double mean(const std::vector<double>& vec, const std::vector<double>& probabili
     return mean;
 }
 
-// Standard deviation of a probability distribution
+// Standard deviation of a probability distribution, assumes normalised
 double sigma(const std::vector<double>& vec, const std::vector<double>& probability, double mean) {
     double sigma_squared = 0., sum_probability = 0.;
     for (int i = 0; i < vec.size(); i++) {
@@ -51,16 +51,12 @@ double median(std::vector <double> vec) {
     return vec[half];
 }
 
-// Median of a probability distribution
+// Median of a probability distribution, assumes normalised
 double median(const std::vector<double>& vec, const std::vector<double>& probability) {
-    double sum_probability = 0., cumulative_probability = 0;
-    int i;
-    for (i = 0; i < vec.size(); i++) sum_probability += probability[i];
-    for (i = 0; i < vec.size(); i++) {
+    double cumulative_probability = 0;
+    for (int i = 0; i < vec.size(); i++) {
         cumulative_probability += probability[i];
-        if (cumulative_probability >= sum_probability/2.) {
-            return vec[i];
-        }
+        if (cumulative_probability >= 0.5) return vec[i];
     }
     return 0.;
 }
@@ -84,6 +80,22 @@ double max_diff(std::vector<double> vec) {
 // Finds the point yi that corresponds to xi, given known points (x1, y1) and (x2, y2)
 double interpolate_linear(double xi, double x1, double x2, double y1, double y2) {
     return y1 + (y2 - y1) * ((xi - x1)/(x2 - x1));
+}
+
+// Finds the index for which all values below this are less than the cut-off
+int get_left_boundary(const std::vector<double>& vec, double cut_off) {
+    for (int i = 0; i < vec.size(); i++) {
+        if (vec[i] > cut_off) return i;
+    }
+    return 0;
+}
+
+// Finds the index for which all values above this are less than the cut-off
+int get_right_boundary(const std::vector<double>& vec, double cut_off) {
+    for (int i = (int) vec.size() - 1; i >= 0; i--) {
+        if (vec[i] > cut_off) return i;
+    }
+    return (int) vec.size() - 1;
 }
 
 // Finds the quantiles at a given edge width away from the start and end of the distribution.
