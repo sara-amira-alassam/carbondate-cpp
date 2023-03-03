@@ -4,8 +4,8 @@ plot_probabilities <- function() {
     seq(carbondate_start, by = carbondate_resolution, length.out = length(carbondate_prob)),
     carbondate_prob*carbondate_probnorm,
     col = "blue",
-    xlab = "Probability",
-    ylab = "Calendar Age AD",
+    xlab = "Calendar Age AD",
+    ylab = "Probability",
     main = title,
     type = "o")
   lines(seq(oxcal_start, by = oxcal_resolution, length.out = length(oxcal_prob)), oxcal_prob*oxcal_probnorm, col = "Red")

@@ -11,9 +11,9 @@ int main() {
     WalkerDPMM dpmm;
     dpmm.initialise(c14_age, c14_sig, cc_cal_age, cc_c14_age, cc_c14_sig);
 
-    int ident = 7;
-    DensityOutput density_output = dpmm.get_single_calendar_age_likelihood(1, ident, 5);
-    density_output.print();
+    int ident = 4;
+    DensityOutput density_output = dpmm.get_single_calendar_age_likelihood(1, ident);
+    density_output.print(5);
 
     dpmm.calibrate(1e5, 10);
     write_column_to_csv(
@@ -31,14 +31,14 @@ int main() {
     std::vector<std::string> density_headers = {"calendar_age", "ci_lower", "mean", "ci_upper"};
     write_columns_to_csv("../output/kerr_predictive_density.csv", density_headers, density_data);
 
-    density_output = dpmm.get_posterior_calendar_age_density(1, ident, 5);
-    density_output.print();
+    density_output = dpmm.get_posterior_calendar_age_density(1, ident);
+    density_output.print(5);
 
     std::vector<std::string> post_density_headers = {"calendar_age", "probability"};
     write_columns_to_csv(
             "../output/kerr_posterior_density_" + std::to_string(ident) + ".csv",
             post_density_headers,
-            density_output.as_columns());
+            density_output.as_columns(5));
 
     return 0;
 }

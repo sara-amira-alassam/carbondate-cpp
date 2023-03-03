@@ -560,7 +560,7 @@ DensityData WalkerDPMM::get_predictive_density(
     return density_data;
 }
 
-DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int output_offset, int ident, int resolution) {
+DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int output_offset, int ident) {
 
     DensityOutput density_output("ocd", ident + output_offset, "posterior");
     int n_burn = n_out / 2;
@@ -568,7 +568,7 @@ DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int output_offset, 
 
     double min_calendar_age = std::numeric_limits<double>::infinity();
     double max_calendar_age = -std::numeric_limits<double>::infinity();
-    std::vector<double> posterior_calendar_ages(n_count);
+    std::vector<double> posterior_calendar_ages(n_count), probability;
     for (int i = 0; i < n_count; i++) {
         posterior_calendar_ages[i] = to_calAD(calendar_age[i + n_burn][ident]);
         if (posterior_calendar_ages[i] < min_calendar_age) {
@@ -579,45 +579,35 @@ DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int output_offset, 
     }
 
     int start_break = (int) min_calendar_age;
-    while (start_break % resolution != 0) start_break--;
-
-    int num_breaks = (int) floor((max_calendar_age - start_break) / resolution) + 1;
-    int bin;
-    double max_density = 0.;
-    density_output.prob.resize(num_breaks, 0);
+    int num_breaks = (int) floor(max_calendar_age - start_break) + 1;
+    probability.resize(num_breaks, 0);
     for (int i = 0; i < n_count; i++) {
-        bin = (int) ((posterior_calendar_ages[i] - start_break) / resolution);
-        density_output.prob[bin] += 1.;
-        if (density_output.prob[bin] > max_density) max_density = density_output.prob[bin];
+        probability[(int) (posterior_calendar_ages[i] - start_break)]++;
     }
-    for (int i = 0; i < num_breaks; i++) density_output.prob[i] /= max_density;
-    density_output.start_calAD = start_break + resolution / 2.;
-    density_output.resolution = resolution;
-    density_output.prob_norm = max_density / (n_count * resolution);
+    density_output.set_yearwise_probability(probability);
+    density_output.start_calAD = start_break + 0.5;
     density_output.mean_calAD = mean(posterior_calendar_ages);
     density_output.median_calAD = median(posterior_calendar_ages);
     density_output.sigma = sigma(posterior_calendar_ages, density_output.median_calAD);
     return density_output;
 }
 
-DensityOutput WalkerDPMM::get_single_calendar_age_likelihood(
-        int output_offset, int ident, int resolution) {
-
+DensityOutput WalkerDPMM::get_single_calendar_age_likelihood(int output_offset, int ident) {
     DensityOutput density_output("ocd", ident + output_offset, "likelihood");
 
     int n_points = (int) yearwise_calcurve.cal_age.size();
-    std::vector<double> raw_density(n_points), probability(n_points);
+    std::vector<double> probability(n_points), truncated_probability;
     double sum_density = 0., max_dens = 0., max_prob;
     for (int i = 0; i < n_points; i++) {
-        raw_density[i] = dnorm4(
+        probability[i] = dnorm4(
                 c14_age[ident],
                 yearwise_calcurve.c14_age[i],
                 sqrt(pow(yearwise_calcurve.c14_sig[i], 2) + pow(c14_sig[ident], 2)),
                 0);
-        if (raw_density[i] > max_prob) max_prob = raw_density[i];
-        sum_density += raw_density[i];
+        if (probability[i] > max_prob) max_prob = probability[i];
+        sum_density += probability[i];
     }
-    for (int i = 0; i < n_points; i++) probability[i] = raw_density[i] / sum_density;
+    for (int i = 0; i < n_points; i++) probability[i] = probability[i] / sum_density;
 
     double mean_calBP = mean(yearwise_calcurve.cal_age, probability);
     density_output.mean_calAD = to_calAD(mean_calBP);
@@ -626,21 +616,12 @@ DensityOutput WalkerDPMM::get_single_calendar_age_likelihood(
 
     int min_calendar_index = get_left_boundary(probability, 1e-10);
     int max_calendar_index = get_right_boundary(probability, 1e-10);
-    int num_breaks = (int) ceil((max_calendar_index - min_calendar_index) / resolution);
-    density_output.prob.resize(num_breaks, 0);
-    double max_density = 0.;
-    for (int b = 0; b < num_breaks; b++) {
-        for (int j = 0; j < resolution; j++) {
-            // Note we're reversing the order as we aggregate here as we translate from calBP to AD
-            density_output.prob[b] += raw_density[max_calendar_index - b * resolution - j];
-        }
-        if (density_output.prob[b] > max_density) max_density = density_output.prob[b];
+    truncated_probability.resize(max_calendar_index - min_calendar_index + 1, 0);
+    // Note we're reversing the order as we aggregate here as we translate from calBP to AD
+    for (int i = max_calendar_index; i >= min_calendar_index; i--) {
+        truncated_probability[max_calendar_index - i] = probability[i];
     }
-    for (int i = 0; i < num_breaks; i++) density_output.prob[i] /= max_density;
-    density_output.start_calAD = to_calAD(
-            yearwise_calcurve.cal_age[max_calendar_index] - (resolution - 1.) / 2.);
-    density_output.resolution = resolution;
-    density_output.prob_norm = max_density / (sum_density * resolution);
-
+    density_output.set_yearwise_probability(truncated_probability);
+    density_output.start_calAD = to_calAD(yearwise_calcurve.cal_age[max_calendar_index] - 0.5);
     return density_output;
 }
