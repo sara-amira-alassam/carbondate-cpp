@@ -196,5 +196,5 @@ void update_progress_bar(double progress) {
 }
 
 double to_calAD(double year_calPB) {
-    return 1950 - year_calPB;
+    return 1950.5 - year_calPB;
 }

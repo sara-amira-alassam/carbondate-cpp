@@ -578,14 +578,13 @@ DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int output_offset, 
         }
     }
 
-    int start_break = (int) min_calendar_age;
-    int num_breaks = (int) floor(max_calendar_age - start_break) + 1;
+    density_output.start_calAD = floor(min_calendar_age + 0.5);
+    int num_breaks = (int) floor(max_calendar_age - density_output.start_calAD) + 1;
     probability.resize(num_breaks, 0);
     for (int i = 0; i < n_count; i++) {
-        probability[(int) (posterior_calendar_ages[i] - start_break)]++;
+        probability[int (floor(posterior_calendar_ages[i] - density_output.start_calAD - 0.5))]++;
     }
     density_output.set_yearwise_probability(probability);
-    density_output.start_calAD = start_break + 0.5;
     density_output.mean_calAD = mean(posterior_calendar_ages);
     density_output.median_calAD = median(posterior_calendar_ages);
     density_output.sigma = sigma(posterior_calendar_ages, density_output.median_calAD);

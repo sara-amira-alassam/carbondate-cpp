@@ -13,7 +13,6 @@ class DensityOutput {
     std::string _output_name;
     std::string _output_prefix;
     std::vector<double> _prob_yearwise;
-    double _prob_total = 0.;
     double _prob_max = 0.;
 
     std::vector<double> _prob_smoothed;
@@ -32,10 +31,15 @@ private:
     std::string output_line(const std::string& var_name, int var);
     std::string output_line(const std::string& var_name, double var);
     std::string output_line(const std::string& var_name, const std::vector<double>& var);
+    std::string comment_line(const std::string &comment, int &comment_index);
     void calculate_probability_smoothed(int resolution);
     double find_probability_and_ranges_for_cut_off(
             double cut_off, std::vector<std::vector<double>>& ranges);
-    std::vector<std::vector<double>> get_ranges(double probability, int resolution);
+    double find_probability_and_ranges_for_cut_off_smoothed(
+            double cut_off, std::vector<std::vector<double>>& ranges);
+    std::vector<std::vector<double>> get_ranges_by_bisection(double probability, int resolution);
+    std::vector<std::vector<double>> get_ranges_by_bisection(double probability);
+    std::vector<std::vector<double>> get_ranges(double probability);
 
 public:
     DensityOutput(std::string output_var, int index, std::string output_name);

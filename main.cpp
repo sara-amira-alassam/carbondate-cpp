@@ -21,7 +21,7 @@ int main() {
             "calendar age",
             dpmm.get_calendar_age(ident));
 
-    DensityData predictive_density = dpmm.get_predictive_density(500, 101, 0.025);
+    DensityData predictive_density = dpmm.get_predictive_density(5000, 101, 0.025);
     std::vector<std::vector<double>> density_data = {
         predictive_density.cal_age,
         predictive_density.ci_lower,
