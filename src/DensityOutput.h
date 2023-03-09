@@ -9,11 +9,12 @@
 
 class DensityOutput {
     std::string _output_var;
-    int _index;
-    std::string _output_name;
     std::string _output_prefix;
     std::vector<double> _prob_yearwise;
     double _prob_max = 0.;
+    double _date;
+    double _error;
+    std::string _name;
 
     std::vector<double> _prob_smoothed;
     int _resolution_smoothed;
@@ -27,25 +28,41 @@ public:
     double median_calAD = 0;
 
 private:
-    std::string output_prefix();
+    std::string variable_line(const std::string& var_name, int var);
+    std::string variable_line(const std::string& var_name, double var);
+    std::string variable_line(const std::string& var_name, const std::string& var);
     std::string output_line(const std::string& var_name, int var);
     std::string output_line(const std::string& var_name, double var);
     std::string output_line(const std::string& var_name, const std::vector<double>& var);
     std::string comment_line(const std::string &comment, int &comment_index);
+    std::string range_lines(
+            int range_index, double probability, int resolution, int& comment_index);
+    static std::string to_string(double var);
+    static std::string to_percent_string(double fraction);
+
     void calculate_probability_smoothed(int resolution);
-    double find_probability_and_ranges_for_cut_off(
-            double cut_off, std::vector<std::vector<double>>& ranges);
     double find_probability_and_ranges_for_cut_off_smoothed(
+            double cut_off, std::vector<std::vector<double>>& ranges);
+
+    // Get rid of the below functions after testing
+    double find_probability_and_ranges_for_cut_off(
             double cut_off, std::vector<std::vector<double>>& ranges);
     std::vector<std::vector<double>> get_ranges_by_bisection(double probability, int resolution);
     std::vector<std::vector<double>> get_ranges_by_bisection(double probability);
     std::vector<std::vector<double>> get_ranges(double probability);
 
 public:
-    DensityOutput(std::string output_var, int index, std::string output_name);
+    DensityOutput(
+            std::string output_var,
+            int index,
+            const std::string& output_name,
+            double date,
+            double error,
+            const std::string& name);
     void set_yearwise_probability(std::vector<double> probability);
     void print(int resolution);
     std::vector<std::vector<double>> as_columns(int resolution);
+
 };
 
 

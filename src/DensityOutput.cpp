@@ -7,42 +7,42 @@
 #include "DensityOutput.h"
 #include <iostream>
 
-DensityOutput::DensityOutput(std::string output_var, int index, std::string output_name) {
+DensityOutput::DensityOutput(
+        std::string output_var,
+        int index,
+        const std::string& output_name,
+        double date,
+        double error,
+        const std::string& name) {
     _output_var = std::move(output_var) + "[" + std::to_string(index) + "]";
-    _index = index;
-    _output_name = std::move(output_name);
-}
-
-std::string DensityOutput::output_prefix() {
-    if (_output_prefix.empty()) {
-        _output_prefix = _output_var + "." + _output_name;
-    }
-    return _output_prefix;
+    _output_prefix = _output_var + "." + output_name;
+    _date = date;
+    _error = error;
+    _name = name;
 }
 
 void DensityOutput::print(int resolution) {
     calculate_probability_smoothed(resolution);
-    std::vector<std::vector<double>> ranges;
-    int comment_index = 1;
+    int comment_index = 0, no_comments = -1;
+    std::string param = to_string(_date) + "," + to_string(_error);
     std::cout << "if!(" + _output_var + "){" + _output_var + "={};}\n";
+    std::cout << variable_line("ref", "OxCal v4.4.4 Bronk Ramsey (2021); r:5");
+    std::cout << variable_line("name", _name);
+    std::cout << variable_line("op", "R_Date");
+    std::cout << variable_line("param", param);
+    std::cout << variable_line("level", 0);
+    std::cout << variable_line("date", _date);
+    std::cout << variable_line("error", _error);
+    std::cout << variable_line("type", "date");
+    std::cout << variable_line("calib", 0);
+    std::cout << _output_prefix + "={};\n";
+    std::cout << comment_line(_name + "R_Date(" + param + ")", comment_index);
     std::cout << output_line("mean", mean_calAD);
     std::cout << output_line("sigma", sigma);
     std::cout << output_line("median", median_calAD);
-    std::cout << output_prefix() + ".range[1]=[];\n";
-    ranges = get_ranges_by_bisection(0.683, 5);
-    std::cout << comment_line("  68.3% probability", comment_index);
-    for (int i = 0; i < ranges.size(); i++) {
-        std::cout << output_line("range[1][" + std::to_string(i) + "]", ranges[i]);
-    }
-    ranges = get_ranges_by_bisection(0.954, 5);
-    std::cout << comment_line("  95.4% probability", comment_index);
-    for (int i = 0; i < ranges.size(); i++) {
-        std::cout << output_line("range[2][" + std::to_string(i) + "]", ranges[i]);
-    }
-    ranges = get_ranges_by_bisection(0.997, 5);
-    for (int i = 0; i < ranges.size(); i++) {
-        std::cout << output_line("range[3][" + std::to_string(i) + "]", ranges[i]);
-    }
+    std::cout << range_lines(1, 0.683, resolution, comment_index);
+    std::cout << range_lines(2, 0.954, resolution, comment_index);
+    std::cout << range_lines(3, 0.997, resolution, no_comments);
     std::cout << output_line("start", _start_calAD_smoothed);
     std::cout << output_line("resolution", resolution);
     std::cout << output_line("prob", _prob_smoothed);
@@ -50,23 +50,83 @@ void DensityOutput::print(int resolution) {
 }
 
 std::string DensityOutput::comment_line(const std::string& comment, int& comment_index) {
-    return output_prefix() + ".comment[" + std::to_string(comment_index++) + "]=\"" +  comment + "\";\n";
+    std::string line;
+    if (comment_index == 0) {
+        line = _output_prefix + ".comment=[];\n";
+    }
+    line += _output_prefix + ".comment[" + std::to_string(comment_index++) + "]=\"" +  comment + "\";\n";
+    return line;
+}
+
+std::string DensityOutput::variable_line(const std::string& var_name, int var) {
+    return _output_var + "." + var_name + "=" +  std::to_string(var) + ";\n";
+}
+
+std::string DensityOutput::variable_line(const std::string& var_name, double var) {
+    return _output_var + "." + var_name + "=" +  to_string(var) + ";\n";
+}
+
+std::string DensityOutput::variable_line(const std::string& var_name, const std::string& var) {
+    return _output_var + "." + var_name + "=\"" +  var + "\";\n";
 }
 
 std::string DensityOutput::output_line(const std::string& var_name, int var) {
-    return output_prefix() + "." + var_name + "=" +  std::to_string(var) + ";\n";
+    return _output_prefix + "." + var_name + "=" +  std::to_string(var) + ";\n";
 }
 
 std::string DensityOutput::output_line(const std::string& var_name, double var) {
-    return output_prefix() + "." + var_name + "=" +  std::to_string(var) + ";\n";
+    return _output_prefix + "." + var_name + "=" + to_string(var) + ";\n";
 }
 
 std::string DensityOutput::output_line(
         const std::string& var_name, const std::vector<double>& var) {
-    std::string output_line = output_prefix() + "." + var_name + "=[";
+    std::string output_line = _output_prefix + "." + var_name + "=[";
     for (int i = 0; i < var.size() - 1; i++) output_line += std::to_string(var[i]) + ", ";
     output_line += std::to_string(var[var.size() - 1]) + "];\n";
     return output_line;
+}
+
+std::string DensityOutput::range_lines(
+        int range_index, double probability, int resolution, int& comment_index) {
+
+    std::vector<std::vector<double>> ranges = get_ranges_by_bisection(probability, resolution);
+    std::string range_string = "range[" + std::to_string(range_index) + "]";
+    std::string range_lines;
+    if (range_index == 1) {
+        range_lines = _output_prefix + ".range=[];\n";
+    }
+    range_lines += _output_prefix + "." + range_string + "=[];\n";
+    for (int i = 0; i < ranges.size(); i++) {
+        range_lines += output_line(range_string + "[" + std::to_string(i) + "]", ranges[i]);
+    }
+    if (comment_index >= 0) {
+        range_lines += comment_line(
+                "  " + to_percent_string(probability) + " probability", comment_index);
+        for (auto & range : ranges) {
+            std::string comment = "    " + std::to_string(int (round(range[0]))) + "AD";
+            comment += " (" + to_percent_string(range[2]) + ") ";
+            comment += std::to_string(int (round(range[1]))) + "AD";
+            range_lines += comment_line(comment, comment_index);
+        }
+    }
+
+    return range_lines;
+}
+
+std::string DensityOutput::to_string(double var) {
+    std::string string_var;
+    char temp_string[10] = "";
+    snprintf(temp_string, 10, "%.6g", var);
+    string_var = temp_string;
+    return string_var;
+}
+
+std::string DensityOutput::to_percent_string(double fraction) {
+    std::string percent;
+    char temp_string[8] = "";
+    snprintf(temp_string, 8, "%4.1f%%", fraction * 100);
+    percent = temp_string;
+    return percent;
 }
 
 std::vector<std::vector<double>> DensityOutput::as_columns(int resolution) {
@@ -116,6 +176,70 @@ void DensityOutput::set_yearwise_probability(std::vector<double> probability) {
 // Returns the area under the yearwise probability curve if we ignore all values below the cut-off
 // Also populates the vector ranges, where each entry contains
 // [start_calAD, end_calAD, probability within this range]
+double DensityOutput::find_probability_and_ranges_for_cut_off_smoothed(
+        double cut_off, std::vector<std::vector<double>> &ranges) {
+    ranges.clear();
+    double y1, y2, dx, x_intercept_1, x_intercept_2, res = _resolution_smoothed;
+    double range_probability = 0, total_probability = 0;
+    for (int i = 0; i < _prob_smoothed.size() - 1; i++) {
+        y1 = _prob_smoothed[i];
+        y2 = _prob_smoothed[i + 1];
+        if (y1 <= cut_off && cut_off <= y2) {
+            dx = res * (cut_off - y1) / (y2 - y1);
+            x_intercept_1 = _start_calAD_smoothed + i * res + dx;
+            range_probability = (cut_off + y2) * (res - dx) / 2.;
+        } else if (y2 <= cut_off && cut_off <= y1) {
+            dx = res * (cut_off - y1) / (y2 - y1);
+            x_intercept_2 = _start_calAD_smoothed + i * res + dx;
+            range_probability += (cut_off + y2) * dx / 2.;
+            range_probability *= _prob_norm_smoothed;
+            ranges.push_back(std::vector<double> {x_intercept_1, x_intercept_2, range_probability});
+            total_probability += range_probability;
+            range_probability = 0;
+        } else if (cut_off <= y1 && cut_off <= y2) {
+            range_probability += (y1 + y2) * res / 2.;
+        }
+    }
+    return total_probability;
+}
+
+// Finds the calendar age ranges between which the probability matches the provided probability
+// where the points with the highest probability are chosen first. Returns the ressult as a
+// vector of vectors, where each entry contains
+// [start_calAD, end_calAD, probability within this range]
+// arg `resolution` gives the resolution of the probability curve to use
+std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(
+        double probability, int resolution) {
+    std::vector<std::vector<double>> ranges;
+
+    calculate_probability_smoothed(resolution);
+
+    // Use bisection method to find the closest probability cut-off to give the desired probability
+    // a and b are the upper and lower points of the section - we know the smoothed probability has a max of 1
+    double a = 0., b = 1.;
+    double p; // p is the midpoint between a and b
+    double current_probability = -1.;
+    const int max_iter = 1000;
+    for (int i = 0; i < max_iter; i++) {
+        p = (a + b) / 2.;
+        current_probability = find_probability_and_ranges_for_cut_off_smoothed(p, ranges);
+        if (abs(current_probability - probability) < 1e-4) {
+            break;
+        }
+        if (current_probability < probability) {
+            b = p;
+        } else {
+            a = p;
+        }
+    }
+    return ranges;
+}
+
+/////////////////// NOTE: none of these functions are currently used but are left in for testing
+/////////////////// They should be removed when the final version is decided on.
+// Returns the area under the yearwise probability curve if we ignore all values below the cut-off
+// Also populates the vector ranges, where each entry contains
+// [start_calAD, end_calAD, probability within this range]
 double DensityOutput::find_probability_and_ranges_for_cut_off(
         double cut_off, std::vector<std::vector<double>> &ranges) {
     ranges.clear();
@@ -142,34 +266,33 @@ double DensityOutput::find_probability_and_ranges_for_cut_off(
     return total_probability;
 }
 
-// Returns the area under the yearwise probability curve if we ignore all values below the cut-off
-// Also populates the vector ranges, where each entry contains
+// Finds the calendar age ranges between which the probability matches the provided probability
+// where the points with the highest probability are chosen first. Returns the ressult as a
+// vector of vectors, where each entry contains
 // [start_calAD, end_calAD, probability within this range]
-double DensityOutput::find_probability_and_ranges_for_cut_off_smoothed(
-        double cut_off, std::vector<std::vector<double>> &ranges) {
-    ranges.clear();
-    double y1, y2, dx, x_intercept_1, x_intercept_2, res = _resolution_smoothed;
-    double range_probability = 0, total_probability = 0;
-    for (int i = 0; i < _prob_smoothed.size() - 1; i++) {
-        y1 = _prob_smoothed[i];
-        y2 = _prob_smoothed[i + 1];
-        if (y1 <= cut_off && cut_off <= y2) {
-            dx = res * (cut_off - y1) / (y2 - y1);
-            x_intercept_1 = _start_calAD_smoothed + i * res + dx;
-            range_probability = (cut_off + y2) * (res - dx) / 2.;
-        } else if (y2 <= cut_off && cut_off <= y1) {
-            dx = res * (cut_off - y1) / (y2 - y1);
-            x_intercept_2 = _start_calAD_smoothed + i * res + dx;
-            range_probability += (cut_off + y2) * dx / 2.;
-            range_probability *= _prob_norm_smoothed;
-            ranges.push_back(std::vector<double> {x_intercept_1, x_intercept_2, range_probability});
-            total_probability += range_probability;
-            range_probability = 0;
-        } else if (cut_off <= y1 && cut_off <= y2) {
-            range_probability += (y1 + y2) * res / 2.;
+// arg `resolution` gives the resolution of the probability curve to use
+std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(double probability) {
+    std::vector<std::vector<double>> ranges;
+
+    // Use bisection method to find the closest probability cut-off to give the desired probability
+    // a and b are the upper and lower points of the section - we know the smoothed probability has a max of 1
+    double a = 0., b = 1.;
+    double p; // p is the midpoint between a and b
+    double current_probability = -1.;
+    const int max_iter = 1000;
+    for (int i = 0; i < max_iter; i++) {
+        p = (a + b) / 2.;
+        current_probability = find_probability_and_ranges_for_cut_off(p, ranges);
+        if (abs(current_probability - probability) < 1e-4) {
+            break;
+        }
+        if (current_probability < probability) {
+            b = p;
+        } else {
+            a = p;
         }
     }
-    return total_probability;
+    return ranges;
 }
 
 // Finds the calendar age ranges between which the probability matches the provided probability
@@ -220,67 +343,6 @@ std::vector<std::vector<double>> DensityOutput::get_ranges(double probability) {
     if (current_range[2] > min_prob) {
         current_range[1] = start_calAD + included_values[num_values - 1];
         ranges.push_back(current_range);
-    }
-    return ranges;
-}
-
-// Finds the calendar age ranges between which the probability matches the provided probability
-// where the points with the highest probability are chosen first. Returns the ressult as a
-// vector of vectors, where each entry contains
-// [start_calAD, end_calAD, probability within this range]
-// arg `resolution` gives the resolution of the probability curve to use
-std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(
-        double probability, int resolution) {
-    std::vector<std::vector<double>> ranges;
-
-    calculate_probability_smoothed(resolution);
-
-    // Use bisection method to find the closest probability cut-off to give the desired probability
-    // a and b are the upper and lower points of the section - we know the smoothed probability has a max of 1
-    double a = 0., b = 1.;
-    double p; // p is the midpoint between a and b
-    double current_probability = -1.;
-    const int max_iter = 1000;
-    for (int i = 0; i < max_iter; i++) {
-        p = (a + b) / 2.;
-        current_probability = find_probability_and_ranges_for_cut_off_smoothed(p, ranges);
-        if (abs(current_probability - probability) < 1e-4) {
-            break;
-        }
-        if (current_probability < probability) {
-            b = p;
-        } else {
-            a = p;
-        }
-    }
-    return ranges;
-}
-
-// Finds the calendar age ranges between which the probability matches the provided probability
-// where the points with the highest probability are chosen first. Returns the ressult as a
-// vector of vectors, where each entry contains
-// [start_calAD, end_calAD, probability within this range]
-// arg `resolution` gives the resolution of the probability curve to use
-std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(double probability) {
-    std::vector<std::vector<double>> ranges;
-
-    // Use bisection method to find the closest probability cut-off to give the desired probability
-    // a and b are the upper and lower points of the section - we know the smoothed probability has a max of 1
-    double a = 0., b = 1.;
-    double p; // p is the midpoint between a and b
-    double current_probability = -1.;
-    const int max_iter = 1000;
-    for (int i = 0; i < max_iter; i++) {
-        p = (a + b) / 2.;
-        current_probability = find_probability_and_ranges_for_cut_off(p, ranges);
-        if (abs(current_probability - probability) < 1e-4) {
-            break;
-        }
-        if (current_probability < probability) {
-            b = p;
-        } else {
-            a = p;
-        }
     }
     return ranges;
 }
