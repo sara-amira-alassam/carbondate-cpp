@@ -43,13 +43,14 @@ private:
     void calculate_probability_smoothed(int resolution);
     double find_probability_and_ranges_for_cut_off_smoothed(
             double cut_off, std::vector<std::vector<double>>& ranges);
+    std::vector<std::vector<double>> get_ranges_by_bisection(double probability, int resolution);
+    std::vector<std::string> get_output_lines(int resolution);
 
     // Get rid of the below functions after testing
-    double find_probability_and_ranges_for_cut_off(
+/*    double find_probability_and_ranges_for_cut_off(
             double cut_off, std::vector<std::vector<double>>& ranges);
-    std::vector<std::vector<double>> get_ranges_by_bisection(double probability, int resolution);
     std::vector<std::vector<double>> get_ranges_by_bisection(double probability);
-    std::vector<std::vector<double>> get_ranges(double probability);
+    std::vector<std::vector<double>> get_ranges(double probability);*/
 
 public:
     DensityOutput(
@@ -61,6 +62,8 @@ public:
             const std::string& name);
     void set_yearwise_probability(std::vector<double> probability);
     void print(int resolution);
+    void write_to_file(int resolution, const std::string& file_prefix);
+
     std::vector<std::vector<double>> as_columns(int resolution);
 
 };

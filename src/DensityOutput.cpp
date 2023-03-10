@@ -2,6 +2,8 @@
 // Created by Sara Al-Assam on 21/02/2023.
 //
 #include <utility>
+#include <iostream>
+#include <fstream>
 #include <cmath>
 #include "helpers.h"
 #include "DensityOutput.h"
@@ -21,32 +23,53 @@ DensityOutput::DensityOutput(
     _name = name;
 }
 
+void DensityOutput::write_to_file(int resolution, const std::string &file_prefix) {
+    std::ofstream output_file;
+    output_file.open("../output/" + file_prefix + ".js", std::ios_base::app);
+
+    for (const std::string& output_line : get_output_lines(resolution)) {
+        output_file << output_line;
+    }
+
+    output_file.close();
+}
+
 void DensityOutput::print(int resolution) {
-    calculate_probability_smoothed(resolution);
+    for (const std::string& output_line : get_output_lines(resolution)) {
+        std::cout << output_line;
+    }
+}
+
+std::vector<std::string> DensityOutput::get_output_lines(int resolution) {
+    std::vector<std::string> output_lines;
     int comment_index = 0, no_comments = -1;
     std::string param = to_string(_date) + "," + to_string(_error);
-    std::cout << "if!(" + _output_var + "){" + _output_var + "={};}\n";
-    std::cout << variable_line("ref", "OxCal v4.4.4 Bronk Ramsey (2021); r:5");
-    std::cout << variable_line("name", _name);
-    std::cout << variable_line("op", "R_Date");
-    std::cout << variable_line("param", param);
-    std::cout << variable_line("level", 0);
-    std::cout << variable_line("date", _date);
-    std::cout << variable_line("error", _error);
-    std::cout << variable_line("type", "date");
-    std::cout << variable_line("calib", 0);
-    std::cout << _output_prefix + "={};\n";
-    std::cout << comment_line(_name + "R_Date(" + param + ")", comment_index);
-    std::cout << output_line("mean", mean_calAD);
-    std::cout << output_line("sigma", sigma);
-    std::cout << output_line("median", median_calAD);
-    std::cout << range_lines(1, 0.683, resolution, comment_index);
-    std::cout << range_lines(2, 0.954, resolution, comment_index);
-    std::cout << range_lines(3, 0.997, resolution, no_comments);
-    std::cout << output_line("start", _start_calAD_smoothed);
-    std::cout << output_line("resolution", resolution);
-    std::cout << output_line("prob", _prob_smoothed);
-    std::cout << output_line("probNorm", _prob_norm_smoothed);
+    calculate_probability_smoothed(resolution);
+
+    output_lines.push_back("if(!" + _output_var + "){" + _output_var + "={};}\n");
+    output_lines.push_back(variable_line("ref", "OxCal v4.4.4 Bronk Ramsey (2021); r:5"));
+    output_lines.push_back(variable_line("name", _name));
+    output_lines.push_back(variable_line("op", "R_Date"));
+    output_lines.push_back(variable_line("param", param));
+    output_lines.push_back(variable_line("level", 0));
+    output_lines.push_back(variable_line("date", _date));
+    output_lines.push_back(variable_line("error", _error));
+    output_lines.push_back(_output_prefix + "={};\n");
+    output_lines.push_back(comment_line(_name + " R_Date(" + param + ")", comment_index));
+    output_lines.push_back(variable_line("type", "date"));
+    output_lines.push_back(variable_line("calib", 0));
+    output_lines.push_back(range_lines(1, 0.683, resolution, comment_index));
+    output_lines.push_back(range_lines(2, 0.954, resolution, comment_index));
+    output_lines.push_back(range_lines(3, 0.997, resolution, no_comments));
+    output_lines.push_back(output_line("mean", mean_calAD));
+    output_lines.push_back(output_line("sigma", sigma));
+    output_lines.push_back(output_line("median", median_calAD));
+    output_lines.push_back(output_line("probNorm", _prob_norm_smoothed));
+    output_lines.push_back(output_line("start", _start_calAD_smoothed));
+    output_lines.push_back(output_line("resolution", resolution));
+    output_lines.push_back(output_line("prob", _prob_smoothed));
+
+    return output_lines;
 }
 
 std::string DensityOutput::comment_line(const std::string& comment, int& comment_index) {
@@ -109,7 +132,6 @@ std::string DensityOutput::range_lines(
             range_lines += comment_line(comment, comment_index);
         }
     }
-
     return range_lines;
 }
 
@@ -133,7 +155,7 @@ std::vector<std::vector<double>> DensityOutput::as_columns(int resolution) {
     calculate_probability_smoothed(resolution);
     std::vector<std::vector<double>> output(2, std::vector<double>(_prob_smoothed.size()));
     for (int i = 0; i < _prob_smoothed.size(); i++) {
-        output[0][i] = 1950 - _start_calAD_smoothed - i * resolution;
+        output[0][i] = 1950.5 - _start_calAD_smoothed - i * resolution;
         output[1][i] = _prob_smoothed[i] * _prob_norm_smoothed;
     }
     return output;
@@ -193,7 +215,8 @@ double DensityOutput::find_probability_and_ranges_for_cut_off_smoothed(
             x_intercept_2 = _start_calAD_smoothed + i * res + dx;
             range_probability += (cut_off + y2) * dx / 2.;
             range_probability *= _prob_norm_smoothed;
-            ranges.push_back(std::vector<double> {x_intercept_1, x_intercept_2, range_probability});
+            ranges.push_back(
+                    std::vector<double> {x_intercept_1, x_intercept_2, 100. * range_probability});
             total_probability += range_probability;
             range_probability = 0;
         } else if (cut_off <= y1 && cut_off <= y2) {
@@ -240,6 +263,7 @@ std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(
 // Returns the area under the yearwise probability curve if we ignore all values below the cut-off
 // Also populates the vector ranges, where each entry contains
 // [start_calAD, end_calAD, probability within this range]
+/*
 double DensityOutput::find_probability_and_ranges_for_cut_off(
         double cut_off, std::vector<std::vector<double>> &ranges) {
     ranges.clear();
@@ -346,3 +370,4 @@ std::vector<std::vector<double>> DensityOutput::get_ranges(double probability) {
     }
     return ranges;
 }
+*/
