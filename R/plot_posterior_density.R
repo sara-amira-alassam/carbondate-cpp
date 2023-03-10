@@ -1,7 +1,7 @@
 library(readr)
 library(carbondate)
 
-ident = 10
+ident = 4
 output_file = paste("output/kerr_posterior_density_", ident, ".csv", sep="")
 
 posterior_density <- read_csv(output_file, show_col_types = FALSE)

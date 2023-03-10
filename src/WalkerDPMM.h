@@ -87,7 +87,8 @@ public:
     void calibrate(int n_iter, int n_thin);
     DensityData get_predictive_density(
             int n_posterior_samples, int n_points, double quantile_edge_width);
-    DensityOutput get_posterior_density(int output_offset, int ident, int resolution);
+    DensityOutput get_posterior_calendar_age_density(int output_offset, int ident);
+    DensityOutput get_single_calendar_age_likelihood(int output_offset, int ident);
 
     std::vector<double> get_c14_age() { return c14_age; }
     std::vector<double> get_c14_sig() { return c14_sig; }

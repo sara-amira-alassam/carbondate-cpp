@@ -6,15 +6,36 @@
 #include "helpers.h"
 
 
+// Mean of elements in a vector
 double mean(const std::vector<double>& vec) {
     double mean = 0.0;
-    for (double elem : vec) {
-        mean += elem;
-    }
+    for (double elem : vec) mean += elem;
     mean /= (double) vec.size();
     return mean;
 }
 
+// Mean of a probability distribution, assumes normalised
+double mean(const std::vector<double>& vec, const std::vector<double>& probability) {
+    double mean = 0.;
+    for (int i = 0; i < vec.size(); i++) mean += vec[i] * probability[i];
+    return mean;
+}
+
+// Standard deviation of elements in a vector
+double sigma(const std::vector<double>& vec, double mean) {
+    double sigma_squared = 0.;
+    for (double elem : vec) sigma_squared += pow(elem - mean, 2);
+    return sqrt(sigma_squared / (double) vec.size());
+}
+
+// Standard deviation of a probability distribution, assumes normalised
+double sigma(const std::vector<double>& vec, const std::vector<double>& probability, double mean) {
+    double sigma_squared = 0.;
+    for (int i = 0; i < vec.size(); i++) sigma_squared += pow(vec[i] - mean, 2) * probability[i];
+    return sqrt(sigma_squared);
+}
+
+// Middle value of sorted elements in a vector
 double median(std::vector <double> vec) {
    unsigned n = vec.size(), half = n/2;
 
@@ -25,6 +46,16 @@ double median(std::vector <double> vec) {
     }
     std::nth_element(vec.begin(), vec.begin() + half, vec.end());
     return vec[half];
+}
+
+// Median of a probability distribution, assumes normalised
+double median(const std::vector<double>& vec, const std::vector<double>& probability) {
+    double cumulative_probability = 0;
+    for (int i = 0; i < vec.size(); i++) {
+        cumulative_probability += probability[i];
+        if (cumulative_probability >= 0.5) return vec[i];
+    }
+    return 0.;
 }
 
 double mad(std::vector <double> vec) {
@@ -46,6 +77,22 @@ double max_diff(std::vector<double> vec) {
 // Finds the point yi that corresponds to xi, given known points (x1, y1) and (x2, y2)
 double interpolate_linear(double xi, double x1, double x2, double y1, double y2) {
     return y1 + (y2 - y1) * ((xi - x1)/(x2 - x1));
+}
+
+// Finds the index for which all values below this are less than the cut-off
+int get_left_boundary(const std::vector<double>& vec, double cut_off) {
+    for (int i = 0; i < vec.size(); i++) {
+        if (vec[i] > cut_off) return i;
+    }
+    return 0;
+}
+
+// Finds the index for which all values above this are less than the cut-off
+int get_right_boundary(const std::vector<double>& vec, double cut_off) {
+    for (int i = (int) vec.size() - 1; i >= 0; i--) {
+        if (vec[i] > cut_off) return i;
+    }
+    return (int) vec.size() - 1;
 }
 
 // Finds the quantiles at a given edge width away from the start and end of the distribution.
@@ -146,4 +193,8 @@ void update_progress_bar(double progress) {
     int right_padding = bar_width - left_padding;
     printf("\r%3d%% [%.*s%*s]", val, left_padding, bar_string.c_str(), right_padding, "");
     fflush(stdout);
+}
+
+double to_calAD(double year_calPB) {
+    return 1950.5 - year_calPB;
 }
