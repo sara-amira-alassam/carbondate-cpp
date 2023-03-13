@@ -20,13 +20,15 @@ int main(int argc, char* argv[]) {
         density_output.write_to_file(5, file_prefix);
     }
 
-    /*int ident = 4;
     dpmm.calibrate(1e5, 10);
-    write_column_to_csv(
-            "../output/kerr_calendar_age_" + std::to_string(ident) + ".csv",
-            "calendar age",
-            dpmm.get_calendar_age(ident));
 
+    for (int i = 0; i <= 10; i++){
+        DensityOutput density_output = dpmm.get_posterior_calendar_age_density(1, i);
+        density_output.print(5);
+        density_output.write_to_file(5, file_prefix);
+    }
+
+    /*
     DensityData predictive_density = dpmm.get_predictive_density(5000, 101, 0.025);
     std::vector<std::vector<double>> density_data = {
         predictive_density.cal_age,
@@ -36,15 +38,6 @@ int main(int argc, char* argv[]) {
     };
     std::vector<std::string> density_headers = {"calendar_age", "ci_lower", "mean", "ci_upper"};
     write_columns_to_csv("../output/kerr_predictive_density.csv", density_headers, density_data);*/
-
-    //density_output = dpmm.get_posterior_calendar_age_density(1, ident);
-    //density_output.print(5);
-/*
-    std::vector<std::string> post_density_headers = {"calendar_age", "probability"};
-    write_columns_to_csv(
-            "../output/kerr_posterior_density_" + std::to_string(ident) + ".csv",
-            post_density_headers,
-            density_output.as_columns(5));*/
 
     return 0;
 }
