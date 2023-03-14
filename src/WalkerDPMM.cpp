@@ -7,6 +7,7 @@
 void WalkerDPMM::initialise(
         std::vector<double> i_c14_age,
         std::vector<double> i_c14_sig,
+        std::vector<std::string> i_c14_name,
         std::vector<double> cc_cal_age,
         std::vector<double> cc_c14_age,
         std::vector<double> cc_c14_sig,
@@ -23,6 +24,7 @@ void WalkerDPMM::initialise(
 
     c14_age = std::move(i_c14_age);
     c14_sig = std::move(i_c14_sig);
+    c14_name = std::move(i_c14_name);
 
     n_obs = (int) c14_age.size();
     n_out = 1;
@@ -560,10 +562,10 @@ DensityData WalkerDPMM::get_predictive_density(
     return density_data;
 }
 
-DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int output_offset, int ident) {
+DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int ident) {
 
     DensityOutput density_output(
-            "ocd", ident + output_offset, "posterior", c14_age[ident], c14_sig[ident], "");
+            ident, "posterior", c14_age[ident], c14_sig[ident], c14_name[ident]);
     int n_burn = n_out / 2;
     int n_count = n_out - n_burn;
 
@@ -592,14 +594,9 @@ DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int output_offset, 
     return density_output;
 }
 
-DensityOutput WalkerDPMM::get_single_calendar_age_likelihood(int output_offset, int ident) {
+DensityOutput WalkerDPMM::get_single_calendar_age_likelihood(int ident) {
     DensityOutput density_output(
-            "ocd",
-            ident + output_offset,
-            "likelihood",
-            c14_age[ident],
-            c14_sig[ident],
-            std::to_string(ident));
+            ident, "likelihood", c14_age[ident], c14_sig[ident], c14_name[ident]);
 
     int n_points = (int) yearwise_calcurve.cal_age.size();
     std::vector<double> probability(n_points), truncated_probability;

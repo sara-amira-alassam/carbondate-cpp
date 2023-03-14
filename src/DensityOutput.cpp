@@ -9,13 +9,12 @@
 #include "DensityOutput.h"
 
 DensityOutput::DensityOutput(
-        std::string output_var,
         int index,
         const std::string& output_name,
         double date,
         double error,
         const std::string& name) {
-    _output_var = std::move(output_var) + "[" + std::to_string(index) + "]";
+    _output_var = "ocd[" + std::to_string(index + 1) + "]";
     _output_prefix = _output_var + "." + output_name;
     _date = date;
     _error = error;
