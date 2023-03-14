@@ -54,7 +54,6 @@ private:
 
 public:
     DensityOutput(
-            std::string output_var,
             int index,
             const std::string& output_name,
             double date,
