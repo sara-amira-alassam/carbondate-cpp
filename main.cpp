@@ -1,6 +1,4 @@
-#include <iostream>
 #include "src/WalkerDPMM.h"
-#include "src/csv_helpers.h"
 #include "src/read_data.h"
 
 int main(int argc, char* argv[]) {
