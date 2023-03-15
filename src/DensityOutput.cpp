@@ -9,33 +9,30 @@
 #include "DensityOutput.h"
 
 DensityOutput::DensityOutput(
-        int index,
-        const std::string& output_name,
         double date,
         double error,
         const std::string& name) {
-    _output_var = "ocd[" + std::to_string(index + 1) + "]";
-    _output_prefix = _output_var + "." + output_name;
     _date = date;
     _error = error;
     _name = name;
 }
 
-void DensityOutput::write_to_file(int resolution, const std::string &file_prefix) {
+void DensityOutput::write_to_file(
+        int resolution,
+        const std::string& file_prefix,
+        const std::string& output_var,
+        const std::string& output_name) {
     std::ofstream output_file;
     output_file.open("../output/" + file_prefix + ".js", std::ios_base::app);
+
+    _output_var = output_var;
+    _output_prefix = output_var + "." + output_name;
 
     for (const std::string& output_line : get_output_lines(resolution)) {
         output_file << output_line;
     }
 
     output_file.close();
-}
-
-void DensityOutput::print(int resolution) {
-    for (const std::string& output_line : get_output_lines(resolution)) {
-        std::cout << output_line;
-    }
 }
 
 std::vector<std::string> DensityOutput::get_output_lines(int resolution) {
@@ -149,16 +146,6 @@ std::string DensityOutput::to_percent_string(double fraction) {
     return percent;
 }
 
-std::vector<std::vector<double>> DensityOutput::as_columns(int resolution) {
-    calculate_probability_smoothed(resolution);
-    std::vector<std::vector<double>> output(2, std::vector<double>(_prob_smoothed.size()));
-    for (int i = 0; i < _prob_smoothed.size(); i++) {
-        output[0][i] = 1950.5 - _start_calAD_smoothed - i * resolution;
-        output[1][i] = _prob_smoothed[i] * _prob_norm_smoothed;
-    }
-    return output;
-}
-
 void DensityOutput::calculate_probability_smoothed(int resolution) {
     if (!_prob_smoothed.empty() && _resolution_smoothed == resolution) {
         // This means its already been previously calculated and set
@@ -247,7 +234,7 @@ std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(
     // a and b are the upper and lower points of the section - we know the smoothed probability has a max of 1
     double a = 0., b = 1.;
     double p; // p is the midpoint between a and b
-    double current_probability = -1.;
+    double current_probability;
     const int max_iter = 1000;
     for (int i = 0; i < max_iter; i++) {
         p = (a + b) / 2.;

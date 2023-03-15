@@ -17,9 +17,9 @@ class DensityOutput {
     std::string _name;
 
     std::vector<double> _prob_smoothed;
-    int _resolution_smoothed;
-    double _start_calAD_smoothed;
-    double _prob_norm_smoothed;
+    int _resolution_smoothed{};
+    double _start_calAD_smoothed{};
+    double _prob_norm_smoothed{};
 
 public:
     double start_calAD = 0;
@@ -54,17 +54,15 @@ private:
 
 public:
     DensityOutput(
-            int index,
-            const std::string& output_name,
             double date,
             double error,
             const std::string& name);
     void set_yearwise_probability(std::vector<double> probability);
-    void print(int resolution);
-    void write_to_file(int resolution, const std::string& file_prefix);
-
-    std::vector<std::vector<double>> as_columns(int resolution);
-
+    void write_to_file(
+            int resolution,
+            const std::string& file_prefix,
+            const std::string& output_var,
+            const std::string& output_name);
 };
 
 

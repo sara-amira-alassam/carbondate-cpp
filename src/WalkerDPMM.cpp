@@ -563,9 +563,7 @@ DensityData WalkerDPMM::get_predictive_density(
 }
 
 DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int ident) {
-
-    DensityOutput density_output(
-            ident, "posterior", c14_age[ident], c14_sig[ident], c14_name[ident]);
+    DensityOutput density_output(c14_age[ident], c14_sig[ident], c14_name[ident]);
     int n_burn = n_out / 2;
     int n_count = n_out - n_burn;
 
@@ -595,8 +593,7 @@ DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int ident) {
 }
 
 DensityOutput WalkerDPMM::get_single_calendar_age_likelihood(int ident) {
-    DensityOutput density_output(
-            ident, "likelihood", c14_age[ident], c14_sig[ident], c14_name[ident]);
+    DensityOutput density_output(c14_age[ident], c14_sig[ident], c14_name[ident]);
 
     int n_points = (int) yearwise_calcurve.cal_age.size();
     std::vector<double> probability(n_points), truncated_probability;
