@@ -11,7 +11,10 @@ int main(int argc, char* argv[]) {
     std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
     WalkerDPMM dpmm;
 
-    read_oxcal_data(file_prefix, c14_name, c14_age, c14_sig);
+    if (!read_oxcal_data(file_prefix, c14_name, c14_age, c14_sig)) {
+        // If there is no data within the NP model in this OxCal file then simply exit
+        return 0;
+    }
     read_calibration_curve("../data/intcal20.14c", cc_cal_age, cc_c14_age, cc_c14_sig);
 
     dpmm.initialise(c14_age, c14_sig, c14_name, cc_cal_age, cc_c14_age, cc_c14_sig);
