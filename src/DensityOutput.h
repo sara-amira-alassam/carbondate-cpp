@@ -37,8 +37,6 @@ private:
     std::string comment_line(const std::string &comment, int &comment_index);
     std::string range_lines(
             int range_index, double probability, int resolution, int& comment_index);
-    static std::string to_string(double var);
-    static std::string to_percent_string(double fraction);
 
     void calculate_probability_smoothed(int resolution);
     double find_probability_and_ranges_for_cut_off_smoothed(
@@ -63,6 +61,9 @@ public:
             const std::string& file_prefix,
             const std::string& output_var,
             const std::string& output_name);
+    std::string get_name() { return _name; }
+    double get_lower() { return start_calAD; }
+    double get_upper() { return start_calAD + (double) _prob_yearwise.size(); }
 };
 
 

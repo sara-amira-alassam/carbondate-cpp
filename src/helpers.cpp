@@ -198,3 +198,19 @@ void update_progress_bar(double progress) {
 double to_calAD(double year_calPB) {
     return 1950.5 - year_calPB;
 }
+
+std::string to_string(double var) {
+    std::string string_var;
+    char temp_string[10] = "";
+    snprintf(temp_string, 10, "%.6g", var);
+    string_var = temp_string;
+    return string_var;
+}
+
+std::string to_percent_string(double fraction) {
+    std::string percent;
+    char temp_string[8] = "";
+    snprintf(temp_string, 8, "%4.1f%%", fraction * 100);
+    percent = temp_string;
+    return percent;
+}

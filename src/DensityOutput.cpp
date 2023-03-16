@@ -130,22 +130,6 @@ std::string DensityOutput::range_lines(
     return range_lines;
 }
 
-std::string DensityOutput::to_string(double var) {
-    std::string string_var;
-    char temp_string[10] = "";
-    snprintf(temp_string, 10, "%.6g", var);
-    string_var = temp_string;
-    return string_var;
-}
-
-std::string DensityOutput::to_percent_string(double fraction) {
-    std::string percent;
-    char temp_string[8] = "";
-    snprintf(temp_string, 8, "%4.1f%%", fraction * 100);
-    percent = temp_string;
-    return percent;
-}
-
 void DensityOutput::calculate_probability_smoothed(int resolution) {
     if (!_prob_smoothed.empty() && _resolution_smoothed == resolution) {
         // This means its already been previously calculated and set

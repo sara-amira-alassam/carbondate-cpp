@@ -16,6 +16,7 @@ private:
     void print_likelihoods();
     void print_predictive_density();
     void print_posteriors();
+    void append_to_file(const std::vector<std::string>& output_lines);
 
 public:
     OxCalOutput(int n_obs, int resolution, const std::string& file_prefix);
