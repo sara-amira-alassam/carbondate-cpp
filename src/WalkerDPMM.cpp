@@ -563,7 +563,7 @@ DensityData WalkerDPMM::get_predictive_density(
 }
 
 DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int ident) {
-    DensityOutput density_output(c14_age[ident], c14_sig[ident], c14_name[ident]);
+    DensityOutput density_output;
     int n_burn = n_out / 2;
     int n_count = n_out - n_burn;
 
@@ -589,39 +589,5 @@ DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int ident) {
     density_output.mean_calAD = mean(posterior_calendar_ages);
     density_output.median_calAD = median(posterior_calendar_ages);
     density_output.sigma = sigma(posterior_calendar_ages, density_output.median_calAD);
-    return density_output;
-}
-
-DensityOutput WalkerDPMM::get_single_calendar_age_likelihood(int ident) {
-    DensityOutput density_output(c14_age[ident], c14_sig[ident], c14_name[ident]);
-
-    int n_points = (int) yearwise_calcurve.cal_age.size();
-    std::vector<double> probability(n_points), truncated_probability;
-    double sum_density = 0., max_dens = 0., max_prob;
-    for (int i = 0; i < n_points; i++) {
-        probability[i] = dnorm4(
-                c14_age[ident],
-                yearwise_calcurve.c14_age[i],
-                sqrt(pow(yearwise_calcurve.c14_sig[i], 2) + pow(c14_sig[ident], 2)),
-                0);
-        if (probability[i] > max_prob) max_prob = probability[i];
-        sum_density += probability[i];
-    }
-    for (int i = 0; i < n_points; i++) probability[i] = probability[i] / sum_density;
-
-    double mean_calBP = mean(yearwise_calcurve.cal_age, probability);
-    density_output.mean_calAD = to_calAD(mean_calBP);
-    density_output.sigma = sigma(yearwise_calcurve.cal_age, probability, mean_calBP);
-    density_output.median_calAD = to_calAD(median(yearwise_calcurve.cal_age, probability));
-
-    int min_calendar_index = get_left_boundary(probability, 1e-10);
-    int max_calendar_index = get_right_boundary(probability, 1e-10);
-    truncated_probability.resize(max_calendar_index - min_calendar_index + 1, 0);
-    // Note we're reversing the order as we aggregate here as we translate from calBP to AD
-    for (int i = max_calendar_index; i >= min_calendar_index; i--) {
-        truncated_probability[max_calendar_index - i] = probability[i];
-    }
-    density_output.set_yearwise_probability(truncated_probability);
-    density_output.start_calAD = to_calAD(yearwise_calcurve.cal_age[max_calendar_index] - 0.5);
     return density_output;
 }

@@ -8,14 +8,6 @@
 #include "helpers.h"
 #include "DensityOutput.h"
 
-DensityOutput::DensityOutput(
-        double date,
-        double error,
-        const std::string& name) {
-    _date = date;
-    _error = error;
-    _name = name;
-}
 
 void DensityOutput::write_to_file(
         int resolution,
@@ -38,21 +30,12 @@ void DensityOutput::write_to_file(
 std::vector<std::string> DensityOutput::get_output_lines(int resolution) {
     std::vector<std::string> output_lines;
     int comment_index = 0, no_comments = -1;
-    std::string param = to_string(_date) + "," + to_string(_error);
     calculate_probability_smoothed(resolution);
 
     output_lines.push_back("if(!" + _output_var + "){" + _output_var + "={};}\n");
-    output_lines.push_back(variable_line("ref", "OxCal v4.4.4 Bronk Ramsey (2021); r:5"));
-    output_lines.push_back(variable_line("name", _name));
-    output_lines.push_back(variable_line("op", "R_Date"));
-    output_lines.push_back(variable_line("param", param));
-    output_lines.push_back(variable_line("level", 0));
-    output_lines.push_back(variable_line("date", _date));
-    output_lines.push_back(variable_line("error", _error));
+    output_lines.push_back(variable_line("ref", "TODO: Add custom ref"));
     output_lines.push_back(_output_prefix + "={};\n");
-    output_lines.push_back(comment_line(_name + " R_Date(" + param + ")", comment_index));
-    output_lines.push_back(variable_line("type", "date"));
-    output_lines.push_back(variable_line("calib", 0));
+    output_lines.push_back(comment_line("Posterior ", comment_index));
     output_lines.push_back(range_lines(1, 0.683, resolution, comment_index));
     output_lines.push_back(range_lines(2, 0.954, resolution, comment_index));
     output_lines.push_back(range_lines(3, 0.997, resolution, no_comments));
@@ -74,14 +57,6 @@ std::string DensityOutput::comment_line(const std::string& comment, int& comment
     }
     line += _output_prefix + ".comment[" + std::to_string(comment_index++) + "]=\"" +  comment + "\";\n";
     return line;
-}
-
-std::string DensityOutput::variable_line(const std::string& var_name, int var) {
-    return _output_var + "." + var_name + "=" +  std::to_string(var) + ";\n";
-}
-
-std::string DensityOutput::variable_line(const std::string& var_name, double var) {
-    return _output_var + "." + var_name + "=" +  to_string(var) + ";\n";
 }
 
 std::string DensityOutput::variable_line(const std::string& var_name, const std::string& var) {

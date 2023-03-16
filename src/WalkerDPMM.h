@@ -91,6 +91,7 @@ public:
             int n_posterior_samples, int n_points, double quantile_edge_width);
     DensityOutput get_posterior_calendar_age_density(int ident);
     DensityOutput get_single_calendar_age_likelihood(int ident);
+    DensityOutput get_summed_probability_distribution();
 
     std::vector<double> get_c14_age() { return c14_age; }
     std::vector<double> get_c14_sig() { return c14_sig; }

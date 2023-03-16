@@ -12,9 +12,6 @@ class DensityOutput {
     std::string _output_prefix;
     std::vector<double> _prob_yearwise;
     double _prob_max = 0.;
-    double _date;
-    double _error;
-    std::string _name;
 
     std::vector<double> _prob_smoothed;
     int _resolution_smoothed{};
@@ -28,8 +25,6 @@ public:
     double median_calAD = 0;
 
 private:
-    std::string variable_line(const std::string& var_name, int var);
-    std::string variable_line(const std::string& var_name, double var);
     std::string variable_line(const std::string& var_name, const std::string& var);
     std::string output_line(const std::string& var_name, int var);
     std::string output_line(const std::string& var_name, double var);
@@ -51,19 +46,12 @@ private:
     std::vector<std::vector<double>> get_ranges(double probability);*/
 
 public:
-    DensityOutput(
-            double date,
-            double error,
-            const std::string& name);
     void set_yearwise_probability(std::vector<double> probability);
     void write_to_file(
             int resolution,
             const std::string& file_prefix,
             const std::string& output_var,
             const std::string& output_name);
-    std::string get_name() { return _name; }
-    double get_lower() { return start_calAD; }
-    double get_upper() { return start_calAD + (double) _prob_yearwise.size(); }
 };
 
 

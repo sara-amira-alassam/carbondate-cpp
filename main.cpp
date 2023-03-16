@@ -21,14 +21,9 @@ int main(int argc, char* argv[]) {
     OxCalOutput oxcal_output(11, output_resolution, file_prefix);
 
     dpmm.initialise(c14_age, c14_sig, c14_name, cc_cal_age, cc_c14_age, cc_c14_sig);
+    dpmm.calibrate(5e5, 10);
 
-    for (int i = 0; i <= 10; i++){
-        oxcal_output.set_likelihood(i, dpmm.get_single_calendar_age_likelihood(i));
-    }
-
-    dpmm.calibrate(1e5, 10);
-
-    for (int i = 0; i <= 10; i++){
+    for (int i = 0; i < c14_age.size(); i++){
         oxcal_output.set_posterior(i, dpmm.get_posterior_calendar_age_density(i));
     }
 
