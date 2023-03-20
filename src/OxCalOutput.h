@@ -5,7 +5,6 @@
 
 class OxCalOutput {
     std::vector<DensityOutput> _posteriors;
-    int _resolution;
     std::string _file_prefix;
 
 private:
@@ -16,7 +15,8 @@ private:
     void append_to_file(const std::vector<std::string>& output_lines);
 
 public:
-    OxCalOutput(int n_obs, int resolution, const std::string& file_prefix);
+    DensityOutput predictive_density;
+    OxCalOutput(int n_obs, const std::string& file_prefix);
     void set_posterior(int ident, const DensityOutput& posterior);
     void print();
 

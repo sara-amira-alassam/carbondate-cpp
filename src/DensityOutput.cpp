@@ -10,7 +10,6 @@
 
 
 void DensityOutput::write_to_file(
-        int resolution,
         const std::string& file_prefix,
         const std::string& output_var,
         const std::string& output_name) {
@@ -20,32 +19,31 @@ void DensityOutput::write_to_file(
     _output_var = output_var;
     _output_prefix = output_var + "." + output_name;
 
-    for (const std::string& output_line : get_output_lines(resolution)) {
+    for (const std::string& output_line : get_output_lines()) {
         output_file << output_line;
     }
 
     output_file.close();
 }
 
-std::vector<std::string> DensityOutput::get_output_lines(int resolution) {
+std::vector<std::string> DensityOutput::get_output_lines() {
     std::vector<std::string> output_lines;
     int comment_index = 0, no_comments = -1;
-    calculate_probability_smoothed(resolution);
 
     output_lines.push_back("if(!" + _output_var + "){" + _output_var + "={};}\n");
     output_lines.push_back(variable_line("ref", "TODO: Add custom ref"));
     output_lines.push_back(_output_prefix + "={};\n");
     output_lines.push_back(comment_line("Posterior ", comment_index));
-    output_lines.push_back(range_lines(1, 0.683, resolution, comment_index));
-    output_lines.push_back(range_lines(2, 0.954, resolution, comment_index));
-    output_lines.push_back(range_lines(3, 0.997, resolution, no_comments));
+    output_lines.push_back(range_lines(1, 0.683, comment_index));
+    output_lines.push_back(range_lines(2, 0.954, comment_index));
+    output_lines.push_back(range_lines(3, 0.997, no_comments));
     output_lines.push_back(output_line("mean", mean_calAD));
     output_lines.push_back(output_line("sigma", sigma));
     output_lines.push_back(output_line("median", median_calAD));
-    output_lines.push_back(output_line("probNorm", _prob_norm_smoothed));
-    output_lines.push_back(output_line("start", _start_calAD_smoothed));
-    output_lines.push_back(output_line("resolution", resolution));
-    output_lines.push_back(output_line("prob", _prob_smoothed));
+    output_lines.push_back(output_line("probNorm", _prob_norm));
+    output_lines.push_back(output_line("start", start_calAD));
+    output_lines.push_back(output_line("resolution", _resolution));
+    output_lines.push_back(output_line("prob", _probability));
 
     return output_lines;
 }
@@ -79,10 +77,9 @@ std::string DensityOutput::output_line(
     return output_line;
 }
 
-std::string DensityOutput::range_lines(
-        int range_index, double probability, int resolution, int& comment_index) {
+std::string DensityOutput::range_lines(int range_index, double probability, int& comment_index) {
 
-    std::vector<std::vector<double>> ranges = get_ranges_by_bisection(probability, resolution);
+    std::vector<std::vector<double>> ranges = get_ranges_by_bisection(probability);
     std::string range_string = "range[" + std::to_string(range_index) + "]";
     std::string range_lines;
     if (range_index == 1) {
@@ -105,58 +102,36 @@ std::string DensityOutput::range_lines(
     return range_lines;
 }
 
-void DensityOutput::calculate_probability_smoothed(int resolution) {
-    if (!_prob_smoothed.empty() && _resolution_smoothed == resolution) {
-        // This means its already been previously calculated and set
-        return;
-    }
-    int break_num, num_breaks = (int) ceil((double) _prob_yearwise.size() / resolution);
-    _prob_smoothed.resize(num_breaks, 0);
-    _resolution_smoothed = resolution;
-    _start_calAD_smoothed = start_calAD + (resolution - 1.) / 2;
-    double max_density = 0.;
-    for (int j = 0; j < _prob_yearwise.size(); j++) {
-        break_num = j / resolution;
-        _prob_smoothed[break_num] += _prob_yearwise[j];
-        if (_prob_smoothed[break_num] > max_density) max_density = _prob_smoothed[break_num];
-    }
-    for (int b = 0; b < num_breaks; b++) _prob_smoothed[b] /= max_density;
-    _prob_norm_smoothed = max_density / resolution;
-}
-
-void DensityOutput::set_yearwise_probability(std::vector<double> probability) {
+void DensityOutput::set_probability(const std::vector<double>& probability, double resolution) {
     double prob_total = 0.;
-    _prob_yearwise.resize(probability.size());
-    _prob_max = 0.;
-    // We also need to clear variables related to the smoothed probability
-    _prob_smoothed.clear();
-    _resolution_smoothed = 0;
+    _probability.resize(probability.size());
     for (int i = 0; i < probability.size(); i++) {
-        _prob_yearwise[i] = probability[i];
+        _probability[i] = probability[i];
         prob_total += probability[i];
         if (probability[i] > _prob_max) _prob_max = probability[i];
     }
-    for (int i = 0; i < probability.size(); i++) _prob_yearwise[i] /= prob_total;
+    for (int i = 0; i < probability.size(); i++) _probability[i] /= _prob_max;
+    _prob_norm = _prob_max / (prob_total * _resolution);
 }
 
-// Returns the area under the yearwise probability curve if we ignore all values below the cut-off
+// Returns the area under the probability curve if we ignore all values below the cut-off
 // Also populates the vector ranges, where each entry contains
 // [start_calAD, end_calAD, probability within this range]
-double DensityOutput::find_probability_and_ranges_for_cut_off_smoothed(
+double DensityOutput::find_probability_and_ranges_for_cut_off(
         double cut_off, std::vector<std::vector<double>> &ranges) {
     ranges.clear();
-    double y1, y2, dx, x_intercept_1, x_intercept_2, res = _resolution_smoothed;
+    double y1, y2, dx, x_intercept_1, x_intercept_2, res = _resolution;
     double range_probability = 0, total_probability = 0;
-    for (int i = 0; i < _prob_smoothed.size() - 1; i++) {
-        y1 = _prob_smoothed[i];
-        y2 = _prob_smoothed[i + 1];
+    for (int i = 0; i < _probability.size() - 1; i++) {
+        y1 = _probability[i];
+        y2 = _probability[i + 1];
         if (y1 <= cut_off && cut_off <= y2) {
             if (y1 == y2) {
                 dx = res / 2.;
             } else {
                 dx = res * (cut_off - y1) / (y2 - y1);
             }
-            x_intercept_1 = _start_calAD_smoothed + i * res + dx;
+            x_intercept_1 = start_calAD + i * res + dx;
             range_probability = (cut_off + y2) * (res - dx) / 2.;
         } else if (y2 <= cut_off && cut_off <= y1) {
             if (y1 == y2) {
@@ -164,9 +139,9 @@ double DensityOutput::find_probability_and_ranges_for_cut_off_smoothed(
             } else {
                 dx = res * (cut_off - y1) / (y2 - y1);
             }
-            x_intercept_2 = _start_calAD_smoothed + i * res + dx;
+            x_intercept_2 = start_calAD + i * res + dx;
             range_probability += (cut_off + y2) * dx / 2.;
-            range_probability *= _prob_norm_smoothed;
+            range_probability *= _prob_norm;
             ranges.push_back(
                     std::vector<double> {x_intercept_1, x_intercept_2, 100. * range_probability});
             total_probability += range_probability;
@@ -183,11 +158,8 @@ double DensityOutput::find_probability_and_ranges_for_cut_off_smoothed(
 // vector of vectors, where each entry contains
 // [start_calAD, end_calAD, probability within this range]
 // arg `resolution` gives the resolution of the probability curve to use
-std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(
-        double probability, int resolution) {
+std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(double probability) {
     std::vector<std::vector<double>> ranges;
-
-    calculate_probability_smoothed(resolution);
 
     // Use bisection method to find the closest probability cut-off to give the desired probability
     // a and b are the upper and lower points of the section - we know the smoothed probability has a max of 1
@@ -197,7 +169,7 @@ std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(
     const int max_iter = 1000;
     for (int i = 0; i < max_iter; i++) {
         p = (a + b) / 2.;
-        current_probability = find_probability_and_ranges_for_cut_off_smoothed(p, ranges);
+        current_probability = find_probability_and_ranges_for_cut_off(p, ranges);
         if (abs(current_probability - probability) < 1e-4) {
             break;
         }

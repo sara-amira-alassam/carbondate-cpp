@@ -8,15 +8,15 @@
 #include <string>
 
 class DensityOutput {
+    std::vector<double> _probability;
+    double _prob_norm = 0.;
+
+protected:
     std::string _output_var;
     std::string _output_prefix;
-    std::vector<double> _prob_yearwise;
+    int _index;
+    double _resolution = 0;
     double _prob_max = 0.;
-
-    std::vector<double> _prob_smoothed;
-    int _resolution_smoothed{};
-    double _start_calAD_smoothed{};
-    double _prob_norm_smoothed{};
 
 public:
     double start_calAD = 0;
@@ -30,25 +30,18 @@ private:
     std::string output_line(const std::string& var_name, double var);
     std::string output_line(const std::string& var_name, const std::vector<double>& var);
     std::string comment_line(const std::string &comment, int &comment_index);
-    std::string range_lines(
-            int range_index, double probability, int resolution, int& comment_index);
+    std::string range_lines(int range_index, double probability, int& comment_index);
 
-    void calculate_probability_smoothed(int resolution);
-    double find_probability_and_ranges_for_cut_off_smoothed(
-            double cut_off, std::vector<std::vector<double>>& ranges);
-    std::vector<std::vector<double>> get_ranges_by_bisection(double probability, int resolution);
-    std::vector<std::string> get_output_lines(int resolution);
-
-    // Get rid of the below functions after testing
-/*    double find_probability_and_ranges_for_cut_off(
+    double find_probability_and_ranges_for_cut_off(
             double cut_off, std::vector<std::vector<double>>& ranges);
     std::vector<std::vector<double>> get_ranges_by_bisection(double probability);
-    std::vector<std::vector<double>> get_ranges(double probability);*/
+
+protected:
+    virtual std::vector<std::string> get_output_lines();
 
 public:
-    void set_yearwise_probability(std::vector<double> probability);
+    void set_probability(const std::vector<double>& probability, double resolution);
     void write_to_file(
-            int resolution,
             const std::string& file_prefix,
             const std::string& output_var,
             const std::string& output_name);

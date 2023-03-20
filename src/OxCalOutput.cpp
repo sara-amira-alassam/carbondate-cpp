@@ -37,13 +37,12 @@ void OxCalOutput::print_model() {
 }
 
 void OxCalOutput::print_predictive_density() {
-
+    predictive_density.write_to_file(_file_prefix, "ocd[1]", "posterior");
 }
 
 void OxCalOutput::print_posteriors() {
     for (int i = 0; i < _posteriors.size(); i++) {
-        _posteriors[i].write_to_file(
-                _resolution, _file_prefix, "ocd[" + std::to_string(i + 2) + "]", "posterior");
+        _posteriors[i].write_to_file(_file_prefix, "ocd[" + std::to_string(i + 2) + "]", "posterior");
     }
 }
 
@@ -55,8 +54,7 @@ void OxCalOutput::append_to_file(const std::vector<std::string>& output_lines) {
     output_file.close();
 }
 
-OxCalOutput::OxCalOutput(int n_obs, int resolution, const std::string &file_prefix) {
-    _resolution = resolution;
+OxCalOutput::OxCalOutput(int n_obs, const std::string &file_prefix) {
     _file_prefix = file_prefix;
     _posteriors.reserve(n_obs);
 }
