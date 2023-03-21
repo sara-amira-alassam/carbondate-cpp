@@ -15,7 +15,7 @@ protected:
     std::string _output_var;
     std::string _output_prefix;
     int _index;
-    double _resolution = 0;
+    double _resolution;
     double _prob_max = 0.;
 
 public:
@@ -40,7 +40,9 @@ protected:
     virtual std::vector<std::string> get_output_lines();
 
 public:
-    void set_probability(const std::vector<double>& probability, double resolution);
+    DensityOutput(int index, double resolution);
+
+    void set_probability(const std::vector<double>& probability);
     void write_to_file(
             const std::string& file_prefix,
             const std::string& output_var,

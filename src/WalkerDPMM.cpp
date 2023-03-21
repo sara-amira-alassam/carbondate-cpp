@@ -554,14 +554,14 @@ PredictiveDensityOutput WalkerDPMM::get_predictive_density(
     std::reverse(mean.begin(), mean.end());
     std::reverse(ci_lower.begin(), ci_lower.end());
     std::reverse(ci_upper.begin(), ci_upper.end());
-    density_output.set_probability(mean, resolution);
+    density_output.set_probability(mean);
     density_output.set_confidence_intervals(ci_lower, ci_upper);
 
     return density_output;
 }
 
 PosteriorDensityOutput WalkerDPMM::get_posterior_calendar_age_density(int ident, double resolution) {
-    PosteriorDensityOutput density_output;
+    PosteriorDensityOutput density_output(ident, resolution);
     int n_burn = n_out / 2;
     int n_count = n_out - n_burn;
 
@@ -584,7 +584,7 @@ PosteriorDensityOutput WalkerDPMM::get_posterior_calendar_age_density(int ident,
     for (int i = 0; i < n_count; i++) {
         probability[(int) ((posterior_calendar_ages[i] - offset) / resolution)]++;
     }
-    density_output.set_probability(probability, resolution);
+    density_output.set_probability(probability);
     density_output.mean_calAD = mean(posterior_calendar_ages);
     density_output.median_calAD = median(posterior_calendar_ages);
     density_output.sigma = sigma(posterior_calendar_ages, density_output.median_calAD);

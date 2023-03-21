@@ -1,10 +1,11 @@
 #ifndef CARBONDATE_OXCALOUTPUT_H
 #define CARBONDATE_OXCALOUTPUT_H
 
-#include "DensityOutput.h"
+#include "PosteriorDensityOutput.h"
+#include "PredictiveDensityOutput.h"
 
 class OxCalOutput {
-    std::vector<DensityOutput> _posteriors;
+    std::vector<PosteriorDensityOutput> _posteriors;
     std::string _file_prefix;
 
 private:
@@ -15,9 +16,10 @@ private:
     void append_to_file(const std::vector<std::string>& output_lines);
 
 public:
-    DensityOutput predictive_density;
-    OxCalOutput(int n_obs, const std::string& file_prefix);
-    void set_posterior(int ident, const DensityOutput& posterior);
+    PredictiveDensityOutput _predictive_density;
+    OxCalOutput(
+            int n_obs, const std::string &file_prefix, PredictiveDensityOutput predictiveDensity);
+    void set_posterior(int ident, const PosteriorDensityOutput& posterior);
     void print();
 
 };

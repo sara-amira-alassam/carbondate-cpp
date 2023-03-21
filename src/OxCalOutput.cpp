@@ -2,6 +2,7 @@
 // Created by Sara Al-Assam on 15/03/2023.
 //
 #include <fstream>
+#include <utility>
 #include "helpers.h"
 #include "OxCalOutput.h"
 
@@ -37,7 +38,7 @@ void OxCalOutput::print_model() {
 }
 
 void OxCalOutput::print_predictive_density() {
-    predictive_density.write_to_file(_file_prefix, "ocd[1]", "posterior");
+    _predictive_density.write_to_file(_file_prefix, "ocd[1]", "posterior");
 }
 
 void OxCalOutput::print_posteriors() {
@@ -54,12 +55,14 @@ void OxCalOutput::append_to_file(const std::vector<std::string>& output_lines) {
     output_file.close();
 }
 
-OxCalOutput::OxCalOutput(int n_obs, const std::string &file_prefix) {
+OxCalOutput::OxCalOutput(
+        int n_obs, const std::string &file_prefix, PredictiveDensityOutput  predictive_density)
+        : _predictive_density(std::move(predictive_density)), _file_prefix {file_prefix} {
     _file_prefix = file_prefix;
     _posteriors.reserve(n_obs);
 }
 
-void OxCalOutput::set_posterior(int ident, const DensityOutput& posterior) {
+void OxCalOutput::set_posterior(int ident, const PosteriorDensityOutput& posterior) {
     if (ident >= _posteriors.size()) {
         _posteriors.push_back(posterior);
     } else {

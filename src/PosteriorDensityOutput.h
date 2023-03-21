@@ -8,6 +8,8 @@
 #include "DensityOutput.h"
 
 class PosteriorDensityOutput : public DensityOutput {
+public:
+    PosteriorDensityOutput(int ident, double resolution);
 
 };
 

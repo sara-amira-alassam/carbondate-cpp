@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     read_calibration_curve("../data/intcal20.14c", cc_cal_age, cc_c14_age, cc_c14_sig);
-    OxCalOutput oxcal_output(11, file_prefix);
+    OxCalOutput oxcal_output(11, file_prefix, PredictiveDensityOutput(0, 0, 0));
 
     dpmm.initialise(c14_age, c14_sig, c14_name, cc_cal_age, cc_c14_age, cc_c14_sig);
     dpmm.calibrate(1e5, 10);
@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
         oxcal_output.set_posterior(i, dpmm.get_posterior_calendar_age_density(i, output_resolution));
     }
 
-    oxcal_output.predictive_density = dpmm.get_predictive_density(5000, output_resolution, 0.025);
+    oxcal_output._predictive_density = dpmm.get_predictive_density(5000, output_resolution, 0.025);
 
     oxcal_output.print();
 

@@ -102,7 +102,7 @@ std::string DensityOutput::range_lines(int range_index, double probability, int&
     return range_lines;
 }
 
-void DensityOutput::set_probability(const std::vector<double>& probability, double resolution) {
+void DensityOutput::set_probability(const std::vector<double>& probability) {
     double prob_total = 0.;
     _probability.resize(probability.size());
     for (int i = 0; i < probability.size(); i++) {
@@ -181,6 +181,8 @@ std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(double p
     }
     return ranges;
 }
+
+DensityOutput::DensityOutput(int index, double resolution): _index(index), _resolution(resolution) {}
 
 /////////////////// NOTE: none of these functions are currently used but are left in for testing
 /////////////////// They should be removed when the final version is decided on.
