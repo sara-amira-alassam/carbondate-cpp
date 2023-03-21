@@ -25,54 +25,6 @@ void OxCalOutput::initialise_file() {
     output_file.close();
 }
 
-void OxCalOutput::print_model() {
-    std::vector<std::string> output_lines;
-    std::string np_line;
-    // This is a hack for now until we get it working properly
-    np_line = R"(model.element[1]= {op: "NP_Model", type: "date", name: "", )";
-    np_line += "pos: 1, timepos: 1, ";
-    np_line += "lower: 650.5, upper: 1190.5};\n";
-
-    output_lines.emplace_back(np_line);
-    append_to_file(output_lines);
-}
-
-void OxCalOutput::print_predictive_density() {
-    _predictive_density.write_to_file(_file_prefix, "ocd[1]", "posterior");
-}
-
-void OxCalOutput::print_posteriors() {
-    for (int i = 0; i < _posteriors.size(); i++) {
-        _posteriors[i].write_to_file(_file_prefix, "ocd[" + std::to_string(i + 2) + "]", "posterior");
-    }
-}
-
-void OxCalOutput::append_to_file(const std::vector<std::string>& output_lines) {
-    std::ofstream output_file;
-
-    output_file.open("../output/" + _file_prefix + ".js", std::ios_base::app);
-    for (const std::string& output_line : output_lines) output_file << output_line;
-    output_file.close();
-}
-
-OxCalOutput::OxCalOutput(
-        int n_obs, const std::string &file_prefix, PredictiveDensityOutput  predictive_density)
-        : _predictive_density(std::move(predictive_density)), _file_prefix {file_prefix} {
-    _file_prefix = file_prefix;
-    _posteriors.reserve(n_obs);
-}
-
-void OxCalOutput::set_posterior(int ident, const PosteriorDensityOutput& posterior) {
-    if (ident >= _posteriors.size()) {
-        _posteriors.push_back(posterior);
-    } else {
-        _posteriors[ident] = posterior;
-    }
-}
-
-void OxCalOutput::print() {
+OxCalOutput::OxCalOutput(std::string file_prefix): _file_prefix {std::move(file_prefix)} {
     initialise_file();
-    print_model();
-    print_predictive_density();
-    print_posteriors();
 }

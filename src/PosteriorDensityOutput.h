@@ -9,7 +9,11 @@
 
 class PosteriorDensityOutput : public DensityOutput {
 public:
-    PosteriorDensityOutput(int ident, double resolution);
+    PosteriorDensityOutput(
+            int ident,
+            int offset,
+            double resolution,
+            const std::vector<double>& posterior_calendar_ages_AD);
 
 };
 

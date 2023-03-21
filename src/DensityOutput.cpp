@@ -8,21 +8,19 @@
 #include "helpers.h"
 #include "DensityOutput.h"
 
+DensityOutput::DensityOutput(int index, double resolution): _index(index), _resolution(resolution) {
+    _output_var = "ocd[" + std::to_string(_index) + "]";
+    _output_prefix = _output_var + ".posterior";
+}
 
-void DensityOutput::write_to_file(
-        const std::string& file_prefix,
-        const std::string& output_var,
-        const std::string& output_name) {
+
+void DensityOutput::print(const std::string& file_prefix) {
     std::ofstream output_file;
     output_file.open("../output/" + file_prefix + ".js", std::ios_base::app);
-
-    _output_var = output_var;
-    _output_prefix = output_var + "." + output_name;
 
     for (const std::string& output_line : get_output_lines()) {
         output_file << output_line;
     }
-
     output_file.close();
 }
 
@@ -37,11 +35,11 @@ std::vector<std::string> DensityOutput::get_output_lines() {
     output_lines.push_back(range_lines(1, 0.683, comment_index));
     output_lines.push_back(range_lines(2, 0.954, comment_index));
     output_lines.push_back(range_lines(3, 0.997, no_comments));
-    output_lines.push_back(output_line("mean", mean_calAD));
-    output_lines.push_back(output_line("sigma", sigma));
-    output_lines.push_back(output_line("median", median_calAD));
+    output_lines.push_back(output_line("mean", _mean_calAD));
+    output_lines.push_back(output_line("sigma", _sigma_calAD));
+    output_lines.push_back(output_line("median", _median_calAD));
     output_lines.push_back(output_line("probNorm", _prob_norm));
-    output_lines.push_back(output_line("start", start_calAD));
+    output_lines.push_back(output_line("start", _start_calAD));
     output_lines.push_back(output_line("resolution", _resolution));
     output_lines.push_back(output_line("prob", _probability));
 
@@ -131,7 +129,7 @@ double DensityOutput::find_probability_and_ranges_for_cut_off(
             } else {
                 dx = res * (cut_off - y1) / (y2 - y1);
             }
-            x_intercept_1 = start_calAD + i * res + dx;
+            x_intercept_1 = _start_calAD + i * res + dx;
             range_probability = (cut_off + y2) * (res - dx) / 2.;
         } else if (y2 <= cut_off && cut_off <= y1) {
             if (y1 == y2) {
@@ -139,7 +137,7 @@ double DensityOutput::find_probability_and_ranges_for_cut_off(
             } else {
                 dx = res * (cut_off - y1) / (y2 - y1);
             }
-            x_intercept_2 = start_calAD + i * res + dx;
+            x_intercept_2 = _start_calAD + i * res + dx;
             range_probability += (cut_off + y2) * dx / 2.;
             range_probability *= _prob_norm;
             ranges.push_back(
@@ -181,8 +179,6 @@ std::vector<std::vector<double>> DensityOutput::get_ranges_by_bisection(double p
     }
     return ranges;
 }
-
-DensityOutput::DensityOutput(int index, double resolution): _index(index), _resolution(resolution) {}
 
 /////////////////// NOTE: none of these functions are currently used but are left in for testing
 /////////////////// They should be removed when the final version is decided on.

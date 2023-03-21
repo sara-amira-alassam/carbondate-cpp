@@ -3,8 +3,6 @@
 #include <vector>
 #define MATHLIB_STANDALONE
 #include <Rmath.h>
-#include "PredictiveDensityOutput.h"
-#include "PosteriorDensityOutput.h"
 
 struct CalCurve {
     std::vector<double> cal_age;
@@ -13,10 +11,13 @@ struct CalCurve {
 };
 
 struct DensityData {
-    std::vector<double> cal_age;
+    std::vector<double> cal_age_AD;
     std::vector<double> mean;
     std::vector<double> ci_lower;
     std::vector<double> ci_upper;
+
+    explicit DensityData(int n_points)
+        : cal_age_AD(n_points), mean(n_points), ci_lower(n_points), ci_upper(n_points) {};
 };
 
 class WalkerDPMM {
@@ -88,9 +89,9 @@ public:
             int rng_seed = 0
     );
     void calibrate(int n_iter, int n_thin);
-    PredictiveDensityOutput get_predictive_density(
+    DensityData get_predictive_density(
             int n_posterior_samples, double resolution, double quantile_edge_width);
-    PosteriorDensityOutput get_posterior_calendar_age_density(int ident, double resolution);
+    std::vector<double> get_posterior_calendar_ages(int ident);
 
 };
 

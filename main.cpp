@@ -7,8 +7,9 @@ int main(int argc, char* argv[]) {
         return 1;
     std::string file_prefix = argv[1];
 
-    const int output_resolution = 5;
+    const int output_resolution = 5, output_offset = 0;
     std::vector<double> c14_age, c14_sig;
+    std::string model_name = "Kerr";
     std::vector<std::string> c14_name;
     std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
     WalkerDPMM dpmm;
@@ -18,18 +19,29 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     read_calibration_curve("../data/intcal20.14c", cc_cal_age, cc_c14_age, cc_c14_sig);
-    OxCalOutput oxcal_output(11, file_prefix, PredictiveDensityOutput(0, 0, 0));
+    OxCalOutput oxcal_output(file_prefix);
 
     dpmm.initialise(c14_age, c14_sig, c14_name, cc_cal_age, cc_c14_age, cc_c14_sig);
     dpmm.calibrate(1e5, 10);
 
+    DensityData predictive_density_data = dpmm.get_predictive_density(5000, output_resolution, 0.025);
+    PredictiveDensityOutput predictive_density(
+            (int) c14_age.size(),
+            output_offset,
+            output_resolution,
+            model_name,
+            predictive_density_data.cal_age_AD,
+            predictive_density_data.mean,
+            predictive_density_data.ci_lower,
+            predictive_density_data.ci_upper
+    );
+    predictive_density.print(file_prefix);
+
     for (int i = 0; i < c14_age.size(); i++){
-        oxcal_output.set_posterior(i, dpmm.get_posterior_calendar_age_density(i, output_resolution));
+        PosteriorDensityOutput posterior_density(
+                i, output_offset, output_resolution, dpmm.get_posterior_calendar_ages(i));
+        posterior_density.print(file_prefix);
     }
-
-    oxcal_output._predictive_density = dpmm.get_predictive_density(5000, output_resolution, 0.025);
-
-    oxcal_output.print();
 
     return 0;
 }

@@ -8,21 +8,19 @@
 #include <string>
 
 class DensityOutput {
-    std::vector<double> _probability;
-    double _prob_norm = 0.;
 
 protected:
+    std::vector<double> _probability;
     std::string _output_var;
     std::string _output_prefix;
     int _index;
     double _resolution;
     double _prob_max = 0.;
-
-public:
-    double start_calAD = 0;
-    double mean_calAD = 0;
-    double sigma = 0;
-    double median_calAD = 0;
+    double _prob_norm = 0.;
+    double _start_calAD = 0;
+    double _mean_calAD = 0;
+    double _sigma_calAD = 0;
+    double _median_calAD = 0;
 
 private:
     std::string variable_line(const std::string& var_name, const std::string& var);
@@ -41,12 +39,8 @@ protected:
 
 public:
     DensityOutput(int index, double resolution);
-
     void set_probability(const std::vector<double>& probability);
-    void write_to_file(
-            const std::string& file_prefix,
-            const std::string& output_var,
-            const std::string& output_name);
+    void print(const std::string& file_prefix);
 };
 
 
