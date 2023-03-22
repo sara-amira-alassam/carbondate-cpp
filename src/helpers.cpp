@@ -201,8 +201,8 @@ double to_calAD(double year_calPB) {
 
 std::string to_string(double var) {
     std::string string_var;
-    char temp_string[10] = "";
-    snprintf(temp_string, 10, "%.6g", var);
+    char temp_string[13] = "";
+    snprintf(temp_string, 13, "%.6g", var);
     string_var = temp_string;
     return string_var;
 }

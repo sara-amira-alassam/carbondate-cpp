@@ -59,10 +59,6 @@ std::string DensityOutput::variable_line(const std::string& var_name, const std:
     return _output_var + "." + var_name + "=\"" +  var + "\";\n";
 }
 
-std::string DensityOutput::output_line(const std::string& var_name, int var) {
-    return _output_prefix + "." + var_name + "=" +  std::to_string(var) + ";\n";
-}
-
 std::string DensityOutput::output_line(const std::string& var_name, double var) {
     return _output_prefix + "." + var_name + "=" + to_string(var) + ";\n";
 }

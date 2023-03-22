@@ -22,9 +22,8 @@ protected:
     double _sigma_calAD = 0;
     double _median_calAD = 0;
 
-private:
+protected:
     std::string variable_line(const std::string& var_name, const std::string& var);
-    std::string output_line(const std::string& var_name, int var);
     std::string output_line(const std::string& var_name, double var);
     std::string output_line(const std::string& var_name, const std::vector<double>& var);
     std::string comment_line(const std::string &comment, int &comment_index);
