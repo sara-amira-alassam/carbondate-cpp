@@ -3,7 +3,6 @@
 #include <vector>
 #define MATHLIB_STANDALONE
 #include <Rmath.h>
-#include "DensityOutput.h"
 
 struct CalCurve {
     std::vector<double> cal_age;
@@ -12,10 +11,13 @@ struct CalCurve {
 };
 
 struct DensityData {
-    std::vector<double> cal_age;
+    std::vector<double> cal_age_AD;
     std::vector<double> mean;
     std::vector<double> ci_lower;
     std::vector<double> ci_upper;
+
+    explicit DensityData(int n_points)
+        : cal_age_AD(n_points), mean(n_points), ci_lower(n_points), ci_upper(n_points) {};
 };
 
 class WalkerDPMM {
@@ -88,35 +90,9 @@ public:
     );
     void calibrate(int n_iter, int n_thin);
     DensityData get_predictive_density(
-            int n_posterior_samples, int n_points, double quantile_edge_width);
-    DensityOutput get_posterior_calendar_age_density(int ident);
-    DensityOutput get_single_calendar_age_likelihood(int ident);
+            int n_posterior_samples, double resolution, double quantile_edge_width);
+    std::vector<double> get_posterior_calendar_ages(int ident);
 
-    std::vector<double> get_c14_age() { return c14_age; }
-    std::vector<double> get_c14_sig() { return c14_sig; }
-
-    double get_lambda()  { return lambda; }
-    double get_nu1() { return nu1; }
-    double get_nu2() { return nu2; }
-    double get_A() { return A; }
-    double get_B() { return B; }
-    double get_alpha_shape() { return alpha_shape; }
-    double get_alpha_rate() { return alpha_rate; }
-    double get_slice_width() { return slice_width; }
-    double get_slice_multiplier() { return slice_multiplier; }
-
-    std::vector<double> get_alpha() { return alpha; }
-    std::vector<int> get_n_clust() { return n_clust; }
-    std::vector<double> get_mu_phi() { return mu_phi; }
-    std::vector<double> get_phi() { return phi_i; }
-    std::vector<double> get_tau() { return tau_i; }
-    std::vector<double> get_weight() { return weight_i; }
-    std::vector<double> get_calendar_age(int ident) {
-        std::vector<double> output(n_out);
-        for (int i = 0; i < n_out; i++) output[i] = calendar_age[i][ident];
-        return output;
-    }
-    std::vector<int> get_cluster_ids() { return cluster_ids_i; }
 };
 
 #endif //CARBONDATE_WALKERDPMM_H

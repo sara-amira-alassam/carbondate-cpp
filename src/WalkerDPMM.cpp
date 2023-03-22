@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <ctime>
+#include <string>
 #include <utility>
 #include "WalkerDPMM.h"
 #include "helpers.h"
@@ -498,25 +499,16 @@ double WalkerDPMM::log_marginal_normal_gamma(double cal_age, double mu_phi_s) {
 
 DensityData WalkerDPMM::get_predictive_density(
         int n_posterior_samples,
-        int n_points,
-        double quantile_edge_width
-) {
+        double resolution,
+        double quantile_edge_width) {
 
-    DensityData density_data;
     int n_burn = floor(n_out / 2);
     std::vector<int> sample_ids(n_posterior_samples);
     int s; //current sample id
-    // A vector of vectors to represent the density matrix
-    std::vector<std::vector<double>> density_samples(
-            n_points, std::vector<double>(n_posterior_samples, 0));
-    double min_calendar_age = max_year_bp, max_calendar_age = 0, age_diff;
-    double sum_weight, logmarg;
+    get_sample_ids(sample_ids, n_burn - 1, n_out - 1, n_posterior_samples);
 
-    density_data.cal_age.resize(n_points);
-    density_data.mean.resize(n_points, 0);
-    density_data.ci_lower.resize(n_points);
-    density_data.ci_upper.resize(n_points);
-
+    double min_calendar_age = std::numeric_limits<double>::infinity();
+    double max_calendar_age = -std::numeric_limits<double>::infinity();
     for (int i = 0; i < n_out; i++) {
         for (int j = 0; j < n_obs; j++) {
             if (calendar_age[i][j] < min_calendar_age) min_calendar_age = calendar_age[i][j];
@@ -525,13 +517,16 @@ DensityData WalkerDPMM::get_predictive_density(
     }
     min_calendar_age = floor(min_calendar_age);
     max_calendar_age = ceil(max_calendar_age);
-    age_diff = (max_calendar_age - min_calendar_age) / (n_points - 1.);
-    for (int i = 0; i < n_points; i++) {
-        density_data.cal_age[i] = min_calendar_age + i * age_diff;
-    }
+    int n_points = (int) ((max_calendar_age - min_calendar_age) / resolution) + 2;
+    DensityData density_data(n_points);
 
-    get_sample_ids(sample_ids, n_burn - 1, n_out - 1, n_posterior_samples);
+    // A vector of vectors to represent the density matrix
+    std::vector<std::vector<double>> density_samples(
+            n_points, std::vector<double>(n_posterior_samples, 0));
+    double sum_weight, logmarg;
 
+    std::vector<double> cal_age_BP(n_points), sum_ages(n_points, 0);
+    for (int i = 0; i < n_points; i++) cal_age_BP[i] = min_calendar_age + i * resolution;
     for (int j = 0; j < n_posterior_samples; j++) {
         s = sample_ids[j];
         for (int i = 0; i < n_points; i++) {
@@ -539,92 +534,41 @@ DensityData WalkerDPMM::get_predictive_density(
             int n_all_clust = (int) weight[s].size();
             for (int c = 0; c < n_all_clust; c++) {
                 density_samples[i][j] += weight[s][c]
-                                         * dnorm4(density_data.cal_age[i], phi[s][c],
-                                                  1. / sqrt(tau[s][c]), 0);
+                                         * dnorm4(cal_age_BP[i], phi[s][c], 1. / sqrt(tau[s][c]), 0);
                 sum_weight += weight[s][c];
             }
             // The predictive density for a new observation is a scaled t-distribution
-            logmarg = log_marginal_normal_gamma(density_data.cal_age[i], mu_phi[s]);
+            logmarg = log_marginal_normal_gamma(cal_age_BP[i], mu_phi[s]);
             density_samples[i][j] += (1. - sum_weight) * exp(logmarg);
 
-            density_data.mean[i] += density_samples[i][j];
+            sum_ages[i] += density_samples[i][j];
         }
     }
 
+    // Now reverse as we populate the DensityData object as we're converting from calBP to AD
+    int i_reversed;
     for (int i = 0; i < n_points; i++) {
-        density_data.mean[i] /= n_posterior_samples;
+        i_reversed = n_points - 1 - i;
+        density_data.cal_age_AD[i_reversed] = to_calAD(cal_age_BP[i]);
+        density_data.mean[i_reversed] = sum_ages[i] / n_posterior_samples;
         edge_quantiles(
                 density_samples[i],
                 quantile_edge_width,
-                density_data.ci_lower[i],
-                density_data.ci_upper[i]);
+                density_data.ci_lower[i_reversed],
+                density_data.ci_upper[i_reversed]);
     }
+
     return density_data;
 }
 
-DensityOutput WalkerDPMM::get_posterior_calendar_age_density(int ident) {
-
-    DensityOutput density_output(
-            ident, "posterior", c14_age[ident], c14_sig[ident], c14_name[ident]);
+std::vector<double> WalkerDPMM::get_posterior_calendar_ages(int ident) {
     int n_burn = n_out / 2;
     int n_count = n_out - n_burn;
 
-    double min_calendar_age = std::numeric_limits<double>::infinity();
-    double max_calendar_age = -std::numeric_limits<double>::infinity();
-    std::vector<double> posterior_calendar_ages(n_count), probability;
+    std::vector<double> posterior_calendar_ages(n_count);
     for (int i = 0; i < n_count; i++) {
         posterior_calendar_ages[i] = to_calAD(calendar_age[i + n_burn][ident]);
-        if (posterior_calendar_ages[i] < min_calendar_age) {
-            min_calendar_age = posterior_calendar_ages[i];
-        } else if (posterior_calendar_ages[i] > max_calendar_age) {
-            max_calendar_age = posterior_calendar_ages[i];
-        }
     }
 
-    density_output.start_calAD = floor(min_calendar_age + 0.5);
-    int num_breaks = (int) floor(max_calendar_age - density_output.start_calAD) + 1;
-    probability.resize(num_breaks, 0);
-    for (int i = 0; i < n_count; i++) {
-        probability[int (floor(posterior_calendar_ages[i] - density_output.start_calAD - 0.5))]++;
-    }
-    density_output.set_yearwise_probability(probability);
-    density_output.mean_calAD = mean(posterior_calendar_ages);
-    density_output.median_calAD = median(posterior_calendar_ages);
-    density_output.sigma = sigma(posterior_calendar_ages, density_output.median_calAD);
-    return density_output;
-}
-
-DensityOutput WalkerDPMM::get_single_calendar_age_likelihood(int ident) {
-    DensityOutput density_output(
-            ident, "likelihood", c14_age[ident], c14_sig[ident], c14_name[ident]);
-
-    int n_points = (int) yearwise_calcurve.cal_age.size();
-    std::vector<double> probability(n_points), truncated_probability;
-    double sum_density = 0., max_dens = 0., max_prob;
-    for (int i = 0; i < n_points; i++) {
-        probability[i] = dnorm4(
-                c14_age[ident],
-                yearwise_calcurve.c14_age[i],
-                sqrt(pow(yearwise_calcurve.c14_sig[i], 2) + pow(c14_sig[ident], 2)),
-                0);
-        if (probability[i] > max_prob) max_prob = probability[i];
-        sum_density += probability[i];
-    }
-    for (int i = 0; i < n_points; i++) probability[i] = probability[i] / sum_density;
-
-    double mean_calBP = mean(yearwise_calcurve.cal_age, probability);
-    density_output.mean_calAD = to_calAD(mean_calBP);
-    density_output.sigma = sigma(yearwise_calcurve.cal_age, probability, mean_calBP);
-    density_output.median_calAD = to_calAD(median(yearwise_calcurve.cal_age, probability));
-
-    int min_calendar_index = get_left_boundary(probability, 1e-10);
-    int max_calendar_index = get_right_boundary(probability, 1e-10);
-    truncated_probability.resize(max_calendar_index - min_calendar_index + 1, 0);
-    // Note we're reversing the order as we aggregate here as we translate from calBP to AD
-    for (int i = max_calendar_index; i >= min_calendar_index; i--) {
-        truncated_probability[max_calendar_index - i] = probability[i];
-    }
-    density_output.set_yearwise_probability(truncated_probability);
-    density_output.start_calAD = to_calAD(yearwise_calcurve.cal_age[max_calendar_index] - 0.5);
-    return density_output;
+    return posterior_calendar_ages;
 }
