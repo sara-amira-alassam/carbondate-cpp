@@ -8,7 +8,6 @@
 void WalkerDPMM::initialise(
         std::vector<double> i_c14_age,
         std::vector<double> i_c14_sig,
-        std::vector<std::string> i_c14_name,
         std::vector<double> cc_cal_age,
         std::vector<double> cc_c14_age,
         std::vector<double> cc_c14_sig,
@@ -25,7 +24,6 @@ void WalkerDPMM::initialise(
 
     c14_age = std::move(i_c14_age);
     c14_sig = std::move(i_c14_sig);
-    c14_name = std::move(i_c14_name);
 
     n_obs = (int) c14_age.size();
     n_out = 1;

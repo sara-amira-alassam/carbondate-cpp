@@ -11,19 +11,18 @@ int main(int argc, char* argv[]) {
     const int output_resolution = 5, output_offset = 0, n_posterior_samples = 5000;
     const double quantile_edge_width = 0.1586553; // 1-sigma interval
     std::vector<double> c14_age, c14_sig;
-    std::string model_name = "Kerr";
-    std::vector<std::string> c14_name;
+    std::string model_name;
     std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
     WalkerDPMM dpmm;
 
-    if (!read_oxcal_data(file_prefix, c14_name, c14_age, c14_sig)) {
+    if (!read_oxcal_data(file_prefix, c14_age, c14_sig, model_name)) {
         // If there is no data within the NP model in this OxCal file then simply exit
         return 0;
     }
     read_calibration_curve("../data/intcal20.14c", cc_cal_age, cc_c14_age, cc_c14_sig);
     OxCalOutput oxcal_output(file_prefix);
 
-    dpmm.initialise(c14_age, c14_sig, c14_name, cc_cal_age, cc_c14_age, cc_c14_sig);
+    dpmm.initialise(c14_age, c14_sig, cc_cal_age, cc_c14_age, cc_c14_sig);
     dpmm.calibrate(1e5, 10);
 
     DensityData predictive_density_data = dpmm.get_predictive_density(
@@ -46,12 +45,12 @@ int main(int argc, char* argv[]) {
             predictive_density_data.mean,
             predictive_density_data.ci_lower,
             predictive_density_data.ci_upper);
-    predictive_density.print(file_prefix);
+    //predictive_density.print(file_prefix);
 
     for (int i = 0; i < c14_age.size(); i++){
         PosteriorDensityOutput posterior_density(
                 i, output_offset, output_resolution, dpmm.get_posterior_calendar_ages(i));
-        posterior_density.print(file_prefix);
+        //posterior_density.print(file_prefix);
     }
 
     return 0;

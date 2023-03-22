@@ -23,7 +23,6 @@ struct DensityData {
 class WalkerDPMM {
     std::vector<double> c14_age;  // observed c14 determinations
     std::vector<double> c14_sig;  // c14 determination uncertainties
-    std::vector<std::string> c14_name;  // c14 determination names
     CalCurve calcurve;            // original calibration curve data
     CalCurve yearwise_calcurve;   // calibration curve interpolated for every year of calendar age
     int max_year_bp = 50000;      // maximum year for interpolated calendar age
@@ -82,7 +81,6 @@ public:
     void initialise(
             std::vector<double> i_c14_age,
             std::vector<double> i_c14_sig,
-            std::vector<std::string> i_c14_name,
             std::vector<double> cc_cal_age,
             std::vector<double> cc_c14_age,
             std::vector<double> cc_c14_sig,
