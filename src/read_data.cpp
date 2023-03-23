@@ -1,10 +1,9 @@
-//
-// Created by Sara Al-Assam on 13/03/2023.
-//
 #include <fstream>
 #include <regex>
 #include "read_data.h"
 #include "csv_helpers.h"
+
+
 
 void read_calibration_curve(
         const std::string& calibration_curve_path,
@@ -18,7 +17,9 @@ void read_calibration_curve(
 
 }
 
-//
+// Takes a *.oxcal input file created by the OxCal software and reads it to determine the
+// NP model data and output options.
+// If NP model data is found it returns true, otherwise it returns false.
 bool read_oxcal_data(
         const std::string& file_prefix,
         std::vector<double>& c14_age,
@@ -54,4 +55,19 @@ bool read_oxcal_data(
         }
     }
     return np_model && !c14_age.empty();
+}
+
+int read_output_offset(const std::string& file_prefix, const std::string& model_name) {
+    std::string line, model_index;
+    std::regex np_output_regex(R"(ocd\[([0-9]+)\].name\s*=\s*["'])" + model_name + R"(["'];)");
+    std::smatch np_model_match;
+
+    std::fstream file("../output/" + file_prefix + ".js", std::ios::in);
+    while (getline(file, line)) {
+        if (regex_search(line, np_model_match, np_output_regex)) {
+            model_index = np_model_match[1];
+            return std::stoi(model_index);
+        }
+    }
+    throw std::runtime_error("Could not find NP model " + model_name + " in output file");
 }

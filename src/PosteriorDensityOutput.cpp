@@ -17,7 +17,7 @@ PosteriorDensityOutput::PosteriorDensityOutput(
         int offset,
         double resolution,
         const std::vector<double>& posterior_calendar_ages_AD)
-        : DensityOutput(ident + offset + 2, resolution) {
+        : DensityOutput(ident + offset + 1, resolution) {
 
     unsigned n = posterior_calendar_ages_AD.size();
     double min_calendar_age = std::numeric_limits<double>::infinity();
