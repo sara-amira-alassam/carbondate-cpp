@@ -17,7 +17,7 @@ PredictiveDensityOutput::PredictiveDensityOutput(
         const std::vector<double>& mean_density,
         const std::vector<double>& ci_lower,
         const std::vector<double>& ci_upper)
-        : _n_obs(n_obs), _name(std::move(name)), DensityOutput(offset + 1, resolution) {
+        : _n_obs(n_obs), _name(std::move(name)), DensityOutput(offset, resolution) {
 
     if (cal_age_AD[1] - cal_age_AD[0] != resolution) {
         // We don't expect this to happen, but best to double-check

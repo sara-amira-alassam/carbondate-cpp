@@ -14,6 +14,8 @@ void read_calibration_curve(
 
 bool read_oxcal_data(
         const std::string& file_prefix,
-        std::vector<std::string>& c14_name,
         std::vector<double>& c14_age,
-        std::vector<double>& c14_sig);
+        std::vector<double>& c14_sig,
+        std::string& model_name);
+
+int read_output_offset(const std::string& file_prefix, const std::string& model_name);
