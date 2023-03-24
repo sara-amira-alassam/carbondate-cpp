@@ -125,7 +125,8 @@ void WalkerDPMM::interpolate_calibration_curve() {
    int n = (int) calcurve.cal_age.size();
     std::vector<int> perm(n);
     std::vector<double> sorted_cal_age(calcurve.cal_age.begin(), calcurve.cal_age.end());
-    int k_start = 1.; // Start age for interpolated calendar age
+    int k_start = 1.; // TODO : allow different start ages
+    // Start age for interpolated calendar age
 
     yearwise_calcurve.cal_age.resize(max_year_bp);
     yearwise_calcurve.c14_age.resize(max_year_bp);
@@ -392,6 +393,7 @@ double WalkerDPMM::cal_age_log_likelihood(
     int yr;
 
     yr = (int) cal_age - 1;
+    // TODO: Change this
     if ((yr < 0) || (yr >= max_year_bp)) {  // out of range
         return -std::numeric_limits<double>::infinity();
     }

@@ -50,7 +50,8 @@ std::vector<std::string> PredictiveDensityOutput::get_output_lines() {
     ci_line += "resolution:" + to_string(_resolution) + ", ";
     ci_line += "prob_sigma:[";
     for (int i = 0; i < _ci_lower.size(); i++) {
-        ci_line += "[" + to_string(_ci_upper[i]) + "," + to_string(_ci_lower[i]) + "]";
+        ci_line += "[" + to_string((_ci_upper[i] + _ci_lower[i]) / 2.);
+        ci_line += "," + to_string((_ci_upper[i] - _ci_lower[i]) / 2.) + "]";
         if (i != _ci_lower.size() - 1) ci_line += ",";
     }
     ci_line += "]};\n";
