@@ -17,6 +17,7 @@ public:
             int n_obs,
             int offset,
             double resolution,
+            const std::vector<bool>& ranges,
             std::string name,
             const std::vector<double>& cal_age_AD,
             const std::vector<double>& mean,

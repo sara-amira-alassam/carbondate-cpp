@@ -40,7 +40,7 @@ bool read_oxcal_data(
         if (regex_search(line, r_date_match, np_model_regex)) {
             np_model = true;
             model_name = r_date_match[1];
-        } else if (np_model && line.find("};") != std::string::npos) {
+        } else if (np_model && line.find(end_of_section) != std::string::npos) {
             break;
         } else if (np_model && regex_search(line, r_date_match, named_r_date_regex)) {
             age = r_date_match[2];
@@ -70,4 +70,48 @@ int read_output_offset(const std::string& file_prefix, const std::string& model_
         }
     }
     throw std::runtime_error("Could not find NP model " + model_name + " in output file");
+}
+
+// Reads in the options from the oxcal data file. If any of the options are not found in the file
+// then the value will not be altered from the original value. Currently, it will populate the
+// following option variables provided as arguments:
+// * iterations: The number of iterations for the DPMM
+// * resolution: The resolution used for outputting the predictive and posterior density
+// * ranges: A vector of 3 values denoting whether to calculate the 68.3%, 95.4% and 99.7% ranges
+void read_options(
+        const std::string& file_prefix,
+        int& iterations,
+        double& resolution,
+        std::vector<bool>& ranges) {
+
+    std::string line, option, value, end_of_section = "};";
+    std::regex options_regex(R"(Options\(\s*\))");
+    std::regex option_regex(R"((\w+)=['"]*(.+)['"]*;)");
+    bool options_block = false;
+    std::smatch option_match;
+    std::fstream file("../data/" + file_prefix + ".oxcal", std::ios::in);
+
+    if(!file.is_open()) throw std::runtime_error("Could not open file");
+
+    while (getline(file, line)) {
+        if (regex_search(line, option_match, options_regex)) {
+            options_block = true;
+        } else if (options_block && line.find(end_of_section) != std::string::npos) {
+            break;
+        } else if (options_block && regex_search(line, option_match, option_regex)) {
+            option = option_match[1];
+            value = option_match[2];
+            if (option == "Resolution") {
+                resolution = std::stod(value);
+            } else if (option == "kIterations") {
+                iterations = std::stoi(value) * 1000;
+            } else if (option == "SD1") {
+                ranges[0] = value != "FALSE";
+            } else if (option == "SD2") {
+                ranges[1] = value != "FALSE";
+            } else if (option == "SD3") {
+                ranges[2] = value != "FALSE";
+            }
+        }
+    }
 }

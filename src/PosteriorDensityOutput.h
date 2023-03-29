@@ -13,8 +13,8 @@ public:
             int ident,
             int offset,
             double resolution,
+            const std::vector<bool>& ranges,
             const std::vector<double>& posterior_calendar_ages_AD);
-
 };
 
 

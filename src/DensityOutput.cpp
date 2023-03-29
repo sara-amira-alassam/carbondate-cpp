@@ -8,7 +8,8 @@
 #include "helpers.h"
 #include "DensityOutput.h"
 
-DensityOutput::DensityOutput(int index, double resolution): _index(index), _resolution(resolution) {
+DensityOutput::DensityOutput(int index, double resolution, const std::vector<bool>& ranges)
+    : _index(index), _resolution(resolution), _ranges(ranges) {
     _output_var = "ocd[" + std::to_string(_index) + "]";
     _output_prefix = _output_var + ".posterior";
 }
@@ -26,15 +27,15 @@ void DensityOutput::print(const std::string& file_prefix) {
 
 std::vector<std::string> DensityOutput::get_output_lines() {
     std::vector<std::string> output_lines;
-    int comment_index = 0, no_comments = -1;
+    int comment_index = 0;
 
     output_lines.push_back("if(!" + _output_var + "){" + _output_var + "={};}\n");
     output_lines.push_back(variable_line("ref", "TODO: Add custom ref"));
     output_lines.push_back(_output_prefix + "={};\n");
     output_lines.push_back(comment_line("Posterior ", comment_index));
-    output_lines.push_back(range_lines(1, 0.683, comment_index));
-    output_lines.push_back(range_lines(2, 0.954, comment_index));
-    output_lines.push_back(range_lines(3, 0.997, no_comments));
+    output_lines.push_back(range_lines(1, 0.683, comment_index, _ranges[0]));
+    output_lines.push_back(range_lines(2, 0.954, comment_index, _ranges[1]));
+    output_lines.push_back(range_lines(3, 0.997, comment_index, _ranges[2]));
     output_lines.push_back(output_line("mean", _mean_calAD));
     output_lines.push_back(output_line("sigma", _sigma_calAD));
     output_lines.push_back(output_line("median", _median_calAD));
@@ -71,7 +72,8 @@ std::string DensityOutput::output_line(
     return output_line;
 }
 
-std::string DensityOutput::range_lines(int range_index, double probability, int& comment_index) {
+std::string DensityOutput::range_lines(
+        int range_index, double probability, int& comment_index, bool log_range) {
 
     std::vector<std::vector<double>> ranges = get_ranges_by_bisection(probability);
     std::string range_string = "range[" + std::to_string(range_index) + "]";
@@ -83,7 +85,7 @@ std::string DensityOutput::range_lines(int range_index, double probability, int&
     for (int i = 0; i < ranges.size(); i++) {
         range_lines += output_line(range_string + "[" + std::to_string(i) + "]", ranges[i]);
     }
-    if (comment_index >= 0) {
+    if (log_range) {
         range_lines += comment_line(
                 "  " + to_percent_string(probability) + " probability", comment_index);
         for (auto & range : ranges) {

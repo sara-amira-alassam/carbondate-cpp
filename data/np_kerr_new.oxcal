@@ -1,4 +1,37 @@
- KDE_Model("KDE")
+  Options()
+  {
+   Resolution=12;
+   Curve="intcal09.14c";
+   Cubic=TRUE;
+   RawData=TRUE;
+   UseF14C=TRUE;
+   BCAD=TRUE;
+   Intercept=TRUE;
+   Floruit=TRUE;
+   SD1=FALSE;
+   SD2=FALSE;
+   SD3=TRUE;
+   ConvergenceData=TRUE;
+   UniformSpanPrior=TRUE;
+   kIterations=100;
+   Ensembles=9;
+  };
+  Options()
+  {
+   Resolution=7;
+   Curve="intcal20.14c";
+   BCAD=TRUE;
+   Intercept=FALSE;
+   Floruit=FALSE;
+   SD1=FALSE;
+   SD2=FALSE;
+   SD3=TRUE;
+   ConvergenceData=TRUE;
+   UniformSpanPrior=TRUE;
+   kIterations=100;
+   Ensembles=9;
+  };
+KDE_Model("KDE")
  {
   R_Date("kde date",456,21);
   R_Date(452,26);
