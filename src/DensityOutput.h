@@ -15,7 +15,6 @@ protected:
     std::string _output_prefix;
     int _index;
     double _resolution;
-    std::vector<bool> _ranges;
     double _prob_max = 0.;
     double _prob_norm = 0.;
     double _start_calAD = 0;
@@ -28,7 +27,6 @@ protected:
     std::string output_line(const std::string& var_name, double var);
     std::string output_line(const std::string& var_name, const std::vector<double>& var);
     std::string comment_line(const std::string &comment, int &comment_index);
-    std::string range_lines(int range_index, double probability, int& comment_index, bool log_range);
 
     double find_probability_and_ranges_for_cut_off(
             double cut_off, std::vector<std::vector<double>>& ranges);
@@ -36,9 +34,10 @@ protected:
 
 protected:
     virtual std::vector<std::string> get_output_lines();
+    virtual std::string range_lines(int& comment_index);
 
 public:
-    DensityOutput(int index, double resolution, const std::vector<bool>& ranges);
+    DensityOutput(int index, double resolution);
     void set_probability(const std::vector<double>& probability);
     void print(const std::string& file_prefix);
 };

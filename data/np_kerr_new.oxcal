@@ -1,6 +1,6 @@
   Options()
   {
-   Resolution=12;
+   Resolution=5;
    Curve="intcal09.14c";
    Cubic=TRUE;
    RawData=TRUE;
@@ -8,27 +8,12 @@
    BCAD=TRUE;
    Intercept=TRUE;
    Floruit=TRUE;
-   SD1=FALSE;
+   SD1=TRUE;
    SD2=FALSE;
    SD3=TRUE;
    ConvergenceData=TRUE;
    UniformSpanPrior=TRUE;
-   kIterations=100;
-   Ensembles=9;
-  };
-  Options()
-  {
-   Resolution=7;
-   Curve="intcal20.14c";
-   BCAD=TRUE;
-   Intercept=FALSE;
-   Floruit=FALSE;
-   SD1=FALSE;
-   SD2=FALSE;
-   SD3=TRUE;
-   ConvergenceData=TRUE;
-   UniformSpanPrior=TRUE;
-   kIterations=100;
+   kIterations=250;
    Ensembles=9;
   };
 KDE_Model("KDE")

@@ -82,7 +82,8 @@ void read_options(
         const std::string& file_prefix,
         int& iterations,
         double& resolution,
-        std::vector<bool>& ranges) {
+        std::vector<bool>& ranges,
+        bool& quantile_ranges) {
 
     std::string line, option, value, end_of_section = "};";
     std::regex options_regex(R"(Options\(\s*\))");
@@ -108,9 +109,11 @@ void read_options(
             } else if (option == "SD1") {
                 ranges[0] = value != "FALSE";
             } else if (option == "SD2") {
-                ranges[1] = value != "FALSE";
+                ranges[1] = value == "TRUE";
             } else if (option == "SD3") {
-                ranges[2] = value != "FALSE";
+                ranges[2] = value == "TRUE";
+            } else if (option == "Floruit") {
+                quantile_ranges = value == "TRUE";
             }
         }
     }

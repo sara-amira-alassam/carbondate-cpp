@@ -16,9 +16,10 @@ PosteriorDensityOutput::PosteriorDensityOutput(
         int ident,
         int offset,
         double resolution,
-        const std::vector<bool>& ranges,
+        bool quantile_ranges,
+        const std::vector<bool>& log_ranges,
         const std::vector<double>& posterior_calendar_ages_AD)
-        : DensityOutput(ident + offset + 1, resolution, ranges) {
+        : _log_ranges(log_ranges), DensityOutput(ident + offset + 1, resolution) {
 
     unsigned n = posterior_calendar_ages_AD.size();
     double min_calendar_age = std::numeric_limits<double>::infinity();
@@ -42,4 +43,45 @@ PosteriorDensityOutput::PosteriorDensityOutput(
     _mean_calAD = mean(posterior_calendar_ages_AD);
     _median_calAD = median(posterior_calendar_ages_AD);
     _sigma_calAD = sigma(posterior_calendar_ages_AD, _mean_calAD);
+
+    if (quantile_ranges) {
+        double edge_width;
+        for (double probability : _range_probabilities) {
+            edge_width = (1. - probability) / 2.;
+            std::vector<std::vector<double>> range(1, std::vector<double> {0, 0, probability});
+            std::vector<double> calendar_ages(posterior_calendar_ages_AD);
+            edge_quantiles(calendar_ages, edge_width, range[0][0], range[0][1]);
+            _ranges.push_back(range);
+        }
+    } else {
+        for (double probability : _range_probabilities) {
+            _ranges.push_back(get_ranges_by_bisection(probability));
+        }
+    }
+}
+
+std::string PosteriorDensityOutput::range_lines(int& comment_index) {
+    std::string range_lines;
+
+    for (int i = 0; i < _ranges.size(); i++) {
+        std::string range_string = "range[" + std::to_string(i + 1) + "]";
+        if (i == 0) {
+            range_lines = _output_prefix + ".range=[];\n";
+        }
+        range_lines += _output_prefix + "." + range_string + "=[];\n";
+        for (int j = 0; j < _ranges[i].size(); j++) {
+            range_lines += output_line(range_string + "[" + std::to_string(j) + "]", _ranges[i][j]);
+        }
+        if (_log_ranges[i]) {
+            range_lines += comment_line(
+                    "  " + to_percent_string(_range_probabilities[i]) + " probability", comment_index);
+            for (auto & range : _ranges[i]) {
+                std::string comment = "    " + std::to_string(int (round(range[0]))) + "AD";
+                comment += " (" + to_percent_string(range[2] / 100.) + ") ";
+                comment += std::to_string(int (round(range[1]))) + "AD";
+                range_lines += comment_line(comment, comment_index);
+            }
+        }
+    }
+    return range_lines;
 }

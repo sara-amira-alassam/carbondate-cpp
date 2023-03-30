@@ -12,12 +12,12 @@
 // * mean_density: The mean of the sampled densities
 // * ci_lower, ci_upper: The 1-sigma confidence intervals of the sampled densities
 PredictiveDensityOutput::PredictiveDensityOutput(
-        int n_obs, int offset, double resolution, const std::vector<bool>& ranges, std::string name,
+        int n_obs, int offset, double resolution, std::string name,
         const std::vector<double>& cal_age_AD,
         const std::vector<double>& mean_density,
         const std::vector<double>& ci_lower,
         const std::vector<double>& ci_upper)
-        : _n_obs(n_obs), _name(std::move(name)), DensityOutput(offset, resolution, ranges) {
+        : _n_obs(n_obs), _name(std::move(name)), DensityOutput(offset, resolution) {
 
     if (cal_age_AD[1] - cal_age_AD[0] != resolution) {
         // We don't expect this to happen, but best to double-check
@@ -74,4 +74,8 @@ void PredictiveDensityOutput::set_confidence_intervals(
         _ci_lower[i] = ci_lower[i]/_prob_max;
         _ci_upper[i] = ci_upper[i]/_prob_max;
     }
+}
+
+std::string PredictiveDensityOutput::range_lines(int& comment_index) {
+    return _output_prefix + ".range=[];\n";
 }
