@@ -14,17 +14,15 @@ class PosteriorDensityOutput : public DensityOutput {
     // Final level vector index gives start point, end point, and probability of that section
     std::vector<std::vector<std::vector<double>>> _ranges;
     std::vector<bool> _log_ranges;
+    bool _intercept_method;
 
-    std::string range_lines(int& comment_index) override;
+    std::string range_lines(int &comment_index) override;
 
 public:
-    PosteriorDensityOutput(
-            int ident,
-            int offset,
-            double resolution,
-            bool quantile_ranges,
-            const std::vector<bool>& log_ranges,
-            const std::vector<double>& posterior_calendar_ages_AD);
+    PosteriorDensityOutput(int ident, int offset, double resolution,
+                           bool quantile_ranges, bool intercept_ranges,
+                           const std::vector<bool> &log_ranges,
+                           const std::vector<double> &posterior_calendar_ages_AD);
 };
 
 

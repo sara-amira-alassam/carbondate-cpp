@@ -42,16 +42,16 @@ std::vector<std::string> PredictiveDensityOutput::get_output_lines() {
     model_line = "model.element[" + std::to_string(_index) + "]= ";
     model_line += R"({op: "NP_Model", type: "date", name: ")" + _name + "\", ";
     model_line += "pos:" + std::to_string(_index) + ", timepos: " + std::to_string(_index) + ", ";
-    model_line += "lower: " + to_string(_start_calAD) + ", upper:" + to_string(upper_lim) + "};\n";
+    model_line += "lower: " + to_string(_start_calAD, 6) + ", upper:" + to_string(upper_lim, 6) + "};\n";
 
     std::string ci_line = "model.element[" + std::to_string(_index) + "].kde_mean={";
-    ci_line += "probNorm:" + to_string(_prob_norm * _n_obs) + ", ";
-    ci_line += "start:" + to_string(_start_calAD) + ", ";
-    ci_line += "resolution:" + to_string(_resolution) + ", ";
+    ci_line += "probNorm:" + to_string(_prob_norm * _n_obs, 6) + ", ";
+    ci_line += "start:" + to_string(_start_calAD, 6) + ", ";
+    ci_line += "resolution:" + to_string(_resolution, 6) + ", ";
     ci_line += "prob_sigma:[";
     for (int i = 0; i < _ci_lower.size(); i++) {
-        ci_line += "[" + to_string((_ci_upper[i] + _ci_lower[i]) / 2.);
-        ci_line += "," + to_string((_ci_upper[i] - _ci_lower[i]) / 2.) + "]";
+        ci_line += "[" + to_string((_ci_upper[i] + _ci_lower[i]) / 2., 6);
+        ci_line += "," + to_string((_ci_upper[i] - _ci_lower[i]) / 2., 6) + "]";
         if (i != _ci_lower.size() - 1) ci_line += ",";
     }
     ci_line += "]};\n";
@@ -76,6 +76,6 @@ void PredictiveDensityOutput::set_confidence_intervals(
     }
 }
 
-std::string PredictiveDensityOutput::range_lines(int& comment_index) {
+std::string PredictiveDensityOutput::range_lines(int &comment_index) {
     return _output_prefix + ".range=[];\n";
 }

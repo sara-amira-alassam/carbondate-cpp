@@ -7,13 +7,13 @@
    UseF14C=TRUE;
    BCAD=TRUE;
    Intercept=TRUE;
-   Floruit=TRUE;
+   Floruit=FALSE;
    SD1=TRUE;
    SD2=FALSE;
    SD3=TRUE;
    ConvergenceData=TRUE;
    UniformSpanPrior=TRUE;
-   kIterations=250;
+   kIterations=50;
    Ensembles=9;
   };
 KDE_Model("KDE")

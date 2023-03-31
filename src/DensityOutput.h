@@ -30,11 +30,12 @@ protected:
 
     double find_probability_and_ranges_for_cut_off(
             double cut_off, std::vector<std::vector<double>>& ranges);
-    std::vector<std::vector<double>> get_ranges_by_bisection(double probability);
+    std::vector<std::vector<double>> get_ranges_by_intercepts(double probability);
+    std::vector<std::vector<double>> get_ranges(double probability);
 
 protected:
     virtual std::vector<std::string> get_output_lines();
-    virtual std::string range_lines(int& comment_index);
+    virtual std::string range_lines(int &comment_index);
 
 public:
     DensityOutput(int index, double resolution);

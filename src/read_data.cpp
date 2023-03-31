@@ -79,11 +79,12 @@ int read_output_offset(const std::string& file_prefix, const std::string& model_
 // * resolution: The resolution used for outputting the predictive and posterior density
 // * ranges: A vector of 3 values denoting whether to calculate the 68.3%, 95.4% and 99.7% ranges
 void read_options(
-        const std::string& file_prefix,
-        int& iterations,
-        double& resolution,
-        std::vector<bool>& ranges,
-        bool& quantile_ranges) {
+        const std::string &file_prefix,
+        int &iterations,
+        double &resolution,
+        std::vector<bool> &ranges,
+        bool &quantile_ranges,
+        bool &intercept_ranges) {
 
     std::string line, option, value, end_of_section = "};";
     std::regex options_regex(R"(Options\(\s*\))");
@@ -114,7 +115,10 @@ void read_options(
                 ranges[2] = value == "TRUE";
             } else if (option == "Floruit") {
                 quantile_ranges = value == "TRUE";
+            } else if (option == "Intercept") {
+                intercept_ranges = value == "TRUE";
             }
+
         }
     }
 }

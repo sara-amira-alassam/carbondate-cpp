@@ -20,9 +20,5 @@ bool read_oxcal_data(
 
 int read_output_offset(const std::string& file_prefix, const std::string& model_name);
 
-void read_options(
-    const std::string& file_prefix,
-    int& iterations,
-    double& resolution,
-    std::vector<bool>& ranges,
-    bool& quantile_range);
+void read_options(const std::string &file_prefix, int &iterations, double &resolution,
+                  std::vector<bool> &ranges, bool &quantile_range, bool &intercept_ranges);

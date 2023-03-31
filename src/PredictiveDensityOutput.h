@@ -11,7 +11,7 @@ class PredictiveDensityOutput : public DensityOutput {
     std::vector<std::string> get_output_lines() override;
     void set_confidence_intervals(
             const std::vector<double>& ci_lower, const std::vector<double>& ci_upper);
-    std::string range_lines(int& comment_index) override;
+    std::string range_lines(int &comment_index) override;
 
 public:
     PredictiveDensityOutput(

@@ -24,7 +24,7 @@ void rsort_with_index(double *x, int *indx,int n);
 void revsort(double *a, int *ib, int n);
 void update_progress_bar(double progress);
 double to_calAD(double year_calPB);
-std::string to_string(double var);
+std::string to_string(double var, int max_digits);
 std::string to_percent_string(double fraction);
 
 #endif //CARBONDATE_HELPERS_H
