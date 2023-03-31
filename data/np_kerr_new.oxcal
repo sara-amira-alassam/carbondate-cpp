@@ -13,7 +13,7 @@
    SD3=TRUE;
    ConvergenceData=TRUE;
    UniformSpanPrior=TRUE;
-   kIterations=250;
+   kIterations=100;
    Ensembles=9;
   };
 KDE_Model("KDE")

@@ -181,13 +181,13 @@ std::vector<std::vector<double>> DensityOutput::get_ranges(double probability) {
         probability_interp[n - 1] = _probability[_probability.size() - 1];
         sum_prob += probability_interp[n - 1];
     }
+    for (int i = 0; i < n; i++) probability_interp[i] /= sum_prob;
 
     std::vector<std::vector<double>> ranges;
     std::vector<double> current_range{0, 0, 0};
     std::vector<double> sorted_probabilities(probability_interp.begin(), probability_interp.end());
-    double scaled_prob = probability * sum_prob;
     // Don't bother to store ranges with probability less than this
-    const double min_prob = 0.005 * sum_prob;
+    const double min_prob = 0.005;
     std::vector<int> perm(n);
     int num_values = 0;
 
@@ -198,7 +198,7 @@ std::vector<std::vector<double>> DensityOutput::get_ranges(double probability) {
     for (int i = 0; i < n; i++) {
         cumulative_prob += sorted_probabilities[i];
         num_values++;
-        if (cumulative_prob > scaled_prob) {
+        if (cumulative_prob > probability) {
             break;
         }
     }
@@ -210,7 +210,6 @@ std::vector<std::vector<double>> DensityOutput::get_ranges(double probability) {
     for (int i = 1; i < num_values; i++) {
         if (included_values[i] - included_values[i-1] > 1) {
             current_range[1] = _start_calAD + included_values[i - 1] * resolution;
-            current_range[2] /=  sum_prob;
             if (current_range[2] > min_prob) {
                 ranges.push_back(current_range);
             }
@@ -223,7 +222,6 @@ std::vector<std::vector<double>> DensityOutput::get_ranges(double probability) {
     // last range
     if (current_range[2] > min_prob) {
         current_range[1] = _start_calAD + included_values[num_values - 1] * resolution;
-        current_range[2] /= sum_prob;
         ranges.push_back(current_range);
     }
     return ranges;
