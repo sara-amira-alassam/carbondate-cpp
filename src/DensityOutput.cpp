@@ -155,13 +155,39 @@ std::string DensityOutput::range_lines(int &comment_index) {
 // [start_calAD, end_calAD, probability within this range]
 // arg `resolution` gives the resolution of the probability curve to use
 std::vector<std::vector<double>> DensityOutput::get_ranges(double probability) {
+    double resolution = _resolution, sum_prob = 1 / (_prob_norm * _resolution);
+    std::vector<double> probability_interp(_probability.begin(), _probability.end());
+    int n = (int) _probability.size();
+
+    // TODO: Really we want to create a smoothed density from the posterior values but here we
+    // do a much simpler approximation of the histogram values
+    if (_resolution > 1.0) {
+        int scale_factor = floor(_resolution / 0.5);
+        resolution = _resolution / scale_factor;
+        sum_prob = 0.;
+        n = ((int) _probability.size() - 1) * scale_factor + 1;
+        probability_interp.resize(n, 0);
+        double cal_age_interp, cal_age_beg, cal_age_end;
+        for (int i = 0; i < _probability.size() - 1; i++) {
+            cal_age_beg = _start_calAD + i * _resolution;
+            cal_age_end = cal_age_beg + _resolution;
+            for (int j = 0; j < scale_factor; j++) {
+                cal_age_interp = cal_age_beg + j * resolution;
+                probability_interp[i * scale_factor + j] = interpolate_linear(
+                    cal_age_interp, cal_age_beg, cal_age_end, _probability[i], _probability[i + 1]);
+                sum_prob += probability_interp[i * scale_factor + j];
+            }
+        }
+        probability_interp[n - 1] = _probability[_probability.size() - 1];
+        sum_prob += probability_interp[n - 1];
+    }
 
     std::vector<std::vector<double>> ranges;
     std::vector<double> current_range{0, 0, 0};
-    std::vector<double> sorted_probabilities(_probability.begin(), _probability.end());
-    double scaled_prob = probability;
-    const double min_prob = 0.005; // Don't bother to store ranges with probability less than this
-    int n = (int) sorted_probabilities.size();
+    std::vector<double> sorted_probabilities(probability_interp.begin(), probability_interp.end());
+    double scaled_prob = probability * sum_prob;
+    // Don't bother to store ranges with probability less than this
+    const double min_prob = 0.005 * sum_prob;
     std::vector<int> perm(n);
     int num_values = 0;
 
@@ -172,30 +198,32 @@ std::vector<std::vector<double>> DensityOutput::get_ranges(double probability) {
     for (int i = 0; i < n; i++) {
         cumulative_prob += sorted_probabilities[i];
         num_values++;
-        if (abs(cumulative_prob - scaled_prob) < 1e-3 || cumulative_prob > scaled_prob) {
+        if (cumulative_prob > scaled_prob) {
             break;
         }
     }
 
     std::vector<int> included_values(perm.begin(), perm.begin() + num_values);
     std::sort(included_values.begin(), included_values.end());
-    current_range[0] = _start_calAD + included_values[0] * _resolution;
-    current_range[2] = _probability[included_values[0]];
+    current_range[0] = _start_calAD + included_values[0] * resolution;
+    current_range[2] = probability_interp[included_values[0]];
     for (int i = 1; i < num_values; i++) {
-        if (included_values[i] - included_values[i-1] > _resolution) {
-            current_range[1] = _start_calAD + included_values[i - 1] * _resolution;
+        if (included_values[i] - included_values[i-1] > 1) {
+            current_range[1] = _start_calAD + included_values[i - 1] * resolution;
+            current_range[2] /=  sum_prob;
             if (current_range[2] > min_prob) {
                 ranges.push_back(current_range);
             }
-            current_range[0] = _start_calAD + included_values[i] * _resolution;
-            current_range[2] = _probability[included_values[i]];
+            current_range[0] = _start_calAD + included_values[i] * resolution;
+            current_range[2] = probability_interp[included_values[i]];
         } else {
-            current_range[2] += _probability[included_values[i]];
+            current_range[2] += probability_interp[included_values[i]];
         }
     }
     // last range
     if (current_range[2] > min_prob) {
-        current_range[1] = _start_calAD + included_values[num_values - 1] * _resolution;
+        current_range[1] = _start_calAD + included_values[num_values - 1] * resolution;
+        current_range[2] /= sum_prob;
         ranges.push_back(current_range);
     }
     return ranges;
