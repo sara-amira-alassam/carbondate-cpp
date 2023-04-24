@@ -1,4 +1,22 @@
- KDE_Model("KDE")
+  Options()
+  {
+   Resolution=5;
+   Curve="intcal09.14c";
+   Cubic=TRUE;
+   RawData=TRUE;
+   UseF14C=TRUE;
+   BCAD=TRUE;
+   Intercept=FALSE;
+   Floruit=FALSE;
+   SD1=TRUE;
+   SD2=TRUE;
+   SD3=TRUE;
+   ConvergenceData=TRUE;
+   UniformSpanPrior=TRUE;
+   kIterations=100;
+   Ensembles=9;
+  };
+KDE_Model("KDE")
  {
   R_Date("kde date",456,21);
   R_Date(452,26);

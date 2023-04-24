@@ -95,7 +95,8 @@ int get_right_boundary(const std::vector<double>& vec, double cut_off) {
     return (int) vec.size() - 1;
 }
 
-// Finds the quantiles at a given edge width away from the start and end of the distribution.
+// Finds the quantiles at a given edge width away from the start and end of the distribution,
+// where the distribution is defined by a vector of sampled values
 // Note this partially sorts the vector provided as an argument
 void edge_quantiles(
         std::vector<double>& vec,   // Vector to find quantiles of. Assumed unsorted
@@ -199,10 +200,10 @@ double to_calAD(double year_calPB) {
     return 1950.5 - year_calPB;
 }
 
-std::string to_string(double var) {
-    std::string string_var;
-    char temp_string[13] = "";
-    snprintf(temp_string, 13, "%.6g", var);
+std::string to_string(double var, int max_digits) {
+    std::string string_var, format_string = "%." + std::to_string(max_digits) + "g";
+    char temp_string[32] = "";
+    snprintf(temp_string, 13, format_string.c_str(), var);
     string_var = temp_string;
     return string_var;
 }
