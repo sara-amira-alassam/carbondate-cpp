@@ -51,7 +51,7 @@ void WalkerDPMM::initialise_storage(){
 }
 
 void WalkerDPMM::initialise_calendar_age() {
-    int n_points = (int) calcurve.cal_age.size();
+    int n_points = (int) yearwise_calcurve.cal_age.size();
     double current_prob, max_prob, most_probably_age;
     calendar_age_i.resize(n_obs);
 
@@ -60,11 +60,11 @@ void WalkerDPMM::initialise_calendar_age() {
         for (int j = 0; j < n_points; j++) {
             current_prob = dnorm4(
                     c14_age[i],
-                    calcurve.c14_age[j],
-                    sqrt(pow(calcurve.c14_sig[j], 2) + pow(c14_sig[i], 2)),
+                    yearwise_calcurve.c14_age[j],
+                    sqrt(pow(yearwise_calcurve.c14_sig[j], 2) + pow(c14_sig[i], 2)),
                     0);
             if (current_prob > max_prob) {
-                most_probably_age = calcurve.cal_age[j];
+                most_probably_age = yearwise_calcurve.cal_age[j];
                 max_prob = current_prob;
             }
         }
