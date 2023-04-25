@@ -122,7 +122,7 @@ void WalkerDPMM::initialise_clusters() {
 }
 
 void WalkerDPMM::interpolate_calibration_curve() {
-   int n = (int) calcurve.cal_age.size();
+    int n = (int) calcurve.cal_age.size();
     std::vector<int> perm(n);
     std::vector<double> sorted_cal_age(calcurve.cal_age.begin(), calcurve.cal_age.end());
     int k_start = 1.; // TODO : allow different start ages
