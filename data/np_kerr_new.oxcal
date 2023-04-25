@@ -1,7 +1,7 @@
   Options()
   {
    Resolution=5;
-   Curve="intcal20.14c";
+   Curve="HOBS2022.14c";
    Cubic=TRUE;
    RawData=TRUE;
    UseF14C=TRUE;
