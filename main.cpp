@@ -1,8 +1,11 @@
 #include "src/WalkerDPMM.h"
 #include "src/read_data.h"
-#include "src/csv_helpers.h"
 #include "src/PredictiveDensityOutput.h"
 #include "src/PosteriorDensityOutput.h"
+
+#ifndef DATA_PREFIX
+#define DATA_PREFIX "../oxcal/"
+#endif
 
 int main(int argc, char* argv[]) {
     if (argc < 2)
@@ -13,7 +16,7 @@ int main(int argc, char* argv[]) {
     const double quantile_edge_width = 0.1586553; // 1-sigma interval
     int output_offset;
     std::vector<double> c14_age, c14_sig;
-    std::string model_name;
+    std::string model_name, calibration_curve = "intcal20.14c";
     std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
     WalkerDPMM dpmm;
 
@@ -28,9 +31,15 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     output_offset = read_output_offset(file_prefix, model_name);
-    read_calibration_curve("../data/intcal20.14c", cc_cal_age, cc_c14_age, cc_c14_sig);
     read_options(
-        file_prefix, num_iterations, output_resolution, log_ranges, quantile_ranges, intercept_ranges);
+        file_prefix,
+        num_iterations,
+        output_resolution,
+        log_ranges,
+        quantile_ranges,
+        intercept_ranges,
+        calibration_curve);
+    read_calibration_curve(DATA_PREFIX + calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
 
     dpmm.initialise(c14_age, c14_sig, cc_cal_age, cc_c14_age, cc_c14_sig, 5);
     dpmm.calibrate(num_iterations, 10);

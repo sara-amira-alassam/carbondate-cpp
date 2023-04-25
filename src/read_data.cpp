@@ -1,5 +1,6 @@
 #include <fstream>
 #include <regex>
+#include <set>
 #include "read_data.h"
 #include "csv_helpers.h"
 
@@ -11,6 +12,7 @@ void read_calibration_curve(
         std::vector<double>& cc_c14_age,
         std::vector<double>& cc_c14_sig) {
 
+    printf("Reading calibration data from %s\n", calibration_curve_path.c_str());
     cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0);
     cc_c14_age = get_csv_data_from_column(calibration_curve_path, 1);
     cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 2);
@@ -84,14 +86,17 @@ void read_options(
         double &resolution,
         std::vector<bool> &ranges,
         bool &quantile_ranges,
-        bool &intercept_ranges) {
+        bool &intercept_ranges,
+        std::string &calibration_curve) {
 
     std::string line, option, value, end_of_section = "};";
     std::regex options_regex(R"(Options\(\s*\))");
-    std::regex option_regex(R"((\w+)=['"]*(.+)['"]*;)");
+    std::regex option_regex(R"((\w+)=['"]*([^'"]+)['"]*;)");
     bool options_block = false;
     std::smatch option_match;
     std::fstream file("../data/" + file_prefix + ".oxcal", std::ios::in);
+    static const std::set<std::string> allowed_calibration_curves{
+        "intcal04.14c", "intcal09.14c", "intcal13.14c", "intcal20.14c"};
 
     if(!file.is_open()) throw std::runtime_error("Could not open file");
 
@@ -117,8 +122,15 @@ void read_options(
                 quantile_ranges = value == "TRUE";
             } else if (option == "Intercept") {
                 intercept_ranges = value == "TRUE";
+            } else if (option == "Curve") {
+                if (allowed_calibration_curves.count(value) == 0) {
+                    printf(
+                        "The calibration curve %s is not recognised. Default %s is being used.\n",
+                        value.c_str(), calibration_curve.c_str());
+                } else {
+                    calibration_curve = value;
+                }
             }
-
         }
     }
 }
