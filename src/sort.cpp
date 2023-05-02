@@ -2,7 +2,7 @@
 // Taken from functions in R/src/main/sort.c with small modifications
 // (it does not seem that these functions are included in the standalone R library).
 //
-void rsort_with_index(double *x, int *indx,int n)
+void rsort_with_index(double *x, int *indx, int n)
 {
     double v;
     int i, j, h, iv;

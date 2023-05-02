@@ -128,15 +128,14 @@ void edge_quantiles(
 }
 
 // Adapted from do_sample in R/src/main/sample.c and from EmpiricalSample in Rcpp package
-void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index,int size) {
+void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index) {
 
-    ans.resize(size);
     int n = finish_index - start_index + 1;
-    bool replace = size >= n;
+    bool replace = ans.size() >= n;
 
-    if (replace || size < 2) {
-        for (int i = 0 ; i < size; i++) {
-            ans[i] = static_cast<int>(R_unif_index(n)) + start_index;
+    if (replace || ans.size() < 2) {
+        for (int & an : ans) {
+            an = static_cast<int>(R_unif_index(n)) + start_index;
         }
         return;
     }
@@ -146,9 +145,9 @@ void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index,int
         x[i] = i;
     }
 
-    for (int i = 0 ; i < size; i++) {
+    for (int & an : ans) {
         int j = static_cast<int>(R_unif_index(n));
-        ans[i] = x[j] + start_index;
+        an = x[j] + start_index;
         x[j] = x[--n];
     }
 }

@@ -114,7 +114,7 @@ void WalkerDPMM::initialise_clusters() {
     }
 
     cluster_ids_i.resize(n_obs);
-    get_sample_ids(cluster_ids_i, 1, n_clust_i, n_obs);
+    get_sample_ids(cluster_ids_i, 1, n_clust_i);
     cluster_ids[0] = cluster_ids_i;
     phi[0] = phi_i;
     tau[0] = tau_i;
@@ -224,7 +224,7 @@ void WalkerDPMM::update_weights(const std::vector<double>& u, double min_u) {
 }
 
 void WalkerDPMM::update_v_element(int cluster_id, double brprod, const std::vector<double>& u) {
-    std::vector<double> prodv(n_weights + 1);   // TODO: does this need to be +1??
+    std::vector<double> prodv(n_weights);
     bool prodv_set = false;
     double b_sub, b_sub_max = 0.;
     int index;
@@ -276,7 +276,7 @@ void WalkerDPMM::update_phi_and_tau() {
             // There are some observations, so update the phi and tau for this
             // cluster (conjugate according to NormalGamma prior)
             update_cluster_phi_and_tau(c, cluster_calendar_ages);
-            cluster_calendar_ages.resize(0);
+            cluster_calendar_ages.clear();
         }
     }
 }
@@ -323,15 +323,15 @@ void WalkerDPMM::update_cluster_ids(const std::vector<double>& u) {
             }
         }
         cluster_ids_i[j] = poss_cluster_ids[sample_integer(poss_cluster_ids.size(), dens, false)];
-        poss_cluster_ids.resize(0);
-        dens.resize(0);
+        poss_cluster_ids.clear();
+        dens.clear();
     }
 }
 
 void WalkerDPMM::update_n_clust() {
     // Find number of distinct populated clusters
     int cluster_id;
-    std::vector<int> observations_per_cluster(2*n_obs, 0);  // Allocate plenty of space
+    std::vector<int> observations_per_cluster(n_weights, 0);
     n_clust_i = 0;
     for (int j = 0; j < n_obs; j++) {
         cluster_id = cluster_ids_i[j];
@@ -481,7 +481,7 @@ void WalkerDPMM::store_current_values(int output_index) {
 }
 
 // Function which works out the marginal of a calendar age when
-// theta ~ N(phi, sd = sqrt(1/tau)) and (phi,tau) are NormalGamma
+// theta ~ N(phi, sd = sqrt(1/tau)) and (phi, tau) are NormalGamma
 double WalkerDPMM::log_marginal_normal_gamma(double cal_age, double mu_phi_s) {
     double logden, margprec, margdf;
 
@@ -503,7 +503,7 @@ DensityData WalkerDPMM::get_predictive_density(
     int n_burn = floor(n_out / 2);
     std::vector<int> sample_ids(n_posterior_samples);
     int s; //current sample id
-    get_sample_ids(sample_ids, n_burn - 1, n_out - 1, n_posterior_samples);
+    get_sample_ids(sample_ids, n_burn - 1, n_out - 1);
 
     double min_calendar_age = std::numeric_limits<double>::infinity();
     double max_calendar_age = -std::numeric_limits<double>::infinity();

@@ -35,7 +35,7 @@ void read_calibration_curve(
         cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0, '\t');
         cc_c14_age = get_csv_data_from_column(calibration_curve_path, 3, '\t');
         cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 4, '\t');
-        for (double & cal_age : cc_cal_age) cal_age = 2020. - cal_age;
+        for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
     }
 }
 

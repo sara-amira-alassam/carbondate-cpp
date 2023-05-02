@@ -8,7 +8,7 @@
 // * n_obs:  The number of observations (this is used for normalization)
 // * offset: The offset to use for indexing the total model output
 //           (e.g. if other models have been specified in the input file in addition to this one)
-// * resolution: The resolution to use for detmining the probability curve
+// * resolution: The resolution to use for determining the probability curve
 // * mean_density: The mean of the sampled densities
 // * ci_lower, ci_upper: The 1-sigma confidence intervals of the sampled densities
 PredictiveDensityOutput::PredictiveDensityOutput(
@@ -30,9 +30,14 @@ PredictiveDensityOutput::PredictiveDensityOutput(
     set_confidence_intervals(ci_lower, ci_upper);
 
     _start_calAD = cal_age_AD[0];
-    _mean_calAD = mean(cal_age_AD, mean_density);
-    _median_calAD = median(cal_age_AD, mean_density);
-    _sigma_calAD = sigma(cal_age_AD, mean_density, _mean_calAD);
+
+    std::vector<double> normalised_density(mean_density.begin(), mean_density.end());
+    double prob_total = 0.;
+    for (double i : normalised_density) prob_total += i;
+    for (double & i : normalised_density) i /= prob_total;
+    _mean_calAD = mean(cal_age_AD, normalised_density);
+    _median_calAD = median(cal_age_AD, normalised_density);
+    _sigma_calAD = sigma(cal_age_AD, normalised_density, _mean_calAD);
 }
 
 std::vector<std::string> PredictiveDensityOutput::get_output_lines() {
