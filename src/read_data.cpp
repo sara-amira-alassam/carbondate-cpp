@@ -1,20 +1,42 @@
 #include <fstream>
 #include <regex>
+#include <set>
 #include "read_data.h"
 #include "csv_helpers.h"
 
+#ifndef DATA_PREFIX
+#define DATA_PREFIX "../oxcal/"
+#endif
 
+const std::set<std::string> modern_intcal_curves = {
+        "intcal04.14c", "intcal09.14c", "intcal13.14c", "intcal20.14c"};
+const std::set<std::string> old_intcal_curves = {"intcal98.14c"};
+const std::set<std::string> custom_curves = {"HOBS2022.14c"};
 
 void read_calibration_curve(
-        const std::string& calibration_curve_path,
+        const std::string& calibration_curve,
         std::vector<double>& cc_cal_age,
         std::vector<double>& cc_c14_age,
         std::vector<double>& cc_c14_sig) {
 
-    cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0);
-    cc_c14_age = get_csv_data_from_column(calibration_curve_path, 1);
-    cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 2);
+    const std::string calibration_curve_path = DATA_PREFIX + calibration_curve;
 
+    printf("Reading calibration data from %s\n", calibration_curve.c_str());
+    if (modern_intcal_curves.count(calibration_curve) == 1) {
+        cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0, ',');
+        cc_c14_age = get_csv_data_from_column(calibration_curve_path, 1, ',');
+        cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 2, ',');
+    } else if (old_intcal_curves.count(calibration_curve) == 1) {
+        cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0, ' ');
+        cc_c14_age = get_csv_data_from_column(calibration_curve_path, 3, ' ');
+        cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 4, ' ');
+        for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
+    } else if (custom_curves.count(calibration_curve) == 1) {
+        cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0, '\t');
+        cc_c14_age = get_csv_data_from_column(calibration_curve_path, 3, '\t');
+        cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 4, '\t');
+        for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
+    }
 }
 
 // Takes a *.oxcal input file created by the OxCal software and reads it to determine the
@@ -84,14 +106,19 @@ void read_options(
         double &resolution,
         std::vector<bool> &ranges,
         bool &quantile_ranges,
-        bool &intercept_ranges) {
+        bool &intercept_ranges,
+        std::string &calibration_curve) {
 
     std::string line, option, value, end_of_section = "};";
     std::regex options_regex(R"(Options\(\s*\))");
-    std::regex option_regex(R"((\w+)=['"]*(.+)['"]*;)");
+    std::regex option_regex(R"((\w+)=['"]*([^'"]+)['"]*;)");
     bool options_block = false;
     std::smatch option_match;
     std::fstream file("../data/" + file_prefix + ".oxcal", std::ios::in);
+    std::set<std::string> allowed_calibration_curves;
+    allowed_calibration_curves.insert(modern_intcal_curves.begin(), modern_intcal_curves.end());
+    allowed_calibration_curves.insert(old_intcal_curves.begin(), old_intcal_curves.end());
+    allowed_calibration_curves.insert(custom_curves.begin(), custom_curves.end());
 
     if(!file.is_open()) throw std::runtime_error("Could not open file");
 
@@ -117,8 +144,15 @@ void read_options(
                 quantile_ranges = value == "TRUE";
             } else if (option == "Intercept") {
                 intercept_ranges = value == "TRUE";
+            } else if (option == "Curve") {
+                if (allowed_calibration_curves.count(value) == 0) {
+                    printf(
+                        "The calibration curve %s is not recognised. Default %s is being used.\n",
+                        value.c_str(), calibration_curve.c_str());
+                } else {
+                    calibration_curve = value;
+                }
             }
-
         }
     }
 }

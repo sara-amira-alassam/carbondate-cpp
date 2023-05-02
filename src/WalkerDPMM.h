@@ -25,7 +25,6 @@ class WalkerDPMM {
     std::vector<double> c14_sig;  // c14 determination uncertainties
     CalCurve calcurve;            // original calibration curve data
     CalCurve yearwise_calcurve;   // calibration curve interpolated for every year of calendar age
-    int max_year_bp = 50000;      // maximum year for interpolated calendar age
 
     int n_obs, n_out;
 

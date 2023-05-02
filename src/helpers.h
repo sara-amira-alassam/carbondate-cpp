@@ -18,7 +18,7 @@ int get_left_boundary(const std::vector<double>& vec, double cut_off);
 int get_right_boundary(const std::vector<double>& vec, double cut_off);
 void edge_quantiles(
         std::vector<double>& vec, double edge_width, double& lower_quantile, double& upper_quantile);
-void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index,int size);
+void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index);
 int sample_integer(unsigned n, std::vector<double> prob, bool one_based);
 void rsort_with_index(double *x, int *indx,int n);
 void revsort(double *a, int *ib, int n);

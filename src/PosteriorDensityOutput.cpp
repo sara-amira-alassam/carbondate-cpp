@@ -25,7 +25,8 @@ PosteriorDensityOutput::PosteriorDensityOutput(
         : _log_ranges(log_ranges), _intercept_method(intercept_ranges),
         DensityOutput(ident + offset + 1, ceil(resolution)) {
 
-    // TODO: log or warn if ignoring a resolution that is less than 1
+    // TODO: log or warn if ignoring a resolution that is less than 1.
+    // TODO: Why can't the resolution be less than 1?? Try and change this
 
     unsigned n = posterior_calendar_ages_AD.size();
     double min_calendar_age = std::numeric_limits<double>::infinity();

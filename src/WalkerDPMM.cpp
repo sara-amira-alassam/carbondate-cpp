@@ -51,7 +51,7 @@ void WalkerDPMM::initialise_storage(){
 }
 
 void WalkerDPMM::initialise_calendar_age() {
-    int n_points = (int) calcurve.cal_age.size();
+    int n_points = (int) yearwise_calcurve.cal_age.size();
     double current_prob, max_prob, most_probably_age;
     calendar_age_i.resize(n_obs);
 
@@ -60,11 +60,11 @@ void WalkerDPMM::initialise_calendar_age() {
         for (int j = 0; j < n_points; j++) {
             current_prob = dnorm4(
                     c14_age[i],
-                    calcurve.c14_age[j],
-                    sqrt(pow(calcurve.c14_sig[j], 2) + pow(c14_sig[i], 2)),
+                    yearwise_calcurve.c14_age[j],
+                    sqrt(pow(yearwise_calcurve.c14_sig[j], 2) + pow(c14_sig[i], 2)),
                     0);
             if (current_prob > max_prob) {
-                most_probably_age = calcurve.cal_age[j];
+                most_probably_age = yearwise_calcurve.cal_age[j];
                 max_prob = current_prob;
             }
         }
@@ -114,7 +114,7 @@ void WalkerDPMM::initialise_clusters() {
     }
 
     cluster_ids_i.resize(n_obs);
-    get_sample_ids(cluster_ids_i, 1, n_clust_i, n_obs);
+    get_sample_ids(cluster_ids_i, 1, n_clust_i);
     cluster_ids[0] = cluster_ids_i;
     phi[0] = phi_i;
     tau[0] = tau_i;
@@ -122,42 +122,42 @@ void WalkerDPMM::initialise_clusters() {
 }
 
 void WalkerDPMM::interpolate_calibration_curve() {
-   int n = (int) calcurve.cal_age.size();
+    int n = (int) calcurve.cal_age.size();
     std::vector<int> perm(n);
     std::vector<double> sorted_cal_age(calcurve.cal_age.begin(), calcurve.cal_age.end());
-    int k_start = 1.; // TODO : allow different start ages
-    // Start age for interpolated calendar age
-
-    yearwise_calcurve.cal_age.resize(max_year_bp);
-    yearwise_calcurve.c14_age.resize(max_year_bp);
-    yearwise_calcurve.c14_sig.resize(max_year_bp);
 
     for (int i = 0; i < n; i++) perm[i] = i;
     rsort_with_index(&sorted_cal_age[0], &perm[0], n);
 
+    // Start and end date for interpolated calendar age
+    int y_start = (int) floor(sorted_cal_age[0]);
+    int y_end = (int) ceil(sorted_cal_age[n - 1]);
+    int n_interp = y_end - y_start + 1;
+
+    yearwise_calcurve.cal_age.resize(n_interp);
+    yearwise_calcurve.c14_age.resize(n_interp);
+    yearwise_calcurve.c14_sig.resize(n_interp);
+
     int i = 0;
-    while (sorted_cal_age[i] < k_start) {
-        i++;
-    }
-    for (int k = k_start; k <= max_year_bp; k++) {
-        yearwise_calcurve.cal_age[k - 1] = k;
-        if (sorted_cal_age[i] == k) {
-            yearwise_calcurve.c14_age[k - 1] = calcurve.c14_age[perm[i]];
-            yearwise_calcurve.c14_sig[k - 1] = calcurve.c14_sig[perm[i]];
-        } else if (sorted_cal_age[i + 1] == k) {
+    for (int k = 0; k < n_interp; k++) {
+        yearwise_calcurve.cal_age[k] = k + y_start;
+        if (sorted_cal_age[i] == yearwise_calcurve.cal_age[k]) {
+            yearwise_calcurve.c14_age[k] = calcurve.c14_age[perm[i]];
+            yearwise_calcurve.c14_sig[k] = calcurve.c14_sig[perm[i]];
+        } else if (sorted_cal_age[i + 1] == yearwise_calcurve.cal_age[k]) {
             i++;
-            yearwise_calcurve.c14_age[k - 1] = calcurve.c14_age[perm[i]];
-            yearwise_calcurve.c14_sig[k - 1] = calcurve.c14_sig[perm[i]];
+            yearwise_calcurve.c14_age[k] = calcurve.c14_age[perm[i]];
+            yearwise_calcurve.c14_sig[k] = calcurve.c14_sig[perm[i]];
         } else {
-            yearwise_calcurve.c14_age[k - 1] = interpolate_linear(
-                    k,
+            yearwise_calcurve.c14_age[k] = interpolate_linear(
+                    yearwise_calcurve.cal_age[k],
                     sorted_cal_age[i],
                     sorted_cal_age[i + 1],
                     calcurve.c14_age[perm[i]],
                     calcurve.c14_age[perm[i + 1]]
             );
-            yearwise_calcurve.c14_sig[k - 1] = interpolate_linear(
-                    k,
+            yearwise_calcurve.c14_sig[k] = interpolate_linear(
+                    yearwise_calcurve.cal_age[k],
                     sorted_cal_age[i],
                     sorted_cal_age[i + 1],
                     calcurve.c14_sig[perm[i]],
@@ -224,7 +224,7 @@ void WalkerDPMM::update_weights(const std::vector<double>& u, double min_u) {
 }
 
 void WalkerDPMM::update_v_element(int cluster_id, double brprod, const std::vector<double>& u) {
-    std::vector<double> prodv(n_weights + 1);   // TODO: does this need to be +1??
+    std::vector<double> prodv(n_weights);
     bool prodv_set = false;
     double b_sub, b_sub_max = 0.;
     int index;
@@ -276,7 +276,7 @@ void WalkerDPMM::update_phi_and_tau() {
             // There are some observations, so update the phi and tau for this
             // cluster (conjugate according to NormalGamma prior)
             update_cluster_phi_and_tau(c, cluster_calendar_ages);
-            cluster_calendar_ages.resize(0);
+            cluster_calendar_ages.clear();
         }
     }
 }
@@ -323,15 +323,15 @@ void WalkerDPMM::update_cluster_ids(const std::vector<double>& u) {
             }
         }
         cluster_ids_i[j] = poss_cluster_ids[sample_integer(poss_cluster_ids.size(), dens, false)];
-        poss_cluster_ids.resize(0);
-        dens.resize(0);
+        poss_cluster_ids.clear();
+        dens.clear();
     }
 }
 
 void WalkerDPMM::update_n_clust() {
     // Find number of distinct populated clusters
     int cluster_id;
-    std::vector<int> observations_per_cluster(2*n_obs, 0);  // Allocate plenty of space
+    std::vector<int> observations_per_cluster(n_weights, 0);
     n_clust_i = 0;
     for (int j = 0; j < n_obs; j++) {
         cluster_id = cluster_ids_i[j];
@@ -390,15 +390,13 @@ double WalkerDPMM::cal_age_log_likelihood(
 ) {
     double loglik;
     double cc_c14_age, cc_c14_sig;
-    int yr;
+    int yr_index = (int) (cal_age - yearwise_calcurve.cal_age[0]);
 
-    yr = (int) cal_age - 1;
-    // TODO: Change this
-    if ((yr < 0) || (yr >= max_year_bp)) {  // out of range
+    if ((yr_index < 0) || (yr_index >= yearwise_calcurve.c14_age.size())) {  // out of range
         return -std::numeric_limits<double>::infinity();
     }
-    cc_c14_age = yearwise_calcurve.c14_age[yr];
-    cc_c14_sig= yearwise_calcurve.c14_sig[yr];
+    cc_c14_age = yearwise_calcurve.c14_age[yr_index];
+    cc_c14_sig= yearwise_calcurve.c14_sig[yr_index];
 
     loglik = dnorm4(cal_age, cluster_mean, cluster_sig, 1);
     loglik += dnorm4(
@@ -483,7 +481,7 @@ void WalkerDPMM::store_current_values(int output_index) {
 }
 
 // Function which works out the marginal of a calendar age when
-// theta ~ N(phi, sd = sqrt(1/tau)) and (phi,tau) are NormalGamma
+// theta ~ N(phi, sd = sqrt(1/tau)) and (phi, tau) are NormalGamma
 double WalkerDPMM::log_marginal_normal_gamma(double cal_age, double mu_phi_s) {
     double logden, margprec, margdf;
 
@@ -505,7 +503,7 @@ DensityData WalkerDPMM::get_predictive_density(
     int n_burn = floor(n_out / 2);
     std::vector<int> sample_ids(n_posterior_samples);
     int s; //current sample id
-    get_sample_ids(sample_ids, n_burn - 1, n_out - 1, n_posterior_samples);
+    get_sample_ids(sample_ids, n_burn - 1, n_out - 1);
 
     double min_calendar_age = std::numeric_limits<double>::infinity();
     double max_calendar_age = -std::numeric_limits<double>::infinity();
