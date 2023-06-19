@@ -16,6 +16,8 @@ bool read_oxcal_data(
     const std::string& file_prefix,
     std::vector<double>& c14_age,
     std::vector<double>& c14_sig,
+    std::vector<double>& f14c_age,
+    std::vector<double>& f14c_sig,
     std::string& model_name);
 
 int read_output_offset(const std::string& file_prefix, const std::string& model_name);

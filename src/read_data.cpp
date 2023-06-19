@@ -46,12 +46,16 @@ bool read_oxcal_data(
         const std::string& file_prefix,
         std::vector<double>& c14_age,
         std::vector<double>& c14_sig,
+        std::vector<double>& f14c_age,
+        std::vector<double>& f14c_sig,
         std::string& model_name) {
 
     std::string line, age, sig, end_of_section = "};";
     std::regex np_model_regex(R"(NP_Model\(\s*["'](.*)["']\s*\))");
     std::regex named_r_date_regex(R"(R_Date\(\s*["'](.*)["']\s*,\s*([0-9\.]*)\s*,\s*([0-9\.]*))");
     std::regex unnamed_r_date_regex(R"(R_Date\(\s*([0-9\.]*)\s*,\s*([0-9\.]*))");
+    std::regex named_r_f14c_regex(R"(R_F14C\(\s*["'](.*)["']\s*,\s*([0-9\.]*)\s*,\s*([0-9\.]*))");
+    std::regex unnamed_r_f14c_regex(R"(R_F14C\(\s*([0-9\.]*)\s*,\s*([0-9\.]*))");
     bool np_model = false;
     std::smatch r_date_match;
     std::fstream file("../data/" + file_prefix + ".oxcal", std::ios::in);
@@ -74,9 +78,20 @@ bool read_oxcal_data(
             sig = r_date_match[2];
             c14_age.push_back(std::strtod(age.c_str(), nullptr));
             c14_sig.push_back(std::strtod(sig.c_str(), nullptr));
+        } else if (np_model && regex_search(line, r_date_match, named_r_f14c_regex)) {
+            age = r_date_match[2];
+            sig = r_date_match[3];
+            f14c_age.push_back(std::strtod(age.c_str(), nullptr));
+            f14c_sig.push_back(std::strtod(sig.c_str(), nullptr));
+        }else if (np_model && regex_search(line, r_date_match, unnamed_r_f14c_regex)){
+            age = r_date_match[1];
+            sig = r_date_match[2];
+            f14c_age.push_back(std::strtod(age.c_str(), nullptr));
+            f14c_sig.push_back(std::strtod(sig.c_str(), nullptr));
         }
     }
-    return np_model && !c14_age.empty();
+    if (!c14_age.empty() && !f14c_age.empty()) throw std::runtime_error("All dates must be the same format");
+    return np_model && (!c14_age.empty() || !f14c_age.empty());
 }
 
 int read_output_offset(const std::string& file_prefix, const std::string& model_name) {

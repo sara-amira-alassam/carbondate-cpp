@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     const int n_posterior_samples = 5000;
     const double quantile_edge_width = 0.1586553; // 1-sigma interval
     int output_offset;
-    std::vector<double> c14_age, c14_sig;
+    std::vector<double> c14_age, c14_sig, f14c_age, f14c_sig;
     std::string model_name, calibration_curve = "intcal20.14c";
     std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
     WalkerDPMM dpmm;
@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     std::vector<bool> log_ranges {true, true, false}; // log 1, 2, 3 s.d. ranges respectively?
     bool quantile_ranges = false, intercept_ranges = false;
 
-    if (!read_oxcal_data(file_prefix, c14_age, c14_sig, model_name)) {
+    if (!read_oxcal_data(file_prefix, c14_age, c14_sig, f14c_age, f14c_sig, model_name)) {
         // If there is no data within the NP model in this OxCal file then simply exit
         return 0;
     }
