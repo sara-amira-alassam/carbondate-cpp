@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     int output_offset;
     std::vector<double> c14_age, c14_sig, f14c_age, f14c_sig;
     std::string model_name, calibration_curve = "intcal20.14c";
-    std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
+    std::vector<double> cc_cal_age, cc_f14c_age, cc_f14c_sig;
     WalkerDPMM dpmm;
 
     // The following relate to options that may be overwritten in the call below to read_options()
@@ -36,9 +36,9 @@ int main(int argc, char* argv[]) {
         quantile_ranges,
         intercept_ranges,
         calibration_curve);
-    read_calibration_curve(calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
+    read_calibration_curve(calibration_curve, cc_cal_age, cc_f14c_age, cc_f14c_sig);
 
-    dpmm.initialise(c14_age, c14_sig, cc_cal_age, cc_c14_age, cc_c14_sig, 5);
+    dpmm.initialise(c14_age, c14_sig, cc_cal_age, cc_f14c_age, cc_f14c_sig, 5);
     dpmm.calibrate(num_iterations, 10);
 
     DensityData predictive_density_data = dpmm.get_predictive_density(
