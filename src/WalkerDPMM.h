@@ -8,6 +8,14 @@ struct CalCurve {
     std::vector<double> cal_age;
     std::vector<double> c14_age;
     std::vector<double> c14_sig;
+    std::vector<double> f14c_age;
+    std::vector<double> f14c_sig;
+};
+
+struct YearlyCalCurve {
+    std::vector<double> cal_age;
+    std::vector<double> rc_age;
+    std::vector<double> rc_sig;
 };
 
 struct DensityData {
@@ -21,12 +29,15 @@ struct DensityData {
 };
 
 class WalkerDPMM {
-    std::vector<double> c14_age;  // observed c14 determinations
-    std::vector<double> c14_sig;  // c14 determination uncertainties
+    std::vector<double> rc_determinations;  // observed radiocarbon determinations
+    std::vector<double> rc_sigmas;  // radiocarbon determination uncertainties
+    bool f14c_inputs;     // Whether the radiocarbon determinations are c14 age or f14c age
     CalCurve calcurve;            // original calibration curve data
-    CalCurve yearwise_calcurve;   // calibration curve interpolated for every year of calendar age
+    YearlyCalCurve yearwise_calcurve;   // calibration curve interpolated for every year of calendar age
 
     int n_obs, n_out;
+
+private:
 
     // Hyperparameters
     double lambda, nu1, nu2;
@@ -72,24 +83,23 @@ private:
             double prmean,
             double prsig,
             double obs_c14_age,
-            double obs_c14_sig
-    );
+            double obs_c14_sig);
     double log_marginal_normal_gamma(double cal_age, double mu_phi_s);
 
 public:
     void initialise(
-            std::vector<double> i_c14_age,
-            std::vector<double> i_c14_sig,
+            std::vector<double> i_rc_determinations,
+            std::vector<double> i_rc_sigmas,
+            bool i_f14c_inputs,
             std::vector<double> cc_cal_age,
             std::vector<double> cc_c14_age,
             std::vector<double> cc_c14_sig,
-            int rng_seed = 0
-    );
+            int rng_seed = 0);
     void calibrate(int n_iter, int n_thin);
     DensityData get_predictive_density(
             int n_posterior_samples, double resolution, double quantile_edge_width);
     std::vector<double> get_posterior_calendar_ages(int ident);
-
+    int get_nobs() const { return n_obs; }
 };
 
 #endif //CARBONDATE_WALKERDPMM_H

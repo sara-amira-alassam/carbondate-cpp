@@ -16,11 +16,9 @@ const std::set<std::string> custom_curves = {"HOBS2022.14c"};
 void read_calibration_curve(
         const std::string& calibration_curve,
         std::vector<double>& cc_cal_age,
-        std::vector<double>& cc_f14c_age,
-        std::vector<double>& cc_f14c_sig) {
+        std::vector<double>& cc_c14_age,
+        std::vector<double>& cc_c14_sig) {
 
-    std::vector<double> cc_c14_age, cc_c14_sig;
-    int n_points;
     const std::string calibration_curve_path = DATA_PREFIX + calibration_curve;
 
     printf("Reading calibration data from %s\n", calibration_curve.c_str());
@@ -38,16 +36,6 @@ void read_calibration_curve(
         cc_c14_age = get_csv_data_from_column(calibration_curve_path, 3, '\t');
         cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 4, '\t');
         for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
-    }
-
-    if (cc_c14_age.empty()) throw std::runtime_error("Unknown calibration curve");
-    n_points = cc_c14_age.size();
-    cc_f14c_age.resize(n_points);
-    cc_f14c_sig.resize(n_points);
-
-    for (int i = 0; i < n_points; i++) {
-        cc_f14c_age[i] = exp(cc_c14_age[i] / -8033.);
-        cc_f14c_sig[i] = cc_f14c_age[i] * cc_c14_sig[i] / 8033;
     }
 }
 
@@ -95,14 +83,14 @@ bool read_oxcal_data(
             sig = r_date_match[3];
             f14c_age.push_back(std::strtod(age.c_str(), nullptr));
             f14c_sig.push_back(std::strtod(sig.c_str(), nullptr));
-        } else if (np_model && regex_search(line, r_date_match, unnamed_r_f14c_regex)){
+        }else if (np_model && regex_search(line, r_date_match, unnamed_r_f14c_regex)){
             age = r_date_match[1];
             sig = r_date_match[2];
             f14c_age.push_back(std::strtod(age.c_str(), nullptr));
             f14c_sig.push_back(std::strtod(sig.c_str(), nullptr));
         }
     }
-    if (!c14_age.empty() && !f14c_age.empty()) throw std::runtime_error("All dates must be the same format");
+    if (!c14_age.empty() && !f14c_age.empty()) throw std::runtime_error("All dates must be the same formats");
     return np_model && (!c14_age.empty() || !f14c_age.empty());
 }
 

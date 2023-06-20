@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     int output_offset;
     std::vector<double> c14_age, c14_sig, f14c_age, f14c_sig;
     std::string model_name, calibration_curve = "intcal20.14c";
-    std::vector<double> cc_cal_age, cc_f14c_age, cc_f14c_sig;
+    std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
     WalkerDPMM dpmm;
 
     // The following relate to options that may be overwritten in the call below to read_options()
@@ -36,15 +36,19 @@ int main(int argc, char* argv[]) {
         quantile_ranges,
         intercept_ranges,
         calibration_curve);
-    read_calibration_curve(calibration_curve, cc_cal_age, cc_f14c_age, cc_f14c_sig);
+    read_calibration_curve(calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
 
-    dpmm.initialise(c14_age, c14_sig, cc_cal_age, cc_f14c_age, cc_f14c_sig, 5);
+    if (!c14_age.empty()) {
+        dpmm.initialise(c14_age, c14_sig, false, cc_cal_age, cc_c14_age, cc_c14_sig, 0);
+    } else {
+        dpmm.initialise(f14c_age, f14c_sig, true, cc_cal_age, cc_c14_age, cc_c14_sig, 0);
+    }
     dpmm.calibrate(num_iterations, 10);
 
     DensityData predictive_density_data = dpmm.get_predictive_density(
             n_posterior_samples, output_resolution, quantile_edge_width);
     PredictiveDensityOutput predictive_density(
-            (int) c14_age.size(),
+            dpmm.get_nobs(),
             output_offset,
             output_resolution,
             model_name,
@@ -54,7 +58,7 @@ int main(int argc, char* argv[]) {
             predictive_density_data.ci_upper);
     predictive_density.print(file_prefix);
 
-    for (int i = 0; i < c14_age.size(); i++){
+    for (int i = 0; i < dpmm.get_nobs(); i++){
         PosteriorDensityOutput posterior_density(
                 i,
                 output_offset,
