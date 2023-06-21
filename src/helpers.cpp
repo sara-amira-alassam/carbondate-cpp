@@ -214,3 +214,35 @@ std::string to_percent_string(double fraction) {
     percent = temp_string;
     return percent;
 }
+
+void convert_to_c14_age(
+        const std::vector<double>&f14c_age,
+        const std::vector<double>&f14c_sig,
+        std::vector<double>&c14_age,
+        std::vector<double>&c14_sig) {
+
+    unsigned n = f14c_age.size();
+
+    c14_age.resize(n);
+    c14_sig.resize(n);
+    for (int i = 0; i < n; i++) {
+        c14_age[i] = -8033. * log(f14c_age[i]);
+        c14_sig[i] =  8033 * f14c_sig[i] / f14c_age[i];
+    }
+}
+
+void convert_to_f14c_age(
+        const std::vector<double>&c14_age,
+        const std::vector<double>&c14_sig,
+        std::vector<double>&f14c_age,
+        std::vector<double>&f14c_sig){
+
+    unsigned n = c14_age.size();
+
+    f14c_age.resize(n);
+    f14c_sig.resize(n);
+    for (int i = 0; i < n; i++) {
+        f14c_age[i] = exp(c14_age[i] / -8033.);
+        f14c_sig[i] = f14c_age[i] * c14_sig[i] / 8033;
+    }
+}

@@ -4,7 +4,7 @@
    Curve="intcal20.14c";
    Cubic=TRUE;
    RawData=TRUE;
-   UseF14C=TRUE;
+   UseF14C=FALSE;
    BCAD=TRUE;
    Intercept=FALSE;
    Floruit=FALSE;

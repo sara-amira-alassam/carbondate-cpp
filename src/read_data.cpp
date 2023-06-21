@@ -122,6 +122,7 @@ void read_options(
         std::vector<bool> &ranges,
         bool &quantile_ranges,
         bool &intercept_ranges,
+        bool &use_f14c,
         std::string &calibration_curve) {
 
     std::string line, option, value, end_of_section = "};";
@@ -150,7 +151,7 @@ void read_options(
             } else if (option == "kIterations") {
                 iterations = std::stoi(value) * 1000;
             } else if (option == "SD1") {
-                ranges[0] = value != "FALSE";
+                ranges[0] = value == "TRUE";
             } else if (option == "SD2") {
                 ranges[1] = value == "TRUE";
             } else if (option == "SD3") {
@@ -159,6 +160,8 @@ void read_options(
                 quantile_ranges = value == "TRUE";
             } else if (option == "Intercept") {
                 intercept_ranges = value == "TRUE";
+            } else if (option == "UseF14C") {
+                use_f14c = value == "TRUE";
             } else if (option == "Curve") {
                 if (allowed_calibration_curves.count(value) == 0) {
                     printf(
