@@ -45,6 +45,9 @@ private:
     double alpha_shape = 1., alpha_rate = 1.;
     double slice_width, slice_multiplier = 10.;
 
+    // SPD ranges - used for initialising certain value
+    std::vector<double> spd_range_1_sigma = {0., 0.}, spd_range_2_sigma = {0., 0.}, spd_range_3_sigma = {0., 0.};
+
     // Instant values of DPMM parameters and output
     // Note that the number of weights can be > number of clusters as may not all be populated
     // Here n_clust refers to the number of unique cluster ids for the observations
@@ -61,7 +64,7 @@ private:
 
 private:
     void initialise_storage();
-    void initialise_calendar_age();
+    void initialise_calendar_age_and_spd_ranges();
     void initialise_hyperparameters();
     void initialise_clusters();
     void interpolate_calibration_curve();

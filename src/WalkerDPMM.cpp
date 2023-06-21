@@ -44,7 +44,7 @@ WalkerDPMM::initialise(
 
     interpolate_calibration_curve();
     initialise_storage();
-    initialise_calendar_age();
+    initialise_calendar_age_and_spd_ranges();
     initialise_hyperparameters();
     initialise_clusters();
 }
@@ -60,48 +60,63 @@ void WalkerDPMM::initialise_storage(){
     cluster_ids.resize(n_out);
 }
 
-void WalkerDPMM::initialise_calendar_age() {
+void WalkerDPMM::initialise_calendar_age_and_spd_ranges() {
     int n_points = (int) yearwise_calcurve.cal_age.size();
-    double current_prob, max_prob, most_probably_age;
+    double sum_prob, max_prob, most_probably_age;
+    std::vector<double> current_prob(n_points), spd(n_points), cum_prob_spd(n_points);
     calendar_age_i.resize(n_obs);
 
     for (int i = 0; i < n_obs; i++) {
-        max_prob = 0.;
+        sum_prob = max_prob = 0.;
         for (int j = 0; j < n_points; j++) {
-            current_prob = dnorm4(
+            current_prob[j] = dnorm4(
                     rc_determinations[i],
                     yearwise_calcurve.rc_age[j],
                     sqrt(pow(yearwise_calcurve.rc_sig[j], 2) + pow(rc_sigmas[i], 2)),
                     0);
-            if (current_prob > max_prob) {
+            sum_prob += current_prob[j];
+            if (current_prob[j] > max_prob) {
                 most_probably_age = yearwise_calcurve.cal_age[j];
-                max_prob = current_prob;
+                max_prob = current_prob[j];
             }
         }
         calendar_age_i[i] = most_probably_age;
+        for (int j = 0; j < n_points; j++) {
+            spd[j] += current_prob[j] / sum_prob;
+        }
     }
     calendar_age[0] = calendar_age_i;
+
+    cum_prob_spd[0] = spd[0] / n_obs;
+    for (int i = 1; i < n_points; i++) cum_prob_spd[i] = cum_prob_spd[i - 1] + spd[i] / n_obs;
+
+    spd_range_1_sigma[0] = yearwise_calcurve.cal_age[get_left_boundary(cum_prob_spd, (1 - 0.683)/2.)];
+    spd_range_1_sigma[1] = yearwise_calcurve.cal_age[get_right_boundary(cum_prob_spd, (1 + 0.683)/2.)];
+    spd_range_2_sigma[0] = yearwise_calcurve.cal_age[get_left_boundary(cum_prob_spd, (1 - 0.954)/2.)];
+    spd_range_2_sigma[1] = yearwise_calcurve.cal_age[get_right_boundary(cum_prob_spd, (1 + 0.954)/2.)];
+    spd_range_3_sigma[0] = yearwise_calcurve.cal_age[get_left_boundary(cum_prob_spd, (1 - 0.997)/2.)];
+    spd_range_3_sigma[1] = yearwise_calcurve.cal_age[get_right_boundary(cum_prob_spd, (1 + 0.997)/2.)];
 }
 
 void WalkerDPMM::initialise_hyperparameters() {
     double calendar_age_range, calendar_age_prec;
 
-    calendar_age_range = max_diff(calendar_age[0]);
-    calendar_age_prec = pow(0.1 * mad(calendar_age[0]), -2);
-
-    A = median(calendar_age[0]);
-    B = 1./pow(calendar_age_range, 2);
+    A = mean(spd_range_2_sigma);
+    B = 1./pow(max_diff(spd_range_2_sigma), 2);
     mu_phi[0] = A;
 
-    lambda = pow(100. / calendar_age_range, 2);
+    calendar_age_range = 0.05 * max_diff(spd_range_1_sigma);
+    calendar_age_prec = pow(calendar_age_range, -2);
+
+    lambda = pow(100. / max_diff(spd_range_3_sigma), 2);
     nu1 = 0.25;
     nu2 = nu1 / calendar_age_prec;
 
-    slice_width = std::max(1000., max_diff(rc_determinations) / 2.);
+    slice_width = max_diff(spd_range_3_sigma);
 }
 
 void WalkerDPMM::initialise_clusters() {
-    n_weights = n_clust_i = n_clust[0] = 10;
+    n_weights = n_clust_i = n_clust[0] = std::min(10, n_obs);
     phi_i.resize(n_weights);
     tau_i.resize(n_weights);
     v.resize(n_weights);
