@@ -33,14 +33,7 @@ WalkerDPMM::initialise(
     calcurve.cal_age = std::move(cc_cal_age);
     calcurve.c14_age = std::move(cc_c14_age);
     calcurve.c14_sig = std::move(cc_c14_sig);
-
-    int n_points = (int) calcurve.c14_age.size();
-    calcurve.f14c_age.resize(n_points);
-    calcurve.f14c_sig.resize(n_points);
-    for (int i = 0; i < n_points; i++) {
-        calcurve.f14c_age[i] = exp(calcurve.c14_age[i] / -8033.);
-        calcurve.f14c_sig[i] = calcurve.f14c_age[i] * calcurve.c14_sig[i] / 8033;
-    }
+    convert_to_f14c_age(calcurve.c14_age, calcurve.c14_sig, calcurve.f14c_age, calcurve.f14c_sig);
 
     interpolate_calibration_curve();
     initialise_storage();

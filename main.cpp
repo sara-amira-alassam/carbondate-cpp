@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     int num_iterations = 1e5;
     double output_resolution = 5;
     std::vector<bool> log_ranges {true, true, false}; // log 1, 2, 3 s.d. ranges respectively?
-    bool quantile_ranges = false, intercept_ranges = false;
+    bool quantile_ranges = false, intercept_ranges = false, use_f14c = true;
 
     if (!read_oxcal_data(file_prefix, c14_age, c14_sig, f14c_age, f14c_sig, model_name)) {
         // If there is no data within the NP model in this OxCal file then simply exit
@@ -35,13 +35,16 @@ int main(int argc, char* argv[]) {
         log_ranges,
         quantile_ranges,
         intercept_ranges,
+        use_f14c,
         calibration_curve);
     read_calibration_curve(calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
 
-    if (!c14_age.empty()) {
-        dpmm.initialise(c14_age, c14_sig, false, cc_cal_age, cc_c14_age, cc_c14_sig, 0);
-    } else {
+    if (use_f14c) {
+        if (f14c_age.empty()) convert_to_f14c_age(c14_age, c14_sig, f14c_age, f14c_sig);
         dpmm.initialise(f14c_age, f14c_sig, true, cc_cal_age, cc_c14_age, cc_c14_sig, 0);
+    } else {
+        if (c14_age.empty()) convert_to_c14_age(f14c_age, f14c_sig, c14_age, c14_sig);
+        dpmm.initialise(c14_age, c14_sig, false, cc_cal_age, cc_c14_age, cc_c14_sig, 0);
     }
     dpmm.calibrate(num_iterations, 10);
 

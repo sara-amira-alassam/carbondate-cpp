@@ -26,5 +26,15 @@ void update_progress_bar(double progress);
 double to_calAD(double year_calPB);
 std::string to_string(double var, int max_digits);
 std::string to_percent_string(double fraction);
+void convert_to_c14_age(
+        const std::vector<double> &f14c_age,
+        const std::vector<double> &f14c_sig,
+        std::vector<double> &c14_age,
+        std::vector<double> &c14_sig);
+void convert_to_f14c_age(
+        const std::vector<double> &c14_age,
+        const std::vector<double> &c14_sig,
+        std::vector<double> &f14c_age,
+        std::vector<double> &f14c_sig);
 
 #endif //CARBONDATE_HELPERS_H
