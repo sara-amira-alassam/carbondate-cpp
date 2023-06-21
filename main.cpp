@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     const int n_posterior_samples = 5000;
     const double quantile_edge_width = 0.1586553; // 1-sigma interval
     int output_offset;
-    std::vector<double> c14_age, c14_sig;
+    std::vector<double> c14_age, c14_sig, f14c_age, f14c_sig;
     std::string model_name, calibration_curve = "intcal20.14c";
     std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
     WalkerDPMM dpmm;
@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     std::vector<bool> log_ranges {true, true, false}; // log 1, 2, 3 s.d. ranges respectively?
     bool quantile_ranges = false, intercept_ranges = false;
 
-    if (!read_oxcal_data(file_prefix, c14_age, c14_sig, model_name)) {
+    if (!read_oxcal_data(file_prefix, c14_age, c14_sig, f14c_age, f14c_sig, model_name)) {
         // If there is no data within the NP model in this OxCal file then simply exit
         return 0;
     }
@@ -38,13 +38,17 @@ int main(int argc, char* argv[]) {
         calibration_curve);
     read_calibration_curve(calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
 
-    dpmm.initialise(c14_age, c14_sig, cc_cal_age, cc_c14_age, cc_c14_sig, 5);
+    if (!c14_age.empty()) {
+        dpmm.initialise(c14_age, c14_sig, false, cc_cal_age, cc_c14_age, cc_c14_sig, 0);
+    } else {
+        dpmm.initialise(f14c_age, f14c_sig, true, cc_cal_age, cc_c14_age, cc_c14_sig, 0);
+    }
     dpmm.calibrate(num_iterations, 10);
 
     DensityData predictive_density_data = dpmm.get_predictive_density(
             n_posterior_samples, output_resolution, quantile_edge_width);
     PredictiveDensityOutput predictive_density(
-            (int) c14_age.size(),
+            dpmm.get_nobs(),
             output_offset,
             output_resolution,
             model_name,
@@ -54,7 +58,7 @@ int main(int argc, char* argv[]) {
             predictive_density_data.ci_upper);
     predictive_density.print(file_prefix);
 
-    for (int i = 0; i < c14_age.size(); i++){
+    for (int i = 0; i < dpmm.get_nobs(); i++){
         PosteriorDensityOutput posterior_density(
                 i,
                 output_offset,

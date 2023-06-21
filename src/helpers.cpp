@@ -82,15 +82,15 @@ double interpolate_linear(double xi, double x1, double x2, double y1, double y2)
 // Finds the index for which all values below this are less than the cut-off
 int get_left_boundary(const std::vector<double>& vec, double cut_off) {
     for (int i = 0; i < vec.size(); i++) {
-        if (vec[i] > cut_off) return i;
+        if (vec[i] >= cut_off) return i;
     }
     return 0;
 }
 
-// Finds the index for which all values above this are less than the cut-off
+// Finds the index for which all values above this are more than the cut-off
 int get_right_boundary(const std::vector<double>& vec, double cut_off) {
     for (int i = (int) vec.size() - 1; i >= 0; i--) {
-        if (vec[i] > cut_off) return i;
+        if (vec[i] <= cut_off) return i;
     }
     return (int) vec.size() - 1;
 }
