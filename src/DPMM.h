@@ -53,11 +53,14 @@ protected:
     std::vector<std::vector<double>> calendar_age;
 
     // Instant values of DPMM parameters
+    // n_clust refers to the number of unique cluster ids for the observations
+    int n_clust_i;
     double alpha_i, mu_phi_i;
     std::vector<double> phi_i, tau_i;
     std::vector<int> cluster_ids_i;
 
     // Stored values of DPMM parameters and output
+    std::vector<int> n_clust;
     std::vector<double> alpha, mu_phi;
     std::vector<std::vector<double>> phi, tau;
     std::vector<std::vector<int>> cluster_ids;
@@ -81,8 +84,12 @@ protected:
             double obs_c14_sig);
     void update_cluster_phi_and_tau(int cluster_id, const std::vector<double>& cluster_calendar_ages);
     void update_mu_phi();
+    void update_alpha();
+    double alpha_log_prior(double alpha_value);
+    virtual double alpha_log_likelihood(double alpha_value);
     void update_calendar_ages();
     double log_marginal_normal_gamma(double cal_age, double mu_phi_s);
+    virtual double calculate_density_sample(int sample_id, double calendar_age_BP);
 
 public:
     void initialise(

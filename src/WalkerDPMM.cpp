@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <ctime>
 #include <string>
 #include <utility>
 #include "WalkerDPMM.h"
@@ -8,7 +7,6 @@
 
 void WalkerDPMM::initialise_storage(){
     DPMM::initialise_storage();
-    n_clust.resize(n_out);
     weight.resize(n_out);
 }
 
@@ -24,10 +22,9 @@ void WalkerDPMM::initialise_clusters() {
 
     for (int c = 0; c < n_weights; c++) {
         tau_i[c] = rgamma(nu1, 1./nu2);
-    }
-    for (int c = 0; c < n_weights; c++) {
         phi_i[c] = rnorm(mu_phi_i, pow(lambda*tau_i[c], -0.5));
     }
+
     double cumprod = 1.0;
     for (int c = 0; c < n_weights; c++) {
         v[c] = rbeta(1., alpha_i);
@@ -178,90 +175,22 @@ double WalkerDPMM::alpha_log_likelihood(double alpha_value) {
     return n_clust_i * log(alpha_value) + lgamma(alpha_value) - lgamma(alpha_value + n_obs);
 }
 
-double WalkerDPMM::alpha_log_prior(double alpha_value) {
-    return dgamma(alpha_value, alpha_shape, 1./alpha_rate, 1);
-}
-
-void WalkerDPMM::update_alpha() {
-    double updated_alpha = -1.;
-    double prop_sd = 1.;        // Standard deviation for sampling proposed value of alpha
-    double log_prior_rate, log_likelihood_rate, log_proposal_rate, hr;
-
-    // Sample new alpha from truncated normal distribution
-    while (updated_alpha <= 0.) updated_alpha = rnorm(alpha_i, prop_sd);
-
-    log_prior_rate = alpha_log_prior(updated_alpha) - alpha_log_prior(alpha_i);
-    log_likelihood_rate = alpha_log_likelihood(updated_alpha) - alpha_log_likelihood(alpha_i);
-    // Adjust for non-symmetric truncated normal proposal
-    log_proposal_rate = pnorm5(alpha_i, 0., 1., 1, 1) - pnorm5(updated_alpha, 0., 1., 1, 1);
-    hr = exp(log_prior_rate + log_likelihood_rate + log_proposal_rate);
-
-    // Accept or reject new alpha
-    if (runif(0., 1.) < hr) alpha_i = updated_alpha;
-}
-
 void WalkerDPMM::store_current_values(int output_index) {
     DPMM::store_current_values(output_index);
-    n_clust[output_index] = n_clust_i;
     weight[output_index] = weight_i;
 }
 
-DensityData WalkerDPMM::get_predictive_density(int n_posterior_samples, double resolution, double quantile_edge_width) {
-    int n_burn = floor(n_out / 2);
-    std::vector<int> sample_ids(n_posterior_samples);
-    int s; //current sample id
-    get_sample_ids(sample_ids, n_burn - 1, n_out - 1);
-
-    double min_calendar_age = std::numeric_limits<double>::infinity();
-    double max_calendar_age = -std::numeric_limits<double>::infinity();
-    for (int i = 0; i < n_out; i++) {
-        for (int j = 0; j < n_obs; j++) {
-            if (calendar_age[i][j] < min_calendar_age) min_calendar_age = calendar_age[i][j];
-            if (calendar_age[i][j] > max_calendar_age) max_calendar_age = calendar_age[i][j];
-        }
+double WalkerDPMM::calculate_density_sample(int sample_id, double calendar_age_BP) {
+    double sum_weight = 0., logmarg, density_sample = 0.;
+    int n_all_clust = (int) weight[sample_id].size();
+    for (int c = 0; c < n_all_clust; c++) {
+        density_sample += weight[sample_id][c]
+                                 * dnorm4(calendar_age_BP, phi[sample_id][c], 1. / sqrt(tau[sample_id][c]), 0);
+        sum_weight += weight[sample_id][c];
     }
-    min_calendar_age = floor(min_calendar_age);
-    max_calendar_age = ceil(max_calendar_age);
-    int n_points = (int) ((max_calendar_age - min_calendar_age) / resolution) + 2;
-    DensityData density_data(n_points);
+    // The predictive density for a new observation is a scaled t-distribution
+    logmarg = log_marginal_normal_gamma(calendar_age_BP, mu_phi[sample_id]);
+    density_sample += (1. - sum_weight) * exp(logmarg);
 
-    // A vector of vectors to represent the density matrix
-    std::vector<std::vector<double>> density_samples(
-            n_points, std::vector<double>(n_posterior_samples, 0));
-    double sum_weight, logmarg;
-
-    std::vector<double> cal_age_BP(n_points), sum_ages(n_points, 0);
-    for (int i = 0; i < n_points; i++) cal_age_BP[i] = min_calendar_age + i * resolution;
-    for (int j = 0; j < n_posterior_samples; j++) {
-        s = sample_ids[j];
-        for (int i = 0; i < n_points; i++) {
-            sum_weight = 0.;
-            int n_all_clust = (int) weight[s].size();
-            for (int c = 0; c < n_all_clust; c++) {
-                density_samples[i][j] += weight[s][c]
-                                         * dnorm4(cal_age_BP[i], phi[s][c], 1. / sqrt(tau[s][c]), 0);
-                sum_weight += weight[s][c];
-            }
-            // The predictive density for a new observation is a scaled t-distribution
-            logmarg = log_marginal_normal_gamma(cal_age_BP[i], mu_phi[s]);
-            density_samples[i][j] += (1. - sum_weight) * exp(logmarg);
-
-            sum_ages[i] += density_samples[i][j];
-        }
-    }
-
-    // Now reverse as we populate the DensityData object as we're converting from calBP to AD
-    int i_reversed;
-    for (int i = 0; i < n_points; i++) {
-        i_reversed = n_points - 1 - i;
-        density_data.cal_age_AD[i_reversed] = to_calAD(cal_age_BP[i]);
-        density_data.mean[i_reversed] = sum_ages[i] / n_posterior_samples;
-        edge_quantiles(
-                density_samples[i],
-                quantile_edge_width,
-                density_data.ci_lower[i_reversed],
-                density_data.ci_upper[i_reversed]);
-    }
-
-    return density_data;
+    return density_sample;
 }

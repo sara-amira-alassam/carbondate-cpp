@@ -47,6 +47,7 @@ void DPMM::initialise_storage() {
     mu_phi.resize(n_out);
     phi.resize(n_out);
     tau.resize(n_out);
+    n_clust.resize(n_out);
     cluster_ids.resize(n_out);
 }
 
@@ -181,6 +182,7 @@ void DPMM::store_current_values(int output_index) {
     phi[output_index] = phi_i;
     tau[output_index] = tau_i;
     cluster_ids[output_index] = cluster_ids_i;
+    n_clust[output_index] = n_clust_i;
 }
 
 double DPMM::cal_age_log_likelihood(
@@ -286,8 +288,7 @@ double DPMM::log_marginal_normal_gamma(double cal_age, double mu_phi_s) {
     return logden;
 }
 
-void DPMM::update_cluster_phi_and_tau(
-        int cluster_id, const std::vector<double>& cluster_calendar_ages) {
+void DPMM::update_cluster_phi_and_tau(int cluster_id, const std::vector<double>& cluster_calendar_ages) {
     int num_in_cluster = (int) cluster_calendar_ages.size();
     std::vector<double> calendar_age_diff(num_in_cluster);
     double calendar_age_mean;
@@ -329,9 +330,83 @@ void DPMM::update_mu_phi() {
     mu_phi_i = rnorm(posterior_mean, 1. / sqrt(posterior_precision));
 }
 
+void DPMM::update_alpha() {
+    double updated_alpha = -1.;
+    double prop_sd = 1.;        // Standard deviation for sampling proposed value of alpha
+    double log_prior_rate, log_likelihood_rate, log_proposal_rate, hr;
+
+    // Sample new alpha from truncated normal distribution
+    while (updated_alpha <= 0.) updated_alpha = rnorm(alpha_i, prop_sd);
+
+    log_prior_rate = alpha_log_prior(updated_alpha) - alpha_log_prior(alpha_i);
+    log_likelihood_rate = alpha_log_likelihood(updated_alpha) - alpha_log_likelihood(alpha_i);
+    // Adjust for non-symmetric truncated normal proposal
+    log_proposal_rate = pnorm5(alpha_i, 0., 1., 1, 1) - pnorm5(updated_alpha, 0., 1., 1, 1);
+    hr = exp(log_prior_rate + log_likelihood_rate + log_proposal_rate);
+
+    // Accept or reject new alpha
+    if (runif(0., 1.) < hr) alpha_i = updated_alpha;
+}
+
+double DPMM::alpha_log_prior(double alpha_value) {
+    return dgamma(alpha_value, alpha_shape, 1./alpha_rate, 1);
+}
+
+double DPMM::alpha_log_likelihood(double alpha_value) {
+    // Must be implemented in child class
+    return 0.;
+}
+
+
 DensityData DPMM::get_predictive_density(int n_posterior_samples, double resolution, double quantile_edge_width) {
-    DensityData density_data(0);
+    int n_burn = floor(n_out / 2);
+    std::vector<int> sample_ids(n_posterior_samples);
+    get_sample_ids(sample_ids, n_burn - 1, n_out - 1);
+
+    double min_calendar_age = std::numeric_limits<double>::infinity();
+    double max_calendar_age = -std::numeric_limits<double>::infinity();
+    for (int i = 0; i < n_out; i++) {
+        for (int j = 0; j < n_obs; j++) {
+            if (calendar_age[i][j] < min_calendar_age) min_calendar_age = calendar_age[i][j];
+            if (calendar_age[i][j] > max_calendar_age) max_calendar_age = calendar_age[i][j];
+        }
+    }
+    min_calendar_age = floor(min_calendar_age);
+    max_calendar_age = ceil(max_calendar_age);
+    int n_points = (int) ((max_calendar_age - min_calendar_age) / resolution) + 2;
+    DensityData density_data(n_points);
+
+    // A vector of vectors to represent the density matrix
+    std::vector<std::vector<double>> density_samples(n_points, std::vector<double>(n_posterior_samples, 0));
+
+    std::vector<double> cal_age_BP(n_points), sum_ages(n_points, 0);
+    for (int i = 0; i < n_points; i++) cal_age_BP[i] = min_calendar_age + i * resolution;
+    for (int j = 0; j < n_posterior_samples; j++) {
+        for (int i = 0; i < n_points; i++) {
+            density_samples[i][j] = calculate_density_sample(sample_ids[j], cal_age_BP[i]);
+            sum_ages[i] += density_samples[i][j];
+        }
+    }
+
+    // Now reverse as we populate the DensityData object as we're converting from calBP to AD
+    int i_reversed;
+    for (int i = 0; i < n_points; i++) {
+        i_reversed = n_points - 1 - i;
+        density_data.cal_age_AD[i_reversed] = to_calAD(cal_age_BP[i]);
+        density_data.mean[i_reversed] = sum_ages[i] / n_posterior_samples;
+        edge_quantiles(
+                density_samples[i],
+                quantile_edge_width,
+                density_data.ci_lower[i_reversed],
+                density_data.ci_upper[i_reversed]);
+    }
+
     return density_data;
+}
+
+double DPMM::calculate_density_sample(int sample_id, double calendar_age_BP) {
+    // Must be implemented in child class
+    return 0.;
 }
 
 std::vector<double> DPMM::get_posterior_calendar_ages(int ident) {
