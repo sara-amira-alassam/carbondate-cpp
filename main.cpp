@@ -1,4 +1,5 @@
 #include "src/WalkerDPMM.h"
+#include "src/PolyaUrnDPMM.h"
 #include "src/read_data.h"
 #include "src/PredictiveDensityOutput.h"
 #include "src/PosteriorDensityOutput.h"
@@ -15,7 +16,7 @@ int main(int argc, char* argv[]) {
     std::vector<double> c14_age, c14_sig, f14c_age, f14c_sig;
     std::string model_name, calibration_curve = "intcal20.14c";
     std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
-    WalkerDPMM dpmm;
+    PolyaUrnDPMM dpmm;
 
     // The following relate to options that may be overwritten in the call below to read_options()
     int num_iterations = 1e5;
