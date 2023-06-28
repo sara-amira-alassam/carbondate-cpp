@@ -101,8 +101,7 @@ public:
             std::vector<double> cc_c14_sig,
             int rng_seed = 0);
     void calibrate(int n_iter, int n_thin);
-    virtual DensityData get_predictive_density(
-            int n_posterior_samples, double resolution, double quantile_edge_width);
+    DensityData get_predictive_density(int n_posterior_samples, double resolution, double quantile_edge_width);
     std::vector<double> get_posterior_calendar_ages(int ident);
     int get_nobs() const { return n_obs; }
 };

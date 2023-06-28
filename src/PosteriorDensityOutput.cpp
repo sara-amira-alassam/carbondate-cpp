@@ -29,9 +29,9 @@ PosteriorDensityOutput::PosteriorDensityOutput(
     // TODO: Why can't the resolution be less than 1?? Try and change this
 
     unsigned n = posterior_calendar_ages_AD.size();
-    double min_calendar_age = std::numeric_limits<double>::infinity();
-    double max_calendar_age = -std::numeric_limits<double>::infinity();
-    for (int i = 0; i < n; i++) {
+    double min_calendar_age = posterior_calendar_ages_AD[0];
+    double max_calendar_age = posterior_calendar_ages_AD[0];
+    for (int i = 1; i < n; i++) {
         if (posterior_calendar_ages_AD[i] < min_calendar_age) {
             min_calendar_age = posterior_calendar_ages_AD[i];
         } else if (posterior_calendar_ages_AD[i] > max_calendar_age) {
