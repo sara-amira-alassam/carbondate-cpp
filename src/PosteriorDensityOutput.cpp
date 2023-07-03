@@ -19,11 +19,9 @@ PosteriorDensityOutput::PosteriorDensityOutput(
         int offset,
         double resolution,
         bool quantile_ranges,
-        bool intercept_ranges,
         const std::vector<bool> &log_ranges,
         const std::vector<double> &posterior_calendar_ages_AD)
-        : _log_ranges(log_ranges), _intercept_method(intercept_ranges),
-        DensityOutput(ident + offset + 1, ceil(resolution)) {
+        : _log_ranges(log_ranges), DensityOutput(ident + offset + 1, ceil(resolution)) {
 
     // TODO: log or warn if ignoring a resolution that is less than 1.
     // TODO: Why can't the resolution be less than 1?? Try and change this
@@ -52,24 +50,84 @@ PosteriorDensityOutput::PosteriorDensityOutput(
     _sigma_calAD = sigma(posterior_calendar_ages_AD, _mean_calAD);
 
     if (quantile_ranges) {
-        double edge_width, range_quantifier = 1.0;
-        for (double probability : _range_probabilities) {
-            edge_width = (1. - probability) / 2.;
-            if (!intercept_ranges) range_quantifier = probability;
-            std::vector<std::vector<double>> range(1, std::vector<double> {0, 0, range_quantifier});
+        double edge_width;
+        for (double range_probability : _range_probabilities) {
+            edge_width = (1. - range_probability) / 2.;
+            std::vector<std::vector<double>> range(1, std::vector<double> {0, 0, range_probability * 100.});
             std::vector<double> calendar_ages(posterior_calendar_ages_AD);
             edge_quantiles(calendar_ages, edge_width, range[0][0], range[0][1]);
             _ranges.push_back(range);
         }
     } else {
         for (double probability : _range_probabilities) {
-            if (intercept_ranges) {
-                _ranges.push_back(get_ranges_by_intercepts(probability));
-            } else {
-                _ranges.push_back(get_ranges(probability));
-            }
+            _ranges.push_back(get_ranges_by_intercepts(probability));
         }
     }
+}
+
+
+// Returns the area under the probability curve if we ignore all values below the cut-off
+// Also populates the vector ranges, where each entry contains
+// [start_calAD, end_calAD, probability within this range]
+double PosteriorDensityOutput::find_probability_and_ranges_for_cut_off(
+        double cut_off, std::vector<std::vector<double>> &ranges) {
+    ranges.clear();
+    double y1, y2, dx, x_intercept_1, x_intercept_2, res = _resolution;
+    double range_probability = 0, total_probability = 0;
+    const double min_prob = 0.001; // Don't bother to store ranges with probability less than this
+    for (int i = 0; i < _probability.size() - 1; i++) {
+        y1 = _probability[i];
+        y2 = _probability[i + 1];
+        if (y1 <= cut_off and y2 > cut_off) {
+            dx = res * (cut_off - y1) / (y2 - y1);
+            x_intercept_1 = _start_calAD + i * res + dx;
+            range_probability = (cut_off + y2) * (res - dx) / 2.;
+        } else if (y1 > cut_off and y2 <= cut_off) {
+            dx = res * (cut_off - y1) / (y2 - y1);
+            x_intercept_2 = _start_calAD + i * res + dx;
+            range_probability += (y1 + cut_off) * dx / 2.;
+            range_probability *= _prob_norm;
+            if (range_probability > min_prob) {
+                ranges.push_back(
+                        std::vector<double> {x_intercept_1, x_intercept_2, range_probability});
+                total_probability += range_probability;
+            }
+            range_probability = 0;
+        } else if (y1 > cut_off and y2 > cut_off) {
+            range_probability += (y1 + y2) * res / 2.;
+        }
+    }
+    for (std::vector<double> &range : ranges) range[2] *= 100.;
+    return total_probability;
+}
+
+// Finds the calendar age ranges between which the probability matches the provided probability
+// where the points with the highest probability are chosen first. Returns the result as a
+// vector of vectors, where each entry contains
+// [start_calAD, end_calAD, probability within this range]
+// arg `resolution` gives the resolution of the probability curve to use
+std::vector<std::vector<double>> PosteriorDensityOutput::get_ranges_by_intercepts(double probability) {
+    std::vector<std::vector<double>> ranges;
+
+    // Use bisection method to find the closest probability cut-off to give the desired probability
+    // a and b are the upper and lower points of the section - we know the smoothed probability has a max of 1
+    double a = 0., b = 1.;
+    double p; // p is the midpoint between a and b
+    double current_probability;
+    const int max_iter = 1000;
+    for (int i = 0; i < max_iter; i++) {
+        p = (a + b) / 2.;
+        current_probability = find_probability_and_ranges_for_cut_off(p, ranges);
+        if (abs(current_probability - probability) < 1e-4) {
+            break;
+        }
+        if (current_probability < probability) {
+            b = p;
+        } else {
+            a = p;
+        }
+    }
+    return ranges;
 }
 
 std::string PosteriorDensityOutput::range_lines(int &comment_index) {
@@ -84,25 +142,94 @@ std::string PosteriorDensityOutput::range_lines(int &comment_index) {
         for (int j = 0; j < _ranges[i].size(); j++) {
             range_lines += output_line(range_string + "[" + std::to_string(j) + "]", _ranges[i][j]);
         }
-        if (_log_ranges[i] and _intercept_method) {
-            range_lines += comment_line(
-                    "  " + std::to_string(i + 1) + " sigma", comment_index);
-            for (std::vector<double> & range : _ranges[i]) {
-                std::string comment = "    " + std::to_string(int (round(range[0]))) + "AD";
-                comment += " (" + to_string(range[2], 2) + ") ";
-                comment += std::to_string(int (round(range[1]))) + "AD";
-                range_lines += comment_line(comment, comment_index);
-            }
-        } else if (_log_ranges[i]) {
+        if (_log_ranges[i]) {
             range_lines += comment_line(
                     "  " + to_percent_string(_range_probabilities[i]) + " probability", comment_index);
             for (std::vector<double> & range : _ranges[i]) {
                 std::string comment = "    " + std::to_string(int (round(range[0]))) + "AD";
-                comment += " (" + to_percent_string(range[2]) + ") ";
+                comment += " (" + to_percent_string(range[2] / 100.) + ") ";
                 comment += std::to_string(int (round(range[1]))) + "AD";
                 range_lines += comment_line(comment, comment_index);
             }
         }
     }
     return range_lines;
+}
+
+// Finds the calendar age ranges between which the probability matches the provided probability
+// where the points with the highest probability are chosen first. Returns the result as a
+// vector of vectors, where each entry contains
+// [start_calAD, end_calAD, probability within this range]
+// arg `resolution` gives the resolution of the probability curve to use
+std::vector<std::vector<double>> PosteriorDensityOutput::get_ranges(double probability) {
+    double resolution = _resolution, sum_prob = 1 / (_prob_norm * _resolution);
+    std::vector<double> probability_interp(_probability.begin(), _probability.end());
+    int n = (int) _probability.size();
+
+    // TODO: Really we want to create a smoothed density from the posterior values but here we
+    // do a much simpler approximation of the histogram values
+    if (_resolution > 1.0) {
+        int scale_factor = floor(_resolution / 0.5);
+        resolution = _resolution / scale_factor;
+        sum_prob = 0.;
+        n = ((int) _probability.size() - 1) * scale_factor + 1;
+        probability_interp.resize(n, 0);
+        double cal_age_interp, cal_age_beg, cal_age_end;
+        for (int i = 0; i < _probability.size() - 1; i++) {
+            cal_age_beg = _start_calAD + i * _resolution;
+            cal_age_end = cal_age_beg + _resolution;
+            for (int j = 0; j < scale_factor; j++) {
+                cal_age_interp = cal_age_beg + j * resolution;
+                probability_interp[i * scale_factor + j] = interpolate_linear(
+                        cal_age_interp, cal_age_beg, cal_age_end, _probability[i], _probability[i + 1]);
+                sum_prob += probability_interp[i * scale_factor + j];
+            }
+        }
+        probability_interp[n - 1] = _probability[_probability.size() - 1];
+        sum_prob += probability_interp[n - 1];
+    }
+    for (int i = 0; i < n; i++) probability_interp[i] /= sum_prob;
+
+    std::vector<std::vector<double>> ranges;
+    std::vector<double> current_range{0, 0, 0};
+    std::vector<double> sorted_probabilities(probability_interp.begin(), probability_interp.end());
+    // Don't bother to store ranges with probability less than this
+    const double min_prob = 0.005;
+    std::vector<int> perm(n);
+    int num_values = 0;
+
+    for (int i = 0; i < n; i++) perm[i] = i;
+    revsort(&sorted_probabilities[0], &perm[0], n);
+
+    double cumulative_prob= 0.;
+    for (int i = 0; i < n; i++) {
+        cumulative_prob += sorted_probabilities[i];
+        num_values++;
+        if (cumulative_prob > probability) {
+            break;
+        }
+    }
+
+    std::vector<int> included_values(perm.begin(), perm.begin() + num_values);
+    std::sort(included_values.begin(), included_values.end());
+    current_range[0] = _start_calAD + included_values[0] * resolution;
+    current_range[2] = probability_interp[included_values[0]];
+    for (int i = 1; i < num_values; i++) {
+        if (included_values[i] - included_values[i-1] > 1) {
+            current_range[1] = _start_calAD + included_values[i - 1] * resolution;
+            if (current_range[2] > min_prob) {
+                ranges.push_back(current_range);
+            }
+            current_range[0] = _start_calAD + included_values[i] * resolution;
+            current_range[2] = probability_interp[included_values[i]];
+        } else {
+            current_range[2] += probability_interp[included_values[i]];
+        }
+    }
+    // last range
+    if (current_range[2] > min_prob) {
+        current_range[1] = _start_calAD + included_values[num_values - 1] * resolution;
+        ranges.push_back(current_range);
+    }
+    return ranges;
 }

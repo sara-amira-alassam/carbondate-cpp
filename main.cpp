@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     int num_iterations = 1e5;
     double output_resolution = 5;
     std::vector<bool> log_ranges {true, true, false}; // log 1, 2, 3 s.d. ranges respectively?
-    bool quantile_ranges = false, intercept_ranges = false, use_f14c = true;
+    bool quantile_ranges = false, use_f14c = true;
 
     if (!read_oxcal_data(file_prefix, c14_age, c14_sig, f14c_age, f14c_sig, model_name)) {
         // If there is no data within the NP model in this OxCal file then simply exit
@@ -35,7 +35,6 @@ int main(int argc, char* argv[]) {
         output_resolution,
         log_ranges,
         quantile_ranges,
-        intercept_ranges,
         use_f14c,
         calibration_curve);
     read_calibration_curve(calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
@@ -68,7 +67,6 @@ int main(int argc, char* argv[]) {
                 output_offset,
                 output_resolution,
                 quantile_ranges,
-                intercept_ranges,
                 log_ranges,
                 dpmm.get_posterior_calendar_ages(i));
         posterior_density.print(file_prefix);
