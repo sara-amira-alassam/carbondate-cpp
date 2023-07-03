@@ -114,14 +114,13 @@ int read_output_offset(const std::string& file_prefix, const std::string& model_
 // following option variables provided as arguments:
 // * iterations: The number of iterations for the DPMM
 // * resolution: The resolution used for outputting the predictive and posterior density
-// * ranges: A vector of 3 values denoting whether to calculate the 68.3%, 95.4% and 99.7% ranges
+// * ranges: A vector of 3 values denoting whether to log the 68.3%, 95.4% and 99.7% ranges
 void read_options(
         const std::string &file_prefix,
         int &iterations,
         double &resolution,
         std::vector<bool> &ranges,
         bool &quantile_ranges,
-        bool &intercept_ranges,
         bool &use_f14c,
         std::string &calibration_curve) {
 
@@ -158,8 +157,6 @@ void read_options(
                 ranges[2] = value == "TRUE";
             } else if (option == "Floruit") {
                 quantile_ranges = value == "TRUE";
-            } else if (option == "Intercept") {
-                intercept_ranges = value == "TRUE";
             } else if (option == "UseF14C") {
                 use_f14c = value == "TRUE";
             } else if (option == "Curve") {

@@ -28,7 +28,6 @@ void read_options(
         double &resolution,
         std::vector<bool> &ranges,
         bool &quantile_range,
-        bool &intercept_ranges,
         bool &use_f14c,
         std::string &calibration_curve);
 
