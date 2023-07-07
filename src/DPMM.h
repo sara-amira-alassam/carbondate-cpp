@@ -4,7 +4,9 @@
 
 #ifndef CARBONDATE_DPMM_H
 #define CARBONDATE_DPMM_H
+#include <utility>
 #include <vector>
+#include <string>
 #define MATHLIB_STANDALONE
 #include <Rmath.h>
 
@@ -34,6 +36,8 @@ struct DensityData {
 
 class DPMM {
 protected:
+    std::string _file_prefix;
+
     std::vector<double> rc_determinations;  // observed radiocarbon determinations
     std::vector<double> rc_sigmas;  // radiocarbon determination uncertainties
     bool f14c_inputs;     // Whether the radiocarbon determinations are c14 age or f14c age
@@ -92,6 +96,7 @@ protected:
     virtual double calculate_density_sample(int sample_id, double calendar_age_BP);
 
 public:
+    DPMM(std::string file_prefix): _file_prefix(std::move(file_prefix)) {}
     void initialise(
             std::vector<double> i_rc_determinations,
             std::vector<double> i_rc_sigmas,

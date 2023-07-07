@@ -1,10 +1,36 @@
 #ifndef CARBONDATE_READ_DATA_H
 #define CARBONDATE_READ_DATA_H
 
-#include <string>
-#include <vector>
+#include "carbondate.h"
 
-#endif //CARBONDATE_READ_DATA_H
+class UnableToReadCalibrationCurveException : public CarbondateException {
+public:
+    explicit UnableToReadCalibrationCurveException(const std::string& calibration_curve_name) {
+        _error_message = "Unable to read calibration curve " + calibration_curve_name;
+    }
+};
+
+class UnableToReadOxcalFileException : public CarbondateException {
+public:
+    explicit UnableToReadOxcalFileException(const std::string& file_path) {
+        _error_message = "Unable to read oxcal file " + file_path;
+    }
+};
+
+class UnableToReadOutputFileException : public CarbondateException {
+public:
+    explicit UnableToReadOutputFileException(const std::string& file_path) {
+        _error_message = "Unable to read output file " + file_path;
+    }
+
+};
+
+class UnableToDetermineOutputOffsetException : public CarbondateException {
+public:
+    explicit UnableToDetermineOutputOffsetException(const std::string& file_path, const std::string& model_name) {
+        _error_message = "Unable to find NP model `" + model_name + "' in output file " + file_path;
+    }
+};
 
 void read_calibration_curve(
     const std::string& calibration_curve,
@@ -42,3 +68,5 @@ void convert_to_f14c_age(
         const std::vector<double> &c14_sig,
         std::vector<double> &f14c_age,
         std::vector<double> &f14c_sig);
+
+#endif //CARBONDATE_READ_DATA_H

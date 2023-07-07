@@ -4,6 +4,7 @@
 
 #include "DPMM.h"
 #include "helpers.h"
+#include "work.h"
 
 void DPMM::initialise(
         std::vector<double> i_rc_determinations,
@@ -166,6 +167,7 @@ void DPMM::calibrate(int n_iter, int n_thin) {
     n_out = n_iter/n_thin + 1;
     initialise_storage();
     for (int i = 1; i <= n_iter; i++) {
+        check_for_work_file(_file_prefix);
         perform_update_step();
         if (i % n_thin == 0) {
             update_progress_bar(i * 1. / n_iter);
