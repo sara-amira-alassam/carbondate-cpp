@@ -321,7 +321,7 @@ void DPMM::update_mu_phi() {
     double sum_tau = 0.;
     double sum_tau_mult_phi = 0.;
 
-    for (int c = 1; c <= phi.size(); c++) {
+    for (int c = 1; c <= phi_i.size(); c++) {
         sum_tau += tau_i[c - 1];
         sum_tau_mult_phi += tau_i[c - 1] * phi_i[c - 1];
     }
