@@ -1,7 +1,3 @@
-//
-// Created by Sara Admin on 21/06/2023.
-//
-
 #include "DPMM.h"
 #include "helpers.h"
 #include "work.h"
@@ -173,8 +169,10 @@ void DPMM::calibrate(int n_iter, int n_thin) {
             update_progress_bar(i * 1. / n_iter);
             store_current_values(i / n_thin);
         }
+        if (i % n_work_update == 0) {
+            update_work_file_mcmc(_file_prefix, double (i) / n_iter, i);
+        }
     }
-    printf("\n");
 }
 
 void DPMM::store_current_values(int output_index) {

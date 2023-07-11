@@ -1,7 +1,3 @@
-//
-// Created by Sara Admin on 21/06/2023.
-//
-
 #ifndef CARBONDATE_DPMM_H
 #define CARBONDATE_DPMM_H
 #include <utility>
@@ -37,20 +33,21 @@ struct DensityData {
 class DPMM {
 protected:
     std::string _file_prefix;
+    int n_work_update = 5000; // How many iterations between updating the work file
 
     std::vector<double> rc_determinations;  // observed radiocarbon determinations
     std::vector<double> rc_sigmas;  // radiocarbon determination uncertainties
-    bool f14c_inputs;     // Whether the radiocarbon determinations are c14 age or f14c age
+    bool f14c_inputs{};     // Whether the radiocarbon determinations are c14 age or f14c age
     CalCurve calcurve;            // original calibration curve data
     YearlyCalCurve yearwise_calcurve;   // calibration curve interpolated for every year of calendar age
 
-    int n_obs, n_out;
+    int n_obs{}, n_out{};
 
     // Hyperparameters
-    double lambda, nu1, nu2;
-    double A, B;
+    double lambda{}, nu1{}, nu2{};
+    double A{}, B{};
     double alpha_shape = 1., alpha_rate = 1.;
-    double slice_width, slice_multiplier = 10.;
+    double slice_width{}, slice_multiplier = 10.;
 
     // Instant value of calendar age and stored values
     std::vector<double> calendar_age_i;
@@ -58,8 +55,8 @@ protected:
 
     // Instant values of DPMM parameters
     // n_clust refers to the number of unique cluster ids for the observations
-    int n_clust_i;
-    double alpha_i, mu_phi_i;
+    int n_clust_i{};
+    double alpha_i{}, mu_phi_i{};
     std::vector<double> phi_i, tau_i;
     std::vector<int> cluster_ids_i;
 
@@ -96,7 +93,7 @@ protected:
     virtual double calculate_density_sample(int sample_id, double calendar_age_BP);
 
 public:
-    DPMM(std::string file_prefix): _file_prefix(std::move(file_prefix)) {}
+    explicit DPMM(std::string file_prefix): _file_prefix(std::move(file_prefix)) {}
     void initialise(
             std::vector<double> i_rc_determinations,
             std::vector<double> i_rc_sigmas,

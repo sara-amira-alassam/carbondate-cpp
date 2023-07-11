@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
         }
         dpmm.calibrate(num_iterations, 10);
 
+        update_work_file_postprocessing(file_prefix, num_iterations);
         DensityData predictive_density_data = dpmm.get_predictive_density(
                 n_posterior_samples, output_resolution, quantile_edge_width);
         PredictiveDensityOutput predictive_density(
