@@ -32,6 +32,13 @@ public:
     }
 };
 
+class InconsistentDateFormatsException : public CarbondateException {
+public:
+    explicit InconsistentDateFormatsException() {
+        _error_message = "All dates must be the same format.";
+    }
+};
+
 void read_calibration_curve(
     const std::string& calibration_curve,
     std::vector<double>& cc_cal_age,

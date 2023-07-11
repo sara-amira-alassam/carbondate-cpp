@@ -104,7 +104,7 @@ bool read_oxcal_data(
             f14c_sig.push_back(std::strtod(sig.c_str(), nullptr));
         }
     }
-    if (!c14_age.empty() && !f14c_age.empty()) throw std::runtime_error("All dates must be the same formats");
+    if (!c14_age.empty() && !f14c_age.empty())  throw InconsistentDateFormatsException();
     return np_model && (!c14_age.empty() || !f14c_age.empty());
 }
 
