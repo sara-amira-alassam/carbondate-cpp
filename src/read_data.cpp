@@ -32,23 +32,22 @@ void read_calibration_curve(
     // Check we can read the file
     std::fstream file(calibration_curve_path, std::ios::in);
     if(!file.is_open()) throw UnableToReadCalibrationCurveException(calibration_curve_path);
-    file.close();
 
     // TODO: Write this to log file
     printf("Reading calibration data from %s\n", calibration_curve.c_str());
     if (modern_intcal_curves.count(calibration_curve) == 1) {
-        cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0, ',');
-        cc_c14_age = get_csv_data_from_column(calibration_curve_path, 1, ',');
-        cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 2, ',');
+        cc_cal_age = get_csv_data_from_column(&file, 0, ',');
+        cc_c14_age = get_csv_data_from_column(&file, 1, ',');
+        cc_c14_sig = get_csv_data_from_column(&file, 2, ',');
     } else if (old_intcal_curves.count(calibration_curve) == 1) {
-        cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0, ' ');
-        cc_c14_age = get_csv_data_from_column(calibration_curve_path, 3, ' ');
-        cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 4, ' ');
+        cc_cal_age = get_csv_data_from_column(&file, 0, ' ');
+        cc_c14_age = get_csv_data_from_column(&file, 3, ' ');
+        cc_c14_sig = get_csv_data_from_column(&file, 4, ' ');
         for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
     } else if (custom_curves.count(calibration_curve) == 1) {
-        cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0, '\t');
-        cc_c14_age = get_csv_data_from_column(calibration_curve_path, 3, '\t');
-        cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 4, '\t');
+        cc_cal_age = get_csv_data_from_column(&file, 0, '\t');
+        cc_c14_age = get_csv_data_from_column(&file, 3, '\t');
+        cc_c14_sig = get_csv_data_from_column(&file, 4, '\t');
         for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
     }
 }
