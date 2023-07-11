@@ -4,8 +4,16 @@
 #include "read_data.h"
 #include "csv_helpers.h"
 
+#ifndef CALIBRATION_DATA_PREFIX
+#define CALIBRATION_DATA_PREFIX "../oxcal/"
+#endif
+
 #ifndef DATA_PREFIX
-#define DATA_PREFIX "../oxcal/"
+#define DATA_PREFIX "../data/"
+#endif
+
+#ifndef OUTPUT_PREFIX
+#define OUTPUT_PREFIX "../output/"
 #endif
 
 const std::set<std::string> modern_intcal_curves = {
@@ -19,22 +27,27 @@ void read_calibration_curve(
         std::vector<double>& cc_c14_age,
         std::vector<double>& cc_c14_sig) {
 
-    const std::string calibration_curve_path = DATA_PREFIX + calibration_curve;
+    const std::string calibration_curve_path = CALIBRATION_DATA_PREFIX + calibration_curve;
 
+    // Check we can read the file
+    std::fstream file(calibration_curve_path, std::ios::in);
+    if(!file.is_open()) throw UnableToReadCalibrationCurveException(calibration_curve_path);
+
+    // TODO: Write this to log file
     printf("Reading calibration data from %s\n", calibration_curve.c_str());
     if (modern_intcal_curves.count(calibration_curve) == 1) {
-        cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0, ',');
-        cc_c14_age = get_csv_data_from_column(calibration_curve_path, 1, ',');
-        cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 2, ',');
+        cc_cal_age = get_csv_data_from_column(&file, 0, ',');
+        cc_c14_age = get_csv_data_from_column(&file, 1, ',');
+        cc_c14_sig = get_csv_data_from_column(&file, 2, ',');
     } else if (old_intcal_curves.count(calibration_curve) == 1) {
-        cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0, ' ');
-        cc_c14_age = get_csv_data_from_column(calibration_curve_path, 3, ' ');
-        cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 4, ' ');
+        cc_cal_age = get_csv_data_from_column(&file, 0, ' ');
+        cc_c14_age = get_csv_data_from_column(&file, 3, ' ');
+        cc_c14_sig = get_csv_data_from_column(&file, 4, ' ');
         for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
     } else if (custom_curves.count(calibration_curve) == 1) {
-        cc_cal_age = get_csv_data_from_column(calibration_curve_path, 0, '\t');
-        cc_c14_age = get_csv_data_from_column(calibration_curve_path, 3, '\t');
-        cc_c14_sig = get_csv_data_from_column(calibration_curve_path, 4, '\t');
+        cc_cal_age = get_csv_data_from_column(&file, 0, '\t');
+        cc_c14_age = get_csv_data_from_column(&file, 3, '\t');
+        cc_c14_sig = get_csv_data_from_column(&file, 4, '\t');
         for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
     }
 }
@@ -58,9 +71,10 @@ bool read_oxcal_data(
     std::regex unnamed_r_f14c_regex(R"(R_F14C\(\s*([0-9\.]*)\s*,\s*([0-9\.]*))");
     bool np_model = false;
     std::smatch r_date_match;
-    std::fstream file("../data/" + file_prefix + ".oxcal", std::ios::in);
+    std::string oxcal_file_path = DATA_PREFIX + file_prefix + ".oxcal";
 
-    if(!file.is_open()) throw std::runtime_error("Could not open file");
+    std::fstream file(oxcal_file_path, std::ios::in);
+    if(!file.is_open()) throw UnableToReadOxcalFileException(oxcal_file_path);
 
     while (getline(file, line)) {
         if (regex_search(line, r_date_match, np_model_regex)) {
@@ -83,14 +97,14 @@ bool read_oxcal_data(
             sig = r_date_match[3];
             f14c_age.push_back(std::strtod(age.c_str(), nullptr));
             f14c_sig.push_back(std::strtod(sig.c_str(), nullptr));
-        }else if (np_model && regex_search(line, r_date_match, unnamed_r_f14c_regex)){
+        } else if (np_model && regex_search(line, r_date_match, unnamed_r_f14c_regex)){
             age = r_date_match[1];
             sig = r_date_match[2];
             f14c_age.push_back(std::strtod(age.c_str(), nullptr));
             f14c_sig.push_back(std::strtod(sig.c_str(), nullptr));
         }
     }
-    if (!c14_age.empty() && !f14c_age.empty()) throw std::runtime_error("All dates must be the same formats");
+    if (!c14_age.empty() && !f14c_age.empty())  throw InconsistentDateFormatsException();
     return np_model && (!c14_age.empty() || !f14c_age.empty());
 }
 
@@ -99,14 +113,17 @@ int read_output_offset(const std::string& file_prefix, const std::string& model_
     std::regex np_output_regex(R"(ocd\[([0-9]+)\].name\s*=\s*["'])" + model_name + R"(["'];)");
     std::smatch np_model_match;
 
-    std::fstream file("../output/" + file_prefix + ".js", std::ios::in);
+    std::string output_file_path = OUTPUT_PREFIX + file_prefix + ".js";
+    std::fstream file(output_file_path, std::ios::in);
+    if(!file.is_open()) throw UnableToReadOutputFileException(output_file_path);
+
     while (getline(file, line)) {
         if (regex_search(line, np_model_match, np_output_regex)) {
             model_index = np_model_match[1];
             return std::stoi(model_index);
         }
     }
-    throw std::runtime_error("Could not find NP model " + model_name + " in output file");
+    throw UnableToDetermineOutputOffsetException(output_file_path, model_name);
 }
 
 // Reads in the options from the oxcal data file. If any of the options are not found in the file
@@ -129,13 +146,14 @@ void read_options(
     std::regex option_regex(R"((\w+)=['"]*([^'"]+)['"]*;)");
     bool options_block = false;
     std::smatch option_match;
-    std::fstream file("../data/" + file_prefix + ".oxcal", std::ios::in);
     std::set<std::string> allowed_calibration_curves;
     allowed_calibration_curves.insert(modern_intcal_curves.begin(), modern_intcal_curves.end());
     allowed_calibration_curves.insert(old_intcal_curves.begin(), old_intcal_curves.end());
     allowed_calibration_curves.insert(custom_curves.begin(), custom_curves.end());
 
-    if(!file.is_open()) throw std::runtime_error("Could not open file");
+    std::string oxcal_file_path = DATA_PREFIX + file_prefix + ".oxcal";
+    std::fstream file(oxcal_file_path, std::ios::in);
+    if(!file.is_open()) throw UnableToReadOxcalFileException(oxcal_file_path);
 
     while (getline(file, line)) {
         if (regex_search(line, option_match, options_regex)) {

@@ -1,9 +1,6 @@
-//
-// Created by Sara Admin on 21/06/2023.
-//
-
 #include "DPMM.h"
 #include "helpers.h"
+#include "work.h"
 
 void DPMM::initialise(
         std::vector<double> i_rc_determinations,
@@ -166,13 +163,16 @@ void DPMM::calibrate(int n_iter, int n_thin) {
     n_out = n_iter/n_thin + 1;
     initialise_storage();
     for (int i = 1; i <= n_iter; i++) {
+        check_for_work_file(_file_prefix);
         perform_update_step();
         if (i % n_thin == 0) {
             update_progress_bar(i * 1. / n_iter);
             store_current_values(i / n_thin);
         }
+        if (i % n_work_update == 0) {
+            update_work_file_mcmc(_file_prefix, double (i) / n_iter, i);
+        }
     }
-    printf("\n");
 }
 
 void DPMM::store_current_values(int output_index) {
@@ -321,7 +321,7 @@ void DPMM::update_mu_phi() {
     double sum_tau = 0.;
     double sum_tau_mult_phi = 0.;
 
-    for (int c = 1; c <= phi.size(); c++) {
+    for (int c = 1; c <= phi_i.size(); c++) {
         sum_tau += tau_i[c - 1];
         sum_tau_mult_phi += tau_i[c - 1] * phi_i[c - 1];
     }

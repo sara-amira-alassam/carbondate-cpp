@@ -1,9 +1,6 @@
-//
-// Created by Sara Al-Assam on 02/02/2023.
-//
-#include <vector>
 #ifndef CARBONDATE_HELPERS_H
 #define CARBONDATE_HELPERS_H
+#include <vector>
 
 double mean(const std::vector<double>& vec);
 double mean(const std::vector<double>& vec, const std::vector<double>& probability);
