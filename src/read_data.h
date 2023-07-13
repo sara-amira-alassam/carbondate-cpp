@@ -64,16 +64,4 @@ void read_options(
         bool &use_f14c,
         std::string &calibration_curve);
 
-void convert_to_c14_age(
-        const std::vector<double> &f14c_age,
-        const std::vector<double> &f14c_sig,
-        std::vector<double> &c14_age,
-        std::vector<double> &c14_sig);
-
-void convert_to_f14c_age(
-        const std::vector<double> &c14_age,
-        const std::vector<double> &c14_sig,
-        std::vector<double> &f14c_age,
-        std::vector<double> &f14c_sig);
-
 #endif //CARBONDATE_READ_DATA_H

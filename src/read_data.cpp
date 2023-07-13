@@ -21,6 +21,10 @@ const std::set<std::string> modern_intcal_curves = {
 const std::set<std::string> old_intcal_curves = {"intcal98.14c"};
 const std::set<std::string> custom_curves = {"HOBS2022.14c"};
 
+std::string oxcal_file_path(const std::string& file_prefix) {
+    return DATA_PREFIX + file_prefix + ".oxcal";
+}
+
 void read_calibration_curve(
         const std::string& calibration_curve,
         std::vector<double>& cc_cal_age,
@@ -52,6 +56,8 @@ void read_calibration_curve(
     }
 }
 
+
+
 // Takes a *.oxcal input file created by the OxCal software and reads it to determine the
 // NP model data and output options.
 // If NP model data is found it returns true, otherwise it returns false.
@@ -71,10 +77,10 @@ bool read_oxcal_data(
     std::regex unnamed_r_f14c_regex(R"(R_F14C\(\s*([0-9\.]*)\s*,\s*([0-9\.]*))");
     bool np_model = false;
     std::smatch r_date_match;
-    std::string oxcal_file_path = DATA_PREFIX + file_prefix + ".oxcal";
+    std::string filepath = oxcal_file_path(file_prefix);
 
-    std::fstream file(oxcal_file_path, std::ios::in);
-    if(!file.is_open()) throw UnableToReadOxcalFileException(oxcal_file_path);
+    std::fstream file(filepath, std::ios::in);
+    if(!file.is_open()) throw UnableToReadOxcalFileException(filepath);
 
     while (getline(file, line)) {
         if (regex_search(line, r_date_match, np_model_regex)) {
@@ -151,9 +157,9 @@ void read_options(
     allowed_calibration_curves.insert(old_intcal_curves.begin(), old_intcal_curves.end());
     allowed_calibration_curves.insert(custom_curves.begin(), custom_curves.end());
 
-    std::string oxcal_file_path = DATA_PREFIX + file_prefix + ".oxcal";
-    std::fstream file(oxcal_file_path, std::ios::in);
-    if(!file.is_open()) throw UnableToReadOxcalFileException(oxcal_file_path);
+    std::string filepath = oxcal_file_path(file_prefix);
+    std::fstream file(filepath, std::ios::in);
+    if(!file.is_open()) throw UnableToReadOxcalFileException(filepath);
 
     while (getline(file, line)) {
         if (regex_search(line, option_match, options_regex)) {
