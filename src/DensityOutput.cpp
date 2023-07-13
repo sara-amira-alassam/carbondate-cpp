@@ -14,10 +14,11 @@ DensityOutput::DensityOutput(int index, double resolution)
     _output_prefix = _output_var + ".posterior";
 }
 
-void DensityOutput::print(const std::string& file_prefix) {
+void DensityOutput::print() {
     std::ofstream output_file;
-    output_file.open("../output/" + file_prefix + ".js", std::ios_base::app);
+    output_file.open("../output/" + project_name + ".js", std::ios_base::app);
 
+    // TODO: exception if file can't be opened
     for (const std::string& output_line : get_output_lines()) {
         output_file << output_line;
     }

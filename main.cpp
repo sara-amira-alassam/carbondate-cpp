@@ -2,9 +2,6 @@
 #include "inc/carbondate.h"
 
 int main(int argc, char* argv[]) {
-    if (argc < 2)
-        return 1;
-    std::string file_prefix = argv[1];
 
     const int n_posterior_samples = 5000;
     const double quantile_edge_width = 0.1586553; // 1-sigma interval
@@ -12,7 +9,7 @@ int main(int argc, char* argv[]) {
     std::vector<double> c14_age, c14_sig, f14c_age, f14c_sig;
     std::string model_name, calibration_curve = "intcal20.14c";
     std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
-    PolyaUrnDPMM dpmm(file_prefix);
+    PolyaUrnDPMM dpmm;
 
     // The following relate to options that may be overwritten in the call below to read_options()
     int num_iterations = 1e5;
@@ -21,22 +18,17 @@ int main(int argc, char* argv[]) {
     bool quantile_ranges = false, use_f14c = true;
 
     try {
-        create_work_file(file_prefix);
-        initialize_log_file(file_prefix);
+        read_arguments(argc, argv);
+        create_work_file();
+        initialize_log_file();
 
-        if (!read_oxcal_data(file_prefix, c14_age, c14_sig, f14c_age, f14c_sig, model_name)) {
+        if (!read_oxcal_data(c14_age, c14_sig, f14c_age, f14c_sig, model_name)) {
             // If there is no data within the NP model in this OxCal file then simply exit
             return 0;
         }
-        output_offset = read_output_offset(file_prefix, model_name);
+        output_offset = read_output_offset(model_name);
         read_options(
-                file_prefix,
-                num_iterations,
-                output_resolution,
-                log_ranges,
-                quantile_ranges,
-                use_f14c,
-                calibration_curve);
+                num_iterations, output_resolution, log_ranges, quantile_ranges, use_f14c, calibration_curve);
         read_calibration_curve(calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
 
         if (use_f14c) {
@@ -48,7 +40,7 @@ int main(int argc, char* argv[]) {
         }
         dpmm.calibrate(num_iterations, 10);
 
-        update_work_file_postprocessing(file_prefix, num_iterations);
+        update_work_file_postprocessing(num_iterations);
         DensityData predictive_density_data = dpmm.get_predictive_density(
                 n_posterior_samples, output_resolution, quantile_edge_width);
         PredictiveDensityOutput predictive_density(
@@ -60,7 +52,7 @@ int main(int argc, char* argv[]) {
                 predictive_density_data.mean,
                 predictive_density_data.ci_lower,
                 predictive_density_data.ci_upper);
-        predictive_density.print(file_prefix);
+        predictive_density.print();
 
         for (int i = 0; i < dpmm.get_nobs(); i++){
             PosteriorDensityOutput posterior_density(
@@ -70,14 +62,14 @@ int main(int argc, char* argv[]) {
                     quantile_ranges,
                     log_ranges,
                     dpmm.get_posterior_calendar_ages(i));
-            posterior_density.print(file_prefix);
+            posterior_density.print();
         }
     } catch (const CarbondateException& ex) {
         std::cerr << "Exception caught: " << ex.what() << std::endl;
-        remove_work_file(file_prefix);
+        remove_work_file();
         return 1;
     }
 
-    remove_work_file(file_prefix);
+    remove_work_file();
     return 0;
 }

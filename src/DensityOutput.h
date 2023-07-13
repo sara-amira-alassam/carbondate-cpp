@@ -1,11 +1,6 @@
-//
-// Created by Sara Al-Assam on 21/02/2023.
-//
-
 #ifndef CARBONDATE_DENSITYOUTPUT_H
 #define CARBONDATE_DENSITYOUTPUT_H
-#include <vector>
-#include <string>
+#include "carbondate.h"
 
 class DensityOutput {
 
@@ -35,7 +30,7 @@ protected:
 public:
     DensityOutput(int index, double resolution);
     void set_probability(const std::vector<double>& probability);
-    void print(const std::string& file_prefix);
+    void print();
 };
 
 

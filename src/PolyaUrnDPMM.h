@@ -22,9 +22,6 @@ private:
     void update_phi_and_tau();
     double alpha_log_likelihood(double alpha_value) override;
     double calculate_density_sample(int sample_id, double calendar_age) override;
-
-public:
-    explicit PolyaUrnDPMM(std::string file_prefix) : DPMM(std::move(file_prefix)) {};
 };
 
 

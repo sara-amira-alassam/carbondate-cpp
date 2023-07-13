@@ -32,7 +32,6 @@ struct DensityData {
 
 class DPMM {
 protected:
-    std::string _file_prefix;
     int n_work_update = 5000; // How many iterations between updating the work file
 
     std::vector<double> rc_determinations;  // observed radiocarbon determinations
@@ -93,7 +92,6 @@ protected:
     virtual double calculate_density_sample(int sample_id, double calendar_age_BP);
 
 public:
-    explicit DPMM(std::string file_prefix): _file_prefix(std::move(file_prefix)) {}
     void initialise(
             std::vector<double> i_rc_determinations,
             std::vector<double> i_rc_sigmas,

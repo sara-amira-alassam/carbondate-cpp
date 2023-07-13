@@ -163,14 +163,14 @@ void DPMM::calibrate(int n_iter, int n_thin) {
     n_out = n_iter/n_thin + 1;
     initialise_storage();
     for (int i = 1; i <= n_iter; i++) {
-        check_for_work_file(_file_prefix);
+        check_for_work_file();
         perform_update_step();
         if (i % n_thin == 0) {
             update_progress_bar(i * 1. / n_iter);
             store_current_values(i / n_thin);
         }
         if (i % n_work_update == 0) {
-            update_work_file_mcmc(_file_prefix, double (i) / n_iter, i);
+            update_work_file_mcmc(double (i) / n_iter, i);
         }
     }
 }

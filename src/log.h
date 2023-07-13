@@ -17,7 +17,7 @@ public:
     }
 };
 
-void initialize_log_file(const std::string& file_prefix);
-void update_log_file(const std::string& file_prefix, const std::string& log_line);
+void initialize_log_file();
+void update_log_file(const std::string& log_line);
 
 #endif //CARBONDATE_LOG_H

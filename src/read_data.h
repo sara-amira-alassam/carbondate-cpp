@@ -3,6 +3,11 @@
 
 #include "carbondate.h"
 
+class IncorrectArgumentsException : public CarbondateException {
+private:
+    std::string _error_message = "Incorrect arguments - correct usage: carbondate [project_name]";
+};
+
 class UnableToReadCalibrationCurveException : public CarbondateException {
 public:
     explicit UnableToReadCalibrationCurveException(const std::string& calibration_curve_name) {
@@ -39,6 +44,8 @@ public:
     }
 };
 
+void read_arguments(int argc, char* argv[]);
+
 void read_calibration_curve(
     const std::string& calibration_curve,
     std::vector<double>& cc_cal_age,
@@ -46,17 +53,15 @@ void read_calibration_curve(
     std::vector<double>& cc_c14_sig);
 
 bool read_oxcal_data(
-    const std::string& file_prefix,
     std::vector<double>& c14_age,
     std::vector<double>& c14_sig,
     std::vector<double>& f14c_age,
     std::vector<double>& f14c_sig,
     std::string& model_name);
 
-int read_output_offset(const std::string& file_prefix, const std::string& model_name);
+int read_output_offset(const std::string& model_name);
 
 void read_options(
-        const std::string &file_prefix,
         int &iterations,
         double &resolution,
         std::vector<bool> &ranges,

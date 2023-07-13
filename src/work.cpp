@@ -2,10 +2,12 @@
 #include <cstdio>
 #include <fstream>
 
-void create_work_file(const std::string& file_prefix) {
-    std::string filepath = file_prefix + ".work";
+std::string work_file_path() {
+    return project_name + ".work";
+}
 
-    std::ofstream file(filepath);
+void create_work_file() {
+    std::ofstream file(work_file_path());
     if (file.is_open()) {
         file.close();
     } else {
@@ -13,10 +15,8 @@ void create_work_file(const std::string& file_prefix) {
     }
 }
 
-void update_work_file_mcmc(const std::string& file_prefix, double done, int iterations) {
-    std::string filepath = file_prefix + ".work";
-
-    std::ofstream file(filepath, std::ios::trunc);
+void update_work_file_mcmc(double done, int iterations) {
+    std::ofstream file(work_file_path(), std::ios::trunc);
     if (file.is_open()) {
         std::string work_lines = "work.program=\"" + carbondate_short_reference() + "\";\n";
         work_lines += "work.operation=\"MCMC\";\n";
@@ -29,10 +29,8 @@ void update_work_file_mcmc(const std::string& file_prefix, double done, int iter
     }
 }
 
-void update_work_file_postprocessing(const std::string& file_prefix, int n_iter){
-    std::string filepath = file_prefix + ".work";
-
-    std::ofstream file(filepath, std::ios::trunc);
+void update_work_file_postprocessing(int n_iter){
+    std::ofstream file(work_file_path(), std::ios::trunc);
     if (file.is_open()) {
         std::string work_lines = "work.program=\"" + carbondate_short_reference() + "\";\n";
         work_lines += "work.operation=\"Post-processing\";\n";
@@ -45,16 +43,13 @@ void update_work_file_postprocessing(const std::string& file_prefix, int n_iter)
     }
 }
 
-void check_for_work_file(const std::string& file_prefix) {
-    std::string filepath = file_prefix + ".work";
-    std::ifstream file(filepath.c_str());
+void check_for_work_file() {
+    std::ifstream file(work_file_path().c_str());
     if (!file.good()) {
         throw WorkFileRemovedException();
     }
 }
 
-void remove_work_file(const std::string& file_prefix) {
-    std::string filepath = file_prefix + ".work";
-
-    std::remove(filepath.c_str());
+void remove_work_file() {
+    std::remove(work_file_path().c_str());
 }

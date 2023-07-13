@@ -7,9 +7,10 @@
 
 #include <exception>
 #include <string>
-#include <vector>
 
 #include "helpers.h"
+
+extern std::string project_name;
 
 class CarbondateException: public std::exception {
 public:
