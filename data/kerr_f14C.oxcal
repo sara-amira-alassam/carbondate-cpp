@@ -1,6 +1,6 @@
 Options()
 {
-    Resolution=5;
+    Resolution=10;
     Curve="intcal20.14c";
     Cubic=FALSE;
     RawData=TRUE;
@@ -9,11 +9,11 @@ Options()
     Intercept=TRUE;
     Floruit=FALSE;
     SD1=TRUE;
-    SD2=TRUE;
+    SD2=FALSE;
     SD3=TRUE;
     ConvergenceData=TRUE;
     UniformSpanPrior=TRUE;
-    kIterations=5;
+    kIterations=100;
     Ensembles=9;
 };
  Plot()

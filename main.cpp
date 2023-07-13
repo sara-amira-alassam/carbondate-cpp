@@ -56,6 +56,9 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < dpmm.get_nobs(); i++){
             PosteriorDensityOutput posterior_density(
                     i,
+                    c14_age.empty() ? f14c_age[i] : c14_age[i],
+                    c14_age.empty() ? f14c_sig[i] : c14_sig[i],
+                    c14_age.empty(),
                     output_offset,
                     output_resolution,
                     quantile_ranges,

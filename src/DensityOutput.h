@@ -9,6 +9,13 @@ public:
     }
 };
 
+class DensityOutputException : public CarbondateException {
+public:
+    explicit DensityOutputException(const std::string& error_message) {
+        _error_message = error_message;
+    }
+};
+
 
 class DensityOutput {
 

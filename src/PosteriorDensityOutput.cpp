@@ -1,4 +1,5 @@
 #include "PosteriorDensityOutput.h"
+#include "log.h"
 
 // Creates an object suitable for printing out the posterior calendar age density for each
 // determination, taking the following arguments:
@@ -11,6 +12,9 @@
 // * posterior_calendar_ages: A list of sampled calendar ages for this determination, in calAD
 PosteriorDensityOutput::PosteriorDensityOutput(
         int ident,
+        double rc_age,
+        double rc_sig,
+        bool f14_age,
         int offset,
         double resolution,
         bool quantile_ranges,
@@ -20,6 +24,11 @@ PosteriorDensityOutput::PosteriorDensityOutput(
 
     // TODO: log or warn if ignoring a resolution that is less than 1.
     // TODO: Why can't the resolution be less than 1?? Try and change this
+    if (f14_age) {
+        _label = "R_F14C(" + to_string(rc_age, 6) + "," + to_string(rc_sig, 8) + ")";
+    } else {
+        _label = "R_Date(" + to_string(rc_age, 4) + "," + to_string(rc_sig, 4) + ")";
+    }
 
     unsigned n = posterior_calendar_ages_AD.size();
     double min_calendar_age = posterior_calendar_ages_AD[0];
@@ -36,10 +45,9 @@ PosteriorDensityOutput::PosteriorDensityOutput(
     int num_breaks = (int) ceil((max_calendar_age - min_calendar_age) / resolution) + 2;
     double break_start = _start_calAD - resolution / 2.0;
     std::vector<double> _probability(num_breaks, 0);
-    for (int i = 0; i < n; i++) {
-        _probability[(int) ((posterior_calendar_ages_AD[i] - break_start) / resolution)]++;
-    }
+    for (int i = 0; i < n; i++) _probability[(int) ((posterior_calendar_ages_AD[i] - break_start) / resolution)]++;
     set_probability(_probability);
+
     _mean_calAD = mean(posterior_calendar_ages_AD);
     _median_calAD = median(posterior_calendar_ages_AD);
     _sigma_calAD = sigma(posterior_calendar_ages_AD, _mean_calAD);
@@ -126,7 +134,7 @@ std::vector<std::vector<double>> PosteriorDensityOutput::get_ranges_by_intercept
 }
 
 std::string PosteriorDensityOutput::range_lines(int &comment_index) {
-    std::string range_lines;
+    std::string range_lines, comment, log_lines = "Posterior " + _label + "\n";
 
     for (int i = 0; i < _ranges.size(); i++) {
         std::string range_string = "range[" + std::to_string(i + 1) + "]";
@@ -138,16 +146,19 @@ std::string PosteriorDensityOutput::range_lines(int &comment_index) {
             range_lines += output_line(range_string + "[" + std::to_string(j) + "]", _ranges[i][j]);
         }
         if (_log_ranges[i]) {
-            range_lines += comment_line(
-                    "  " + to_percent_string(_range_probabilities[i]) + " probability", comment_index);
+            comment = "  " + to_percent_string(_range_probabilities[i]) + " probability";
+            range_lines += comment_line(comment, comment_index);
+            log_lines += comment + "\n";
             for (std::vector<double> & range : _ranges[i]) {
-                std::string comment = "    " + std::to_string(int (round(range[0]))) + "AD";
+                comment = "    " + std::to_string(int (round(range[0]))) + "AD";
                 comment += " (" + to_percent_string(range[2] / 100.) + ") ";
                 comment += std::to_string(int (round(range[1]))) + "AD";
                 range_lines += comment_line(comment, comment_index);
+                log_lines += comment + "\n";
             }
         }
     }
+    update_log_file(log_lines.substr(0, log_lines.length() - 2)); // Remove the last carriage return
     return range_lines;
 }
 

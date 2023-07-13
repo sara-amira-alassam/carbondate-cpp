@@ -1,4 +1,3 @@
-#include <iostream>
 #include "PredictiveDensityOutput.h"
 
 // Creates an object suitable for printing out the predictive calendar age density for all
@@ -19,9 +18,9 @@ PredictiveDensityOutput::PredictiveDensityOutput(
 
     if (cal_age_AD[1] - cal_age_AD[0] != resolution) {
         // We don't expect this to happen, but best to double-check
-        std::cerr << "Resolution should be " + std::to_string(resolution);
-        std::cerr << " but is " + std::to_string(cal_age_AD[1] - cal_age_AD[0]);
-        exit(1);
+        throw DensityOutputException(
+                "Resolution should be " + std::to_string(resolution) +
+                " but is " + std::to_string(cal_age_AD[1] - cal_age_AD[0]));
     }
 
     set_probability(mean_density);
