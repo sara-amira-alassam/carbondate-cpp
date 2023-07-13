@@ -1,8 +1,3 @@
-//
-// Created by Sara Al-Assam on 20/03/2023.
-//
-#include <cmath>
-#include "helpers.h"
 #include "PosteriorDensityOutput.h"
 
 // Creates an object suitable for printing out the posterior calendar age density for each

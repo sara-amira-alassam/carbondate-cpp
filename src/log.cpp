@@ -13,9 +13,8 @@ void initialize_log_file() {
     std::string filepath = log_file_path();
 
     std::ofstream file(filepath, std::fstream::in);
-    if (!file.is_open()) {
-        throw UnableToFindLogFileException(filepath);
-    }
+    if (!file.is_open()) throw UnableToFindLogFileException(filepath);
+
     file.close();
     update_log_file(carbondate_long_reference());
 }
@@ -24,10 +23,8 @@ void update_log_file(const std::string& log_line) {
     std::string filepath = log_file_path();
 
     std::ofstream file(filepath, std::fstream::app);
-    if (file.is_open()) {
-        file << log_line << std::endl;
-        file.close();
-    } else {
-        throw UnableToWriteToLogFileException(filepath);
-    }
+    if (!file.is_open()) throw UnableToWriteToLogFileException(filepath);
+
+    file << log_line << std::endl;
+    file.close();
 }

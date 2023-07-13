@@ -27,7 +27,6 @@ public:
     explicit UnableToReadOutputFileException(const std::string& file_path) {
         _error_message = "Unable to read output file " + file_path;
     }
-
 };
 
 class UnableToDetermineOutputOffsetException : public CarbondateException {

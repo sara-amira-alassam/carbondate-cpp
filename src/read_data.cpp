@@ -17,8 +17,7 @@
 #define OUTPUT_PREFIX "../output/"
 #endif
 
-const std::set<std::string> modern_intcal_curves = {
-        "intcal04.14c", "intcal09.14c", "intcal13.14c", "intcal20.14c"};
+const std::set<std::string> modern_intcal_curves = {"intcal04.14c", "intcal09.14c", "intcal13.14c", "intcal20.14c"};
 const std::set<std::string> old_intcal_curves = {"intcal98.14c"};
 const std::set<std::string> custom_curves = {"HOBS2022.14c"};
 
@@ -143,6 +142,8 @@ int read_output_offset(const std::string& model_name) {
 // * iterations: The number of iterations for the DPMM
 // * resolution: The resolution used for outputting the predictive and posterior density
 // * ranges: A vector of 3 values denoting whether to log the 68.3%, 95.4% and 99.7% ranges
+// * quantile ranges: False to use HPD ranges, True to simply work out a single quantile range
+
 void read_options(
         int &iterations,
         double &resolution,

@@ -1,11 +1,5 @@
-//
-// Created by Sara Al-Assam on 21/02/2023.
-//
-#include <utility>
 #include <iostream>
 #include <fstream>
-#include <cmath>
-#include "helpers.h"
 #include "DensityOutput.h"
 
 DensityOutput::DensityOutput(int index, double resolution)
@@ -15,13 +9,12 @@ DensityOutput::DensityOutput(int index, double resolution)
 }
 
 void DensityOutput::print() {
+    std::string file_path = "../output/" + project_name + ".js";
     std::ofstream output_file;
-    output_file.open("../output/" + project_name + ".js", std::ios_base::app);
+    output_file.open(file_path, std::ios_base::app);
+    if (! output_file.is_open()) throw UnableToWriteToOutputFileException(file_path);
 
-    // TODO: exception if file can't be opened
-    for (const std::string& output_line : get_output_lines()) {
-        output_file << output_line;
-    }
+    for (const std::string& output_line : get_output_lines()) output_file << output_line;
     output_file.close();
 }
 
@@ -30,7 +23,7 @@ std::vector<std::string> DensityOutput::get_output_lines() {
     int comment_index = 0;
 
     output_lines.push_back("if(!" + _output_var + "){" + _output_var + "={};}\n");
-    output_lines.push_back(variable_line("ref", "TODO: Add custom ref"));
+    output_lines.push_back(variable_line("ref", carbondate_long_reference()));
     output_lines.push_back(_output_prefix + "={};\n");
     output_lines.push_back(comment_line("Posterior ", comment_index));
     output_lines.push_back(range_lines(comment_index));
@@ -47,9 +40,7 @@ std::vector<std::string> DensityOutput::get_output_lines() {
 
 std::string DensityOutput::comment_line(const std::string& comment, int& comment_index) {
     std::string line;
-    if (comment_index == 0) {
-        line = _output_prefix + ".comment=[];\n";
-    }
+    if (comment_index == 0) line = _output_prefix + ".comment=[];\n";
     line += _output_prefix + ".comment[" + std::to_string(comment_index++) + "]=\"" +  comment + "\";\n";
     return line;
 }
@@ -62,8 +53,7 @@ std::string DensityOutput::output_line(const std::string& var_name, double var) 
     return _output_prefix + "." + var_name + "=" + to_string(var, 6) + ";\n";
 }
 
-std::string DensityOutput::output_line(
-        const std::string& var_name, const std::vector<double>& var) {
+std::string DensityOutput::output_line(const std::string& var_name, const std::vector<double>& var) {
     std::string output_line = _output_prefix + "." + var_name + "=[";
     for (int i = 0; i < var.size() - 1; i++) output_line += std::to_string(var[i]) + ", ";
     output_line += std::to_string(var[var.size() - 1]) + "];\n";
@@ -78,11 +68,13 @@ void DensityOutput::set_probability(const std::vector<double>& probability) {
         prob_total += probability[i];
         if (probability[i] > _prob_max) _prob_max = probability[i];
     }
+    // Scale so that the maximum value of the density is 1.
     for (int i = 0; i < probability.size(); i++) _probability[i] /= _prob_max;
     _prob_norm = _prob_max / (prob_total * _resolution);
 }
 
 
 std::string DensityOutput::range_lines(int &comment_index) {
+    // Must be implemented in child function if range lines are calculated.
     return {};
 }

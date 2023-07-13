@@ -2,8 +2,6 @@
 #define CARBONDATE_POLYAURNDPMM_H
 #include "DPMM.h"
 
-#include <utility>
-
 class PolyaUrnDPMM : public DPMM  {
 private:
     // Instant values of DPMM parameters
@@ -23,6 +21,5 @@ private:
     double alpha_log_likelihood(double alpha_value) override;
     double calculate_density_sample(int sample_id, double calendar_age) override;
 };
-
 
 #endif //CARBONDATE_POLYAURNDPMM_H

@@ -2,6 +2,14 @@
 #define CARBONDATE_DENSITYOUTPUT_H
 #include "carbondate.h"
 
+class UnableToWriteToOutputFileException : public CarbondateException {
+public:
+    explicit UnableToWriteToOutputFileException(const std::string& file_path) {
+        _error_message = "Unable to write to output file " + file_path;
+    }
+};
+
+
 class DensityOutput {
 
 protected:

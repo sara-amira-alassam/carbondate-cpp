@@ -1,10 +1,8 @@
-#include <vector>
 #include <algorithm>
 #include <string>
 #define MATHLIB_STANDALONE
 #include "Rmath.h"
 #include "helpers.h"
-
 
 // Mean of elements in a vector
 double mean(const std::vector<double>& vec) {
@@ -63,12 +61,12 @@ double mad(std::vector <double> vec) {
     unsigned n = vec.size();
     std::vector <double> deviation(n);
 
-    for (int i = 0; i < n; i++) {
-        deviation[i] = abs(vec[i] - centre);
-    }
+    for (int i = 0; i < n; i++) deviation[i] = abs(vec[i] - centre);
+
     return constant * median(deviation);
 }
 
+// Returns the value of the maximum element in a vector - the minimum element in a vector
 double max_diff(std::vector<double> vec) {
     auto minmax = std::minmax_element(vec.begin(), vec.end());
     return *(minmax.second) - *(minmax.first);
@@ -134,16 +132,12 @@ void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index) {
     bool replace = ans.size() >= n;
 
     if (replace || ans.size() < 2) {
-        for (int & an : ans) {
-            an = static_cast<int>(R_unif_index(n)) + start_index;
-        }
+        for (int & an : ans) an = static_cast<int>(R_unif_index(n)) + start_index;
         return;
     }
 
     std::vector<int> x(n);
-    for (int i = 0; i < n; i++) {
-        x[i] = i;
-    }
+    for (int i = 0; i < n; i++) x[i] = i;
 
     for (int & an : ans) {
         int j = static_cast<int>(R_unif_index(n));
@@ -210,7 +204,7 @@ std::string to_string(double var, int max_digits) {
 std::string to_percent_string(double fraction) {
     std::string percent;
     char temp_string[8] = "";
-    snprintf(temp_string, 8, "%4.1f%%", fraction * 100);
+    snprintf(temp_string, 8, "%4.1f%%", fraction * 100.);
     percent = temp_string;
     return percent;
 }
@@ -227,7 +221,7 @@ void convert_to_c14_age(
     c14_sig.resize(n);
     for (int i = 0; i < n; i++) {
         c14_age[i] = -8033. * log(f14c_age[i]);
-        c14_sig[i] =  8033 * f14c_sig[i] / f14c_age[i];
+        c14_sig[i] =  8033. * f14c_sig[i] / f14c_age[i];
     }
 }
 
@@ -243,6 +237,6 @@ void convert_to_f14c_age(
     f14c_sig.resize(n);
     for (int i = 0; i < n; i++) {
         f14c_age[i] = exp(c14_age[i] / -8033.);
-        f14c_sig[i] = f14c_age[i] * c14_sig[i] / 8033;
+        f14c_sig[i] = f14c_age[i] * c14_sig[i] / 8033.;
     }
 }

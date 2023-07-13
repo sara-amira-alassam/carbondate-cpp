@@ -4,10 +4,8 @@
 #include "carbondate.h"
 
 class WorkFileRemovedException : public CarbondateException {
-public:
-    WorkFileRemovedException() {
-        _error_message = "Work file removed whilst program is running";
-    }
+private:
+    std::string _error_message = "Work file removed whilst program is running";
 };
 
 class UnableToCreateWorkFileException : public CarbondateException {

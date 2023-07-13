@@ -1,8 +1,4 @@
-//
-// Created by Sara Admin on 21/06/2023.
-//
 #include "PolyaUrnDPMM.h"
-#include "helpers.h"
 
 void PolyaUrnDPMM::initialise_storage(){
     DPMM::initialise_storage();

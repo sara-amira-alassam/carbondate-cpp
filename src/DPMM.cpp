@@ -1,5 +1,4 @@
 #include "DPMM.h"
-#include "helpers.h"
 #include "work.h"
 
 void DPMM::initialise(
@@ -102,7 +101,7 @@ void DPMM::initialise_hyperparameters() {
     slice_width = max_diff(spd_range_3_sigma);
 }
 
-void DPMM::initialise_clusters() {}
+void DPMM::initialise_clusters() {}  // Implemented in child class - different for Polya Urn and Walker methods
 
 void DPMM::interpolate_calibration_curve() {
     int n = (int) calcurve.cal_age.size();
@@ -169,9 +168,7 @@ void DPMM::calibrate(int n_iter, int n_thin) {
             update_progress_bar(i * 1. / n_iter);
             store_current_values(i / n_thin);
         }
-        if (i % n_work_update == 0) {
-            update_work_file_mcmc(double (i) / n_iter, i);
-        }
+        if (i % n_work_update == 0) update_work_file_mcmc(double (i) / n_iter, i);
     }
 }
 
@@ -186,27 +183,21 @@ void DPMM::store_current_values(int output_index) {
 }
 
 double DPMM::cal_age_log_likelihood(
-        double cal_age,
-        double cluster_mean,
-        double cluster_sig,
-        double obs_c14_age,
-        double obs_c14_sig
-) {
-    double loglik;
+        double cal_age, double cluster_mean, double cluster_sig, double obs_c14_age, double obs_c14_sig) {
+    double log_likelihood;
     double cc_c14_age, cc_c14_sig;
     int yr_index = (int) (cal_age - yearwise_calcurve.cal_age[0]);
 
-    if ((yr_index < 0) || (yr_index >= yearwise_calcurve.rc_age.size())) {  // out of range
+    if ((yr_index < 0) || (yr_index >= yearwise_calcurve.rc_age.size()))  // out of range
         return -std::numeric_limits<double>::infinity();
-    }
+
     cc_c14_age = yearwise_calcurve.rc_age[yr_index];
     cc_c14_sig= yearwise_calcurve.rc_sig[yr_index];
 
-    loglik = dnorm4(cal_age, cluster_mean, cluster_sig, 1);
-    loglik += dnorm4(
-            obs_c14_age, cc_c14_age, sqrt(cc_c14_sig*cc_c14_sig + obs_c14_sig*obs_c14_sig), 1);
+    log_likelihood = dnorm4(cal_age, cluster_mean, cluster_sig, 1);
+    log_likelihood += dnorm4(obs_c14_age, cc_c14_age, sqrt(cc_c14_sig * cc_c14_sig + obs_c14_sig * obs_c14_sig), 1);
 
-    return loglik;
+    return log_likelihood;
 }
 
 void DPMM::update_calendar_ages() {
@@ -264,11 +255,10 @@ void DPMM::update_calendar_ages() {
             }
 
             // Else shrink the interval
-            if (x1 < x0) {
+            if (x1 < x0)
                 L = x1;
-            } else {
+            else
                 R = x1;
-            }
         }
     }
 }
@@ -283,7 +273,7 @@ double DPMM::log_marginal_normal_gamma(double cal_age, double mu_phi_s) {
 
     logden = lgamma((margdf + 1.) / 2.) - lgamma(margdf / 2.);
     logden += 0.5 * (log(margprec) - log(margdf) - log(M_PI));
-    logden -= ((margdf + 1) / 2) * log(1 + margprec * pow(cal_age - mu_phi_s, 2) / margdf);
+    logden -= ((margdf + 1.) / 2.) * log(1. + margprec * pow(cal_age - mu_phi_s, 2.) / margdf);
 
     return logden;
 }
@@ -297,9 +287,8 @@ void DPMM::update_cluster_phi_and_tau(int cluster_id, const std::vector<double>&
     double lambda_new, nu1_new, nu2_new;
 
     calendar_age_mean = mean(cluster_calendar_ages);
-    for (unsigned i = 0; i < num_in_cluster; ++i) {
+    for (unsigned i = 0; i < num_in_cluster; ++i)
         calendar_age_diff[i] = pow(cluster_calendar_ages[i] - calendar_age_mean, 2);
-    }
     s = mean(calendar_age_diff);
 
     // Update parameters according to conjugate prior

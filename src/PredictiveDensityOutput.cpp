@@ -1,6 +1,4 @@
 #include <iostream>
-#include <utility>
-#include "helpers.h"
 #include "PredictiveDensityOutput.h"
 
 // Creates an object suitable for printing out the predictive calendar age density for all

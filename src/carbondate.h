@@ -7,7 +7,6 @@
 
 #include <exception>
 #include <string>
-
 #include "helpers.h"
 
 extern std::string project_name;

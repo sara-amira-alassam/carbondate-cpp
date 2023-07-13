@@ -1,8 +1,6 @@
 #ifndef CARBONDATE_DPMM_H
 #define CARBONDATE_DPMM_H
-#include <utility>
-#include <vector>
-#include <string>
+#include "carbondate.h"
 #define MATHLIB_STANDALONE
 #include <Rmath.h>
 
