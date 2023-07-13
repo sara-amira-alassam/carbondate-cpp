@@ -1,11 +1,5 @@
 #include <iostream>
-#include "src/carbondate.h"
-#include "src/WalkerDPMM.h"
-#include "src/PolyaUrnDPMM.h"
-#include "src/read_data.h"
-#include "src/PredictiveDensityOutput.h"
-#include "src/PosteriorDensityOutput.h"
-#include "src/work.h"
+#include "inc/carbondate.h"
 
 int main(int argc, char* argv[]) {
     if (argc < 2)
@@ -28,6 +22,7 @@ int main(int argc, char* argv[]) {
 
     try {
         create_work_file(file_prefix);
+        initialize_log_file(file_prefix);
 
         if (!read_oxcal_data(file_prefix, c14_age, c14_sig, f14c_age, f14c_sig, model_name)) {
             // If there is no data within the NP model in this OxCal file then simply exit
@@ -77,7 +72,6 @@ int main(int argc, char* argv[]) {
                     dpmm.get_posterior_calendar_ages(i));
             posterior_density.print(file_prefix);
         }
-
     } catch (const CarbondateException& ex) {
         std::cerr << "Exception caught: " << ex.what() << std::endl;
         remove_work_file(file_prefix);
