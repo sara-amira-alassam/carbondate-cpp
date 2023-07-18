@@ -20,15 +20,12 @@ PosteriorDensityOutput::PosteriorDensityOutput(
         bool quantile_ranges,
         const std::vector<bool> &log_ranges,
         const std::vector<double> &posterior_calendar_ages_AD)
-        : _log_ranges(log_ranges), DensityOutput(ident + offset + 1, ceil(resolution)) {
+        : _log_ranges(log_ranges), DensityOutput(ident + offset + 1, resolution) {
 
-    // TODO: log or warn if ignoring a resolution that is less than 1.
-    // TODO: Why can't the resolution be less than 1?? Try and change this
-    if (f14_age) {
+    if (f14_age)
         _label = "R_F14C(" + to_string(rc_age, 6) + "," + to_string(rc_sig, 8) + ")";
-    } else {
+    else
         _label = "R_Date(" + to_string(rc_age, 4) + "," + to_string(rc_sig, 4) + ")";
-    }
 
     unsigned n = posterior_calendar_ages_AD.size();
     double min_calendar_age = posterior_calendar_ages_AD[0];
@@ -42,11 +39,11 @@ PosteriorDensityOutput::PosteriorDensityOutput(
     }
     _start_calAD = floor(min_calendar_age - resolution / 2.0);
 
-    int num_breaks = (int) ceil((max_calendar_age - min_calendar_age) / resolution) + 2;
     double break_start = _start_calAD - resolution / 2.0;
-    std::vector<double> _probability(num_breaks, 0);
-    for (int i = 0; i < n; i++) _probability[(int) ((posterior_calendar_ages_AD[i] - break_start) / resolution)]++;
-    set_probability(_probability);
+    int num_breaks = (int) ceil((max_calendar_age - break_start) / resolution);
+    std::vector<double> probability(num_breaks, 0);
+    for (int i = 0; i < n; i++) probability[(int) ((posterior_calendar_ages_AD[i] - break_start) / resolution)]++;
+    set_probability(probability);
 
     _mean_calAD = mean(posterior_calendar_ages_AD);
     _median_calAD = median(posterior_calendar_ages_AD);
@@ -91,8 +88,7 @@ double PosteriorDensityOutput::find_probability_and_ranges_for_cut_off(
             range_probability += (y1 + cut_off) * dx / 2.;
             range_probability *= _prob_norm;
             if (range_probability > min_prob) {
-                ranges.push_back(
-                        std::vector<double> {x_intercept_1, x_intercept_2, range_probability});
+                ranges.push_back(std::vector<double> {x_intercept_1, x_intercept_2, range_probability});
                 total_probability += range_probability;
             }
             range_probability = 0;
