@@ -62,14 +62,14 @@ std::string DensityOutput::output_line(const std::string& var_name, const std::v
 
 void DensityOutput::set_probability(const std::vector<double>& probability) {
     double prob_total = 0.;
-    _probability.resize(probability.size());
+    _probability.resize(probability.size() + 2, 0); // This ensures the beginning and final probability is zero
     for (int i = 0; i < probability.size(); i++) {
-        _probability[i] = probability[i];
+        _probability[i + 1] = probability[i];
         prob_total += probability[i];
         if (probability[i] > _prob_max) _prob_max = probability[i];
     }
     // Scale so that the maximum value of the density is 1.
-    for (int i = 0; i < probability.size(); i++) _probability[i] /= _prob_max;
+    for (double & prob : _probability) prob /= _prob_max;
     _prob_norm = _prob_max / (prob_total * _resolution);
 }
 

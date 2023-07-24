@@ -9,6 +9,7 @@ int main(int argc, char* argv[]) {
     std::vector<double> c14_age, c14_sig, f14c_age, f14c_sig;  // Input data - radiocarbon ages and errors
     std::string model_name, calibration_curve = "intcal20.14c";
     std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
+    std::vector<std::string> date_name;
     PolyaUrnDPMM dpmm;
 
     // The following relate to options that may be overwritten in the call below to read_options()
@@ -21,8 +22,9 @@ int main(int argc, char* argv[]) {
         read_arguments(argc, argv);
         create_work_file();
         initialize_log_file();
+        initialize_text_file();
 
-        if (!read_oxcal_data(c14_age, c14_sig, f14c_age, f14c_sig, model_name)) {
+        if (!read_oxcal_data(date_name, c14_age, c14_sig, f14c_age, f14c_sig, model_name)) {
             // If there is no data within the NP model in this OxCal file then simply exit
             return 0;
         }
@@ -56,6 +58,7 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < dpmm.get_nobs(); i++){
             PosteriorDensityOutput posterior_density(
                     i,
+                    date_name[i],
                     c14_age.empty() ? f14c_age[i] : c14_age[i],
                     c14_age.empty() ? f14c_sig[i] : c14_sig[i],
                     c14_age.empty(),

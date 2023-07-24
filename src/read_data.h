@@ -52,6 +52,7 @@ void read_calibration_curve(
     std::vector<double>& cc_c14_sig);
 
 bool read_oxcal_data(
+    std::vector<std::string>& date_name,
     std::vector<double>& c14_age,
     std::vector<double>& c14_sig,
     std::vector<double>& f14c_age,

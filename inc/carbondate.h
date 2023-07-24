@@ -6,6 +6,7 @@
 #include "../src/PolyaUrnDPMM.h"
 #include "../src/read_data.h"
 #include "../src/log.h"
+#include "../src/plain_text.h"
 #include "../src/PredictiveDensityOutput.h"
 #include "../src/PosteriorDensityOutput.h"
 #include "../src/work.h"

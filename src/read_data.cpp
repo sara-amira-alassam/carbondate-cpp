@@ -67,13 +67,14 @@ void read_calibration_curve(
 // NP model data and output options.
 // If NP model data is found it returns true, otherwise it returns false.
 bool read_oxcal_data(
+        std::vector<std::string>& date_name,
         std::vector<double>& c14_age,
         std::vector<double>& c14_sig,
         std::vector<double>& f14c_age,
         std::vector<double>& f14c_sig,
         std::string& model_name) {
 
-    std::string line, age, sig, end_of_section = "};";
+    std::string line, name, age, sig, end_of_section = "};";
     std::regex np_model_regex(R"(NP_Model\(\s*["'](.*)["']\s*\))");
     std::regex named_r_date_regex(R"(R_Date\(\s*["'](.*)["']\s*,\s*([0-9\.]*)\s*,\s*([0-9\.]*))");
     std::regex unnamed_r_date_regex(R"(R_Date\(\s*([0-9\.]*)\s*,\s*([0-9\.]*))");
@@ -93,23 +94,29 @@ bool read_oxcal_data(
         } else if (np_model && line.find(end_of_section) != std::string::npos) {
             break;
         } else if (np_model && regex_search(line, r_date_match, named_r_date_regex)) {
+            name = r_date_match[1];
             age = r_date_match[2];
             sig = r_date_match[3];
+            date_name.push_back(name);
             c14_age.push_back(std::strtod(age.c_str(), nullptr));
             c14_sig.push_back(std::strtod(sig.c_str(), nullptr));
         } else if (np_model && regex_search(line, r_date_match, unnamed_r_date_regex)){
             age = r_date_match[1];
             sig = r_date_match[2];
+            date_name.push_back((std::string) "");
             c14_age.push_back(std::strtod(age.c_str(), nullptr));
             c14_sig.push_back(std::strtod(sig.c_str(), nullptr));
         } else if (np_model && regex_search(line, r_date_match, named_r_f14c_regex)) {
+            name = r_date_match[1];
             age = r_date_match[2];
             sig = r_date_match[3];
+            date_name.push_back(name);
             f14c_age.push_back(std::strtod(age.c_str(), nullptr));
             f14c_sig.push_back(std::strtod(sig.c_str(), nullptr));
         } else if (np_model && regex_search(line, r_date_match, unnamed_r_f14c_regex)){
             age = r_date_match[1];
             sig = r_date_match[2];
+            date_name.push_back((std::string) "");
             f14c_age.push_back(std::strtod(age.c_str(), nullptr));
             f14c_sig.push_back(std::strtod(sig.c_str(), nullptr));
         }

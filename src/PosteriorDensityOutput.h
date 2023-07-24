@@ -16,7 +16,7 @@ class PosteriorDensityOutput : public DensityOutput {
 
 public:
     PosteriorDensityOutput(
-            int ident, double rc_age, double rc_sig, bool f14_age, int offset, double resolution, bool quantile_ranges,
+            int ident, const std::string& date_name, double rc_age, double rc_sig, bool f14_age, int offset, double resolution, bool quantile_ranges,
             const std::vector<bool> &log_ranges, const std::vector<double> &posterior_calendar_ages_AD);
 
 private:

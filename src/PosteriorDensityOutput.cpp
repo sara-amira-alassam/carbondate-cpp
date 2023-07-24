@@ -1,5 +1,6 @@
 #include "PosteriorDensityOutput.h"
 #include "log.h"
+#include "plain_text.h"
 
 // Creates an object suitable for printing out the posterior calendar age density for each
 // determination, taking the following arguments:
@@ -12,6 +13,7 @@
 // * posterior_calendar_ages: A list of sampled calendar ages for this determination, in calAD
 PosteriorDensityOutput::PosteriorDensityOutput(
         int ident,
+        const std::string& date_name,
         double rc_age,
         double rc_sig,
         bool f14_age,
@@ -22,7 +24,9 @@ PosteriorDensityOutput::PosteriorDensityOutput(
         const std::vector<double> &posterior_calendar_ages_AD)
         : _log_ranges(log_ranges), DensityOutput(ident + offset + 1, resolution) {
 
-    if (f14_age)
+    if (date_name.length() > 0)
+        _label = date_name;
+    else if (f14_age)
         _label = "R_F14C(" + to_string(rc_age, 6) + "," + to_string(rc_sig, 8) + ")";
     else
         _label = "R_Date(" + to_string(rc_age, 4) + "," + to_string(rc_sig, 4) + ")";
@@ -59,12 +63,11 @@ PosteriorDensityOutput::PosteriorDensityOutput(
             _ranges.push_back(range);
         }
     } else {
-        for (double probability : _range_probabilities) {
-            _ranges.push_back(get_ranges_by_intercepts(probability));
+        for (double range_probability : _range_probabilities) {
+            _ranges.push_back(get_ranges_by_intercepts(range_probability));
         }
     }
 }
-
 
 // Returns the area under the probability curve if we ignore all values below the cut-off
 // Also populates the vector ranges, where each entry contains
@@ -131,6 +134,7 @@ std::vector<std::vector<double>> PosteriorDensityOutput::get_ranges_by_intercept
 
 std::string PosteriorDensityOutput::range_lines(int &comment_index) {
     std::string range_lines, comment, log_lines = "Posterior " + _label + "\n";
+    std::vector<double> text_ranges;
 
     for (int i = 0; i < _ranges.size(); i++) {
         std::string range_string = "range[" + std::to_string(i + 1) + "]";
@@ -152,9 +156,12 @@ std::string PosteriorDensityOutput::range_lines(int &comment_index) {
                 range_lines += comment_line(comment, comment_index);
                 log_lines += comment + "\n";
             }
+            text_ranges.push_back(_ranges[i][0][0]);
+            text_ranges.push_back(_ranges[i][_ranges[i].size() - 1][1]);
         }
     }
     update_log_file(log_lines.substr(0, log_lines.length() - 2)); // Remove the last carriage return
+    if (!text_ranges.empty()) update_text_file(_label, text_ranges);
     return range_lines;
 }
 
