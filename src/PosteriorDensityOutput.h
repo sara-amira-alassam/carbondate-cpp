@@ -12,12 +12,13 @@ class PosteriorDensityOutput : public DensityOutput {
     std::vector<bool> _log_ranges;
     std::string _label;
 
-    std::string range_lines(int &comment_index) override;
+    std::string _range_lines(int &comment_index) override;
 
 public:
     PosteriorDensityOutput(
-            int ident, const std::string& date_name, double rc_age, double rc_sig, bool f14_age, int offset, double resolution, bool quantile_ranges,
-            const std::vector<bool> &log_ranges, const std::vector<double> &posterior_calendar_ages_AD);
+            int ident, const std::string& date_name, double rc_age, double rc_sig, bool f14c_age, int offset,
+            double resolution, bool quantile_ranges, const std::vector<bool> &log_ranges,
+            const std::vector<double> &posterior_calendar_ages_AD);
 
 private:
     double find_probability_and_ranges_for_cut_off(double cut_off, std::vector<std::vector<double>>& ranges);

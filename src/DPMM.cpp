@@ -1,6 +1,23 @@
 #include "DPMM.h"
 #include "work.h"
 
+/*
+ * Initialises the calculation so that a calibration can be performed, using the following arguments:
+ *  - i_rc_determinations: The radiocarbon determinations, which must either all be in C14 age of F14C age
+ *  - i_rc_sigmas: The errors for the radiocarbon determinations
+ *  - i_f14c_inputs: True, if the radiocarbon determinations are F14C concentrations, false otherwise
+ *  - cc_cal_age: The calibration curve calendar ages
+ *  - cc_c14_age: The calibration curve C14 ages
+ *  - cc_c14_sig: The calibration curve errors on the C14 ages
+ *  - rng_seed:
+ *      For reproducible calculations, set a non-zero seed. If this is zero, a seed is chosen based on the
+ *      current time stamp (i.e. it will be different for different runs)
+ *
+ *  The steps performed include:
+ *  - Interpolating the calibration curve and translating to F14C age if the rc determinations are in F14C space
+ *  - Set the initial values of the DPMM parameters and set the hyperparameters
+ *  - Initialise the vectors to store the output values
+ */
 void DPMM::initialise(
         std::vector<double> i_rc_determinations,
         std::vector<double> i_rc_sigmas,
@@ -9,6 +26,7 @@ void DPMM::initialise(
         std::vector<double> cc_c14_age,
         std::vector<double> cc_c14_sig,
         int rng_seed) {
+
     if (rng_seed == 0) {
         std::time_t t1, t2;
         t1 = time(nullptr);
@@ -30,14 +48,111 @@ void DPMM::initialise(
     calcurve.c14_sig = std::move(cc_c14_sig);
     convert_to_f14c_age(calcurve.c14_age, calcurve.c14_sig, calcurve.f14c_age, calcurve.f14c_sig);
 
-    interpolate_calibration_curve();
-    initialise_storage();
-    initialise_calendar_age_and_spd_ranges();
-    initialise_hyperparameters();
-    initialise_clusters();
+    _interpolate_calibration_curve();
+    _initialise_storage();
+    _initialise_calendar_age_and_spd_ranges();
+    _initialise_hyperparameters();
+    _initialise_clusters();
 }
 
-void DPMM::initialise_storage() {
+/*
+ * A call to initialise() must precede this. Performs the calibration - all the results are stored as private
+ * attributes on the instance. As the calibration is performed, the progress is written to the *.work file.
+ * Args:
+ *  - n_iter: The number of iterations
+ *  - n_thin: How often to store the current state of the DPMM
+ */
+void DPMM::calibrate(int n_iter, int n_thin) {
+    n_out = n_iter/n_thin + 1;
+    _initialise_storage();
+    for (int i = 1; i <= n_iter; i++) {
+        check_for_work_file();
+        _perform_update_step();
+        if (i % n_thin == 0) {
+            update_progress_bar(i * 1. / n_iter);
+            _store_current_values(i / n_thin);
+        }
+        if (i % n_work_update == 0) update_work_file_mcmc(double (i) / n_iter, i);
+    }
+}
+
+/*
+ * Calculates the predictive density. Must be called after a call to calibrate.
+ * Args:
+ * - n_posterior_samples: The number of samples to use of the posterior
+ * - resolution: The calendar age resolution for the density
+ * - quantile_edge_width:
+ *       Which edge width to use for the confidence intervals (so the confidence interval width is 1 - 2*edge_width)
+ *
+ * Returns:
+ *   A DensityData objects, which has the following fields:
+ *   - cal_age_AD
+ *   - mean: The mean predictive density
+ *   - ci_lower: The lower confidence interval
+ *   - ci_upper: The upper confidence interval
+ */
+DensityData DPMM::get_predictive_density(int n_posterior_samples, double resolution, double quantile_edge_width) {
+    int n_burn = floor(n_out / 2);
+    std::vector<int> sample_ids(n_posterior_samples);
+    get_sample_ids(sample_ids, n_burn - 1, n_out - 1);
+
+    double min_calendar_age = std::numeric_limits<double>::infinity();
+    double max_calendar_age = -std::numeric_limits<double>::infinity();
+    for (int i = 0; i < n_out; i++) {
+        for (int j = 0; j < n_obs; j++) {
+            if (calendar_age[i][j] < min_calendar_age) min_calendar_age = calendar_age[i][j];
+            if (calendar_age[i][j] > max_calendar_age) max_calendar_age = calendar_age[i][j];
+        }
+    }
+    min_calendar_age = floor(min_calendar_age);
+    max_calendar_age = ceil(max_calendar_age);
+    int n_points = (int) ((max_calendar_age - min_calendar_age) / resolution) + 2;
+    DensityData density_data(n_points);
+
+    // A vector of vectors to represent the density matrix
+    std::vector<std::vector<double>> density_samples(n_points, std::vector<double>(n_posterior_samples, 0));
+
+    std::vector<double> cal_age_BP(n_points), sum_ages(n_points, 0);
+    for (int i = 0; i < n_points; i++) cal_age_BP[i] = min_calendar_age + i * resolution;
+    for (int j = 0; j < n_posterior_samples; j++) {
+        for (int i = 0; i < n_points; i++) {
+            density_samples[i][j] = _calculate_density_sample(sample_ids[j], cal_age_BP[i]);
+            sum_ages[i] += density_samples[i][j];
+        }
+    }
+
+    // Now reverse as we populate the DensityData object as we're converting from calBP to AD
+    int i_reversed;
+    for (int i = 0; i < n_points; i++) {
+        i_reversed = n_points - 1 - i;
+        density_data.cal_age_AD[i_reversed] = to_calAD(cal_age_BP[i]);
+        density_data.mean[i_reversed] = sum_ages[i] / n_posterior_samples;
+        edge_quantiles(
+                density_samples[i],
+                quantile_edge_width,
+                density_data.ci_lower[i_reversed],
+                density_data.ci_upper[i_reversed]);
+    }
+
+    return density_data;
+}
+
+/*
+ * Returns the posterior calendar ages for the determination that corresponds to `ident`.
+ */
+std::vector<double> DPMM::get_posterior_calendar_ages(int ident) {
+    int n_burn = n_out / 2;
+    int n_count = n_out - n_burn;
+
+    std::vector<double> posterior_calendar_ages(n_count);
+    for (int i = 0; i < n_count; i++) {
+        posterior_calendar_ages[i] = to_calAD(calendar_age[i + n_burn][ident]);
+    }
+
+    return posterior_calendar_ages;
+}
+
+void DPMM::_initialise_storage() {
     calendar_age.resize(n_out);
     alpha.resize(n_out);
     mu_phi.resize(n_out);
@@ -47,7 +162,7 @@ void DPMM::initialise_storage() {
     cluster_ids.resize(n_out);
 }
 
-void DPMM::initialise_calendar_age_and_spd_ranges() {
+void DPMM::_initialise_calendar_age_and_spd_ranges() {
     int n_points = (int) yearwise_calcurve.cal_age.size();
     double sum_prob, max_prob, most_probably_age;
     std::vector<double> current_prob(n_points), spd(n_points), cum_prob_spd(n_points);
@@ -85,7 +200,7 @@ void DPMM::initialise_calendar_age_and_spd_ranges() {
     spd_range_3_sigma[1] = yearwise_calcurve.cal_age[get_right_boundary(cum_prob_spd, (1 + 0.997)/2.)];
 }
 
-void DPMM::initialise_hyperparameters() {
+void DPMM::_initialise_hyperparameters() {
     double calendar_age_range, calendar_age_prec;
 
     A = mean(spd_range_2_sigma);
@@ -101,9 +216,9 @@ void DPMM::initialise_hyperparameters() {
     slice_width = max_diff(spd_range_3_sigma);
 }
 
-void DPMM::initialise_clusters() {}  // Implemented in child class - different for Polya Urn and Walker methods
+void DPMM::_initialise_clusters() {}  // Implemented in child class - different for Polya Urn and Walker methods
 
-void DPMM::interpolate_calibration_curve() {
+void DPMM::_interpolate_calibration_curve() {
     int n = (int) calcurve.cal_age.size();
     std::vector<int> perm(n);
     std::vector<double> sorted_cal_age(calcurve.cal_age.begin(), calcurve.cal_age.end());
@@ -158,21 +273,7 @@ void DPMM::interpolate_calibration_curve() {
     }
 }
 
-void DPMM::calibrate(int n_iter, int n_thin) {
-    n_out = n_iter/n_thin + 1;
-    initialise_storage();
-    for (int i = 1; i <= n_iter; i++) {
-        check_for_work_file();
-        perform_update_step();
-        if (i % n_thin == 0) {
-            update_progress_bar(i * 1. / n_iter);
-            store_current_values(i / n_thin);
-        }
-        if (i % n_work_update == 0) update_work_file_mcmc(double (i) / n_iter, i);
-    }
-}
-
-void DPMM::store_current_values(int output_index) {
+void DPMM::_store_current_values(int output_index) {
     calendar_age[output_index] = calendar_age_i;
     alpha[output_index] = alpha_i;
     mu_phi[output_index] = mu_phi_i;
@@ -182,7 +283,7 @@ void DPMM::store_current_values(int output_index) {
     n_clust[output_index] = n_clust_i;
 }
 
-double DPMM::cal_age_log_likelihood(
+double DPMM::_cal_age_log_likelihood(
         double cal_age, double cluster_mean, double cluster_sig, double obs_c14_age, double obs_c14_sig) {
     double log_likelihood;
     double cc_c14_age, cc_c14_sig;
@@ -200,7 +301,7 @@ double DPMM::cal_age_log_likelihood(
     return log_likelihood;
 }
 
-void DPMM::update_calendar_ages() {
+void DPMM::_update_calendar_ages() {
     // updates calendar ages using slice sampling
     int cluster_id;
     double cluster_mean, cluster_sig;
@@ -216,7 +317,7 @@ void DPMM::update_calendar_ages() {
         x0 = calendar_age_i[j];
 
         // Slice height
-        y = cal_age_log_likelihood(x0, cluster_mean, cluster_sig, rc_determinations[j], rc_sigmas[j]) - rexp(1);
+        y = _cal_age_log_likelihood(x0, cluster_mean, cluster_sig, rc_determinations[j], rc_sigmas[j]) - rexp(1);
 
         //////////////////////////////////////////////
         // Find the slice interval
@@ -231,14 +332,14 @@ void DPMM::update_calendar_ages() {
 
         // LHS stepping out
         while ((J > 0) &&
-               (y < cal_age_log_likelihood(L, cluster_mean, cluster_sig, rc_determinations[j], rc_sigmas[j]))) {
+               (y < _cal_age_log_likelihood(L, cluster_mean, cluster_sig, rc_determinations[j], rc_sigmas[j]))) {
             L -= slice_width;
             J -= 1.;
         }
 
         // RHS stepping out
         while ((K > 0) &&
-               (y < cal_age_log_likelihood(R, cluster_mean, cluster_sig, rc_determinations[j], rc_sigmas[j]))) {
+               (y < _cal_age_log_likelihood(R, cluster_mean, cluster_sig, rc_determinations[j], rc_sigmas[j]))) {
             R += slice_width;
             K -= 1.;
         }
@@ -249,7 +350,7 @@ void DPMM::update_calendar_ages() {
             x1 = L + runif(0., 1.) * (R - L);
 
             // Break loop if we have sampled satisfactorily
-            if (y < cal_age_log_likelihood(x1, cluster_mean, cluster_sig, rc_determinations[j], rc_sigmas[j])) {
+            if (y < _cal_age_log_likelihood(x1, cluster_mean, cluster_sig, rc_determinations[j], rc_sigmas[j])) {
                 calendar_age_i[j] = x1;
                 break;
             }
@@ -265,7 +366,7 @@ void DPMM::update_calendar_ages() {
 
 // Function which works out the marginal of a calendar age when
 // theta ~ N(phi, sd = sqrt(1/tau)) and (phi, tau) are NormalGamma
-double DPMM::log_marginal_normal_gamma(double cal_age, double mu_phi_s) {
+double DPMM::_log_marginal_normal_gamma(double cal_age, double mu_phi_s) {
     double logden, margprec, margdf;
 
     margprec = (nu1 * lambda) / (nu2 * (lambda + 1.));
@@ -278,7 +379,7 @@ double DPMM::log_marginal_normal_gamma(double cal_age, double mu_phi_s) {
     return logden;
 }
 
-void DPMM::update_cluster_phi_and_tau(int cluster_id, const std::vector<double>& cluster_calendar_ages) {
+void DPMM::_update_cluster_phi_and_tau(int cluster_id, const std::vector<double>& cluster_calendar_ages) {
     int num_in_cluster = (int) cluster_calendar_ages.size();
     std::vector<double> calendar_age_diff(num_in_cluster);
     double calendar_age_mean;
@@ -304,7 +405,7 @@ void DPMM::update_cluster_phi_and_tau(int cluster_id, const std::vector<double>&
     phi_i[cluster_id - 1] = rnorm(mu_phi_new, 1./sqrt(lambda_new * tau_i[cluster_id - 1]));
 }
 
-void DPMM::update_mu_phi() {
+void DPMM::_update_mu_phi() {
     // Updates mu_phi via Gibbs sampling based upon current (phi, tau) values
     double posterior_mean, posterior_precision;
     double sum_tau = 0.;
@@ -319,7 +420,7 @@ void DPMM::update_mu_phi() {
     mu_phi_i = rnorm(posterior_mean, 1. / sqrt(posterior_precision));
 }
 
-void DPMM::update_alpha() {
+void DPMM::_update_alpha() {
     double updated_alpha = -1.;
     double prop_sd = 1.;        // Standard deviation for sampling proposed value of alpha
     double log_prior_rate, log_likelihood_rate, log_proposal_rate, hr;
@@ -327,8 +428,8 @@ void DPMM::update_alpha() {
     // Sample new alpha from truncated normal distribution
     while (updated_alpha <= 0.) updated_alpha = rnorm(alpha_i, prop_sd);
 
-    log_prior_rate = alpha_log_prior(updated_alpha) - alpha_log_prior(alpha_i);
-    log_likelihood_rate = alpha_log_likelihood(updated_alpha) - alpha_log_likelihood(alpha_i);
+    log_prior_rate = _alpha_log_prior(updated_alpha) - _alpha_log_prior(alpha_i);
+    log_likelihood_rate = _alpha_log_likelihood(updated_alpha) - _alpha_log_likelihood(alpha_i);
     // Adjust for non-symmetric truncated normal proposal
     log_proposal_rate = pnorm5(alpha_i, 0., 1., 1, 1) - pnorm5(updated_alpha, 0., 1., 1, 1);
     hr = exp(log_prior_rate + log_likelihood_rate + log_proposal_rate);
@@ -337,75 +438,16 @@ void DPMM::update_alpha() {
     if (runif(0., 1.) < hr) alpha_i = updated_alpha;
 }
 
-double DPMM::alpha_log_prior(double alpha_value) {
+double DPMM::_alpha_log_prior(double alpha_value) {
     return dgamma(alpha_value, alpha_shape, 1./alpha_rate, 1);
 }
 
-double DPMM::alpha_log_likelihood(double alpha_value) {
+double DPMM::_alpha_log_likelihood(double alpha_value) {
     // Must be implemented in child class
     return 0.;
 }
 
-
-DensityData DPMM::get_predictive_density(int n_posterior_samples, double resolution, double quantile_edge_width) {
-    int n_burn = floor(n_out / 2);
-    std::vector<int> sample_ids(n_posterior_samples);
-    get_sample_ids(sample_ids, n_burn - 1, n_out - 1);
-
-    double min_calendar_age = std::numeric_limits<double>::infinity();
-    double max_calendar_age = -std::numeric_limits<double>::infinity();
-    for (int i = 0; i < n_out; i++) {
-        for (int j = 0; j < n_obs; j++) {
-            if (calendar_age[i][j] < min_calendar_age) min_calendar_age = calendar_age[i][j];
-            if (calendar_age[i][j] > max_calendar_age) max_calendar_age = calendar_age[i][j];
-        }
-    }
-    min_calendar_age = floor(min_calendar_age);
-    max_calendar_age = ceil(max_calendar_age);
-    int n_points = (int) ((max_calendar_age - min_calendar_age) / resolution) + 2;
-    DensityData density_data(n_points);
-
-    // A vector of vectors to represent the density matrix
-    std::vector<std::vector<double>> density_samples(n_points, std::vector<double>(n_posterior_samples, 0));
-
-    std::vector<double> cal_age_BP(n_points), sum_ages(n_points, 0);
-    for (int i = 0; i < n_points; i++) cal_age_BP[i] = min_calendar_age + i * resolution;
-    for (int j = 0; j < n_posterior_samples; j++) {
-        for (int i = 0; i < n_points; i++) {
-            density_samples[i][j] = calculate_density_sample(sample_ids[j], cal_age_BP[i]);
-            sum_ages[i] += density_samples[i][j];
-        }
-    }
-
-    // Now reverse as we populate the DensityData object as we're converting from calBP to AD
-    int i_reversed;
-    for (int i = 0; i < n_points; i++) {
-        i_reversed = n_points - 1 - i;
-        density_data.cal_age_AD[i_reversed] = to_calAD(cal_age_BP[i]);
-        density_data.mean[i_reversed] = sum_ages[i] / n_posterior_samples;
-        edge_quantiles(
-                density_samples[i],
-                quantile_edge_width,
-                density_data.ci_lower[i_reversed],
-                density_data.ci_upper[i_reversed]);
-    }
-
-    return density_data;
-}
-
-double DPMM::calculate_density_sample(int sample_id, double calendar_age_BP) {
+double DPMM::_calculate_density_sample(int sample_id, double calendar_age_BP) {
     // Must be implemented in child class
     return 0.;
-}
-
-std::vector<double> DPMM::get_posterior_calendar_ages(int ident) {
-    int n_burn = n_out / 2;
-    int n_count = n_out - n_burn;
-
-    std::vector<double> posterior_calendar_ages(n_count);
-    for (int i = 0; i < n_count; i++) {
-        posterior_calendar_ages[i] = to_calAD(calendar_age[i + n_burn][ident]);
-    }
-
-    return posterior_calendar_ages;
 }

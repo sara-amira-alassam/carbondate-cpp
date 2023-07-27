@@ -46,7 +46,7 @@ public:
 void read_arguments(int argc, char* argv[]);
 
 void read_calibration_curve(
-    const std::string& calibration_curve,
+    const std::string& calibration_curve_name,
     std::vector<double>& cc_cal_age,
     std::vector<double>& cc_c14_age,
     std::vector<double>& cc_c14_sig);
@@ -67,6 +67,6 @@ void read_options(
         std::vector<bool> &ranges,
         bool &quantile_range,
         bool &use_f14c,
-        std::string &calibration_curve);
+        std::string &calibration_curve_name);
 
 #endif //CARBONDATE_READ_DATA_H

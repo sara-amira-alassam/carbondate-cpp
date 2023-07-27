@@ -1,11 +1,11 @@
 #include "WalkerDPMM.h"
 
-void WalkerDPMM::initialise_storage(){
-    DPMM::initialise_storage();
+void WalkerDPMM::_initialise_storage(){
+    DPMM::_initialise_storage();
     weight.resize(n_out);
 }
 
-void WalkerDPMM::initialise_clusters() {
+void WalkerDPMM::_initialise_clusters() {
     n_weights = n_clust_i = n_clust[0] = std::min(10, n_obs);
     phi_i.resize(n_weights);
     tau_i.resize(n_weights);
@@ -35,7 +35,7 @@ void WalkerDPMM::initialise_clusters() {
     weight[0] = weight_i;
 }
 
-void WalkerDPMM::perform_update_step() {
+void WalkerDPMM::_perform_update_step() {
     std::vector<double> u(n_obs); // Auxiliary variables
     double min_u = 1.;            // Minimum value of auxilliary values
 
@@ -49,9 +49,9 @@ void WalkerDPMM::perform_update_step() {
     update_phi_and_tau();
     update_cluster_ids(u);
     update_n_clust();
-    update_alpha();
-    update_mu_phi();
-    update_calendar_ages();
+    _update_alpha();
+    _update_mu_phi();
+    _update_calendar_ages();
 }
 
 void WalkerDPMM::update_weights(const std::vector<double>& u, double min_u) {
@@ -129,7 +129,7 @@ void WalkerDPMM::update_phi_and_tau() {
         } else {
             // There are some observations, so update the phi and tau for this
             // cluster (conjugate according to NormalGamma prior)
-            update_cluster_phi_and_tau(c, cluster_calendar_ages);
+            _update_cluster_phi_and_tau(c, cluster_calendar_ages);
             cluster_calendar_ages.clear();
         }
     }
@@ -166,16 +166,16 @@ void WalkerDPMM::update_n_clust() {
     }
 }
 
-double WalkerDPMM::alpha_log_likelihood(double alpha_value) {
+double WalkerDPMM::_alpha_log_likelihood(double alpha_value) {
     return n_clust_i * log(alpha_value) + lgamma(alpha_value) - lgamma(alpha_value + n_obs);
 }
 
-void WalkerDPMM::store_current_values(int output_index) {
-    DPMM::store_current_values(output_index);
+void WalkerDPMM::_store_current_values(int output_index) {
+    DPMM::_store_current_values(output_index);
     weight[output_index] = weight_i;
 }
 
-double WalkerDPMM::calculate_density_sample(int sample_id, double calendar_age_BP) {
+double WalkerDPMM::_calculate_density_sample(int sample_id, double calendar_age_BP) {
     double sum_weight = 0., logmarg, density_sample = 0.;
     int n_all_clust = (int) weight[sample_id].size();
     for (int c = 0; c < n_all_clust; c++) {
@@ -184,7 +184,7 @@ double WalkerDPMM::calculate_density_sample(int sample_id, double calendar_age_B
         sum_weight += weight[sample_id][c];
     }
     // The predictive density for a new observation is a scaled t-distribution
-    logmarg = log_marginal_normal_gamma(calendar_age_BP, mu_phi[sample_id]);
+    logmarg = _log_marginal_normal_gamma(calendar_age_BP, mu_phi[sample_id]);
     density_sample += (1. - sum_weight) * exp(logmarg);
 
     return density_sample;

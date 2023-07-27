@@ -2,21 +2,29 @@
 #include "log.h"
 #include "plain_text.h"
 
-// Creates an object suitable for printing out the posterior calendar age density for each
-// determination, taking the following arguments:
-// * ident:  The index for the determination corresponding to this posterior
-// * offset: The offset to use for indexing the total model output
-//           (e.g. if other models have been specified in the input file in addition to this one)
-// * resolution:
-//      The resolution to use for determining the probability curve. Always rounded up to the
-//      nearest whole number.
-// * posterior_calendar_ages: A list of sampled calendar ages for this determination, in calAD
+/*
+ * Creates an object suitable for printing out the posterior calendar age density for each
+ * determination, taking the following arguments:
+ * - ident:  The index for the determination corresponding to this posterior
+ * - date_name: The name given to the data point, or an empty string if no name is given
+ * - rc_age: The radiocarbon determination
+ * - rc_sig: The error for the radiocarbon determination
+ * - f14c_age: True if the radiocarbon determination is F14C age, false otherwise
+ * - offset: The offset to use for indexing the total model output
+ *          (e.g. if other models have been specified in the input file in addition to this one)
+ * - resolution:
+ *    The resolution to use for determining the probability curve. Always rounded up to the
+ *    nearest whole number.
+ * - quantile_ranges: True if quantile ranges should be used, false otherwise
+ * - log_ranges: A vector of length 3, denoting whether the ranges should be logged for each of the range probabilities
+ * - posterior_calendar_ages: A list of sampled calendar ages for this determination, in calAD
+ */
 PosteriorDensityOutput::PosteriorDensityOutput(
         int ident,
         const std::string& date_name,
         double rc_age,
         double rc_sig,
-        bool f14_age,
+        bool f14c_age,
         int offset,
         double resolution,
         bool quantile_ranges,
@@ -26,7 +34,7 @@ PosteriorDensityOutput::PosteriorDensityOutput(
 
     if (date_name.length() > 0)
         _label = date_name;
-    else if (f14_age)
+    else if (f14c_age)
         _label = "R_F14C(" + to_string(rc_age, 6) + "," + to_string(rc_sig, 8) + ")";
     else
         _label = "R_Date(" + to_string(rc_age, 4) + "," + to_string(rc_sig, 4) + ")";
@@ -47,7 +55,7 @@ PosteriorDensityOutput::PosteriorDensityOutput(
     int num_breaks = (int) ceil((max_calendar_age - break_start) / resolution);
     std::vector<double> probability(num_breaks, 0);
     for (int i = 0; i < n; i++) probability[(int) ((posterior_calendar_ages_AD[i] - break_start) / resolution)]++;
-    set_probability(probability);
+    _set_probability(probability);
 
     _mean_calAD = mean(posterior_calendar_ages_AD);
     _median_calAD = median(posterior_calendar_ages_AD);
@@ -132,7 +140,7 @@ std::vector<std::vector<double>> PosteriorDensityOutput::get_ranges_by_intercept
     return ranges;
 }
 
-std::string PosteriorDensityOutput::range_lines(int &comment_index) {
+std::string PosteriorDensityOutput::_range_lines(int &comment_index) {
     std::string range_lines, comment, log_lines = "Posterior " + _label + "\n";
     std::vector<double> text_ranges;
 
@@ -143,17 +151,17 @@ std::string PosteriorDensityOutput::range_lines(int &comment_index) {
         }
         range_lines += _output_prefix + "." + range_string + "=[];\n";
         for (int j = 0; j < _ranges[i].size(); j++) {
-            range_lines += output_line(range_string + "[" + std::to_string(j) + "]", _ranges[i][j]);
+            range_lines += _output_line(range_string + "[" + std::to_string(j) + "]", _ranges[i][j]);
         }
         if (_log_ranges[i]) {
             comment = "  " + to_percent_string(_range_probabilities[i]) + " probability";
-            range_lines += comment_line(comment, comment_index);
+            range_lines += _comment_line(comment, comment_index);
             log_lines += comment + "\n";
             for (std::vector<double> & range : _ranges[i]) {
                 comment = "    " + std::to_string(int (round(range[0]))) + "AD";
                 comment += " (" + to_percent_string(range[2] / 100.) + ") ";
                 comment += std::to_string(int (round(range[1]))) + "AD";
-                range_lines += comment_line(comment, comment_index);
+                range_lines += _comment_line(comment, comment_index);
                 log_lines += comment + "\n";
             }
             text_ranges.push_back(_ranges[i][0][0]);

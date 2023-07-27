@@ -28,6 +28,15 @@ struct DensityData {
             : cal_age_AD(n_points), mean(n_points), ci_lower(n_points), ci_upper(n_points) {};
 };
 
+/*
+ * This is a base class for one of to available parent classes: WalkerDPMM and PolyaUrnDPMM.
+ * It contains all the public methods for these to classes needed to perform a calculation, however some of the
+ * necessary private methods to implement these are be defined in the child classes (i.e. this class cannot be used
+ * as-is to perform a complete calculation, instead you need an instance of WalkerDPMM or PolyaUrnDPMM).
+ *
+ * Note that it expects the global variable `project_name` to be present (which is achieved by call the read_arguments()
+ * function.
+ */
 class DPMM {
 protected:
     int n_work_update = 5000; // How many iterations between updating the work file
@@ -63,31 +72,31 @@ protected:
     std::vector<std::vector<double>> phi, tau;
     std::vector<std::vector<int>> cluster_ids;
 
-    // SPD ranges - used for initialising certain value
+    // SPD ranges - used for initialising certain start values and hyperparameters
     std::vector<double> spd_range_1_sigma = {0., 0.}, spd_range_2_sigma = {0., 0.}, spd_range_3_sigma = {0., 0.};
 
 protected:
-    virtual void initialise_storage();
-    void initialise_calendar_age_and_spd_ranges();
-    void initialise_hyperparameters();
-    virtual void initialise_clusters();
-    void interpolate_calibration_curve();
-    virtual void perform_update_step() {};
-    virtual void store_current_values(int i);
-    double cal_age_log_likelihood(
+    virtual void _initialise_storage();
+    void _initialise_calendar_age_and_spd_ranges();
+    void _initialise_hyperparameters();
+    virtual void _initialise_clusters();
+    void _interpolate_calibration_curve();
+    virtual void _perform_update_step() {};
+    virtual void _store_current_values(int i);
+    double _cal_age_log_likelihood(
             double cal_age,
             double prmean,
             double prsig,
             double obs_c14_age,
             double obs_c14_sig);
-    void update_cluster_phi_and_tau(int cluster_id, const std::vector<double>& cluster_calendar_ages);
-    void update_mu_phi();
-    void update_alpha();
-    double alpha_log_prior(double alpha_value);
-    virtual double alpha_log_likelihood(double alpha_value);
-    void update_calendar_ages();
-    double log_marginal_normal_gamma(double cal_age, double mu_phi_s);
-    virtual double calculate_density_sample(int sample_id, double calendar_age_BP);
+    void _update_cluster_phi_and_tau(int cluster_id, const std::vector<double>& cluster_calendar_ages);
+    void _update_mu_phi();
+    void _update_alpha();
+    double _alpha_log_prior(double alpha_value);
+    virtual double _alpha_log_likelihood(double alpha_value);
+    void _update_calendar_ages();
+    double _log_marginal_normal_gamma(double cal_age, double mu_phi_s);
+    virtual double _calculate_density_sample(int sample_id, double calendar_age_BP);
 
 public:
     void initialise(
