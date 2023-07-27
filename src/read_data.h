@@ -3,6 +3,11 @@
 
 #include "carbondate.h"
 
+class IncorrectArgumentsException : public CarbondateException {
+private:
+    std::string _error_message = "Incorrect arguments - correct usage: carbondate [project_name]";
+};
+
 class UnableToReadCalibrationCurveException : public CarbondateException {
 public:
     explicit UnableToReadCalibrationCurveException(const std::string& calibration_curve_name) {
@@ -22,7 +27,6 @@ public:
     explicit UnableToReadOutputFileException(const std::string& file_path) {
         _error_message = "Unable to read output file " + file_path;
     }
-
 };
 
 class UnableToDetermineOutputOffsetException : public CarbondateException {
@@ -39,41 +43,30 @@ public:
     }
 };
 
+void read_arguments(int argc, char* argv[]);
+
 void read_calibration_curve(
-    const std::string& calibration_curve,
+    const std::string& calibration_curve_name,
     std::vector<double>& cc_cal_age,
     std::vector<double>& cc_c14_age,
     std::vector<double>& cc_c14_sig);
 
 bool read_oxcal_data(
-    const std::string& file_prefix,
+    std::vector<std::string>& date_name,
     std::vector<double>& c14_age,
     std::vector<double>& c14_sig,
     std::vector<double>& f14c_age,
     std::vector<double>& f14c_sig,
     std::string& model_name);
 
-int read_output_offset(const std::string& file_prefix, const std::string& model_name);
+int read_output_offset(const std::string& model_name);
 
 void read_options(
-        const std::string &file_prefix,
         int &iterations,
         double &resolution,
         std::vector<bool> &ranges,
         bool &quantile_range,
         bool &use_f14c,
-        std::string &calibration_curve);
-
-void convert_to_c14_age(
-        const std::vector<double> &f14c_age,
-        const std::vector<double> &f14c_sig,
-        std::vector<double> &c14_age,
-        std::vector<double> &c14_sig);
-
-void convert_to_f14c_age(
-        const std::vector<double> &c14_age,
-        const std::vector<double> &c14_sig,
-        std::vector<double> &f14c_age,
-        std::vector<double> &f14c_sig);
+        std::string &calibration_curve_name);
 
 #endif //CARBONDATE_READ_DATA_H

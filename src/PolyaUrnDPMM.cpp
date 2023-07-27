@@ -1,15 +1,11 @@
-//
-// Created by Sara Admin on 21/06/2023.
-//
 #include "PolyaUrnDPMM.h"
-#include "helpers.h"
 
-void PolyaUrnDPMM::initialise_storage(){
-    DPMM::initialise_storage();
+void PolyaUrnDPMM::_initialise_storage(){
+    DPMM::_initialise_storage();
     observations_per_cluster.resize(n_out);
 }
 
-void PolyaUrnDPMM::initialise_clusters() {
+void PolyaUrnDPMM::_initialise_clusters() {
     n_clust_i = n_clust[0] = std::min(10, n_obs);
     phi_i.resize(n_clust_i);
     tau_i.resize(n_clust_i);
@@ -40,16 +36,16 @@ void PolyaUrnDPMM::initialise_clusters() {
     observations_per_cluster[0] = observations_per_cluster_i;
 }
 
-void PolyaUrnDPMM::perform_update_step() {
+void PolyaUrnDPMM::_perform_update_step() {
     update_cluster_ids();
     update_phi_and_tau();
-    update_mu_phi();
-    update_calendar_ages();
-    update_alpha();
+    _update_mu_phi();
+    _update_calendar_ages();
+    _update_alpha();
 }
 
-void PolyaUrnDPMM::store_current_values(int output_index) {
-    DPMM::store_current_values(output_index);
+void PolyaUrnDPMM::_store_current_values(int output_index) {
+    DPMM::_store_current_values(output_index);
     observations_per_cluster[output_index] = observations_per_cluster_i;
 }
 
@@ -82,7 +78,7 @@ void PolyaUrnDPMM::update_cluster_ids() {
                 cluster_prob[c - 1] = dnorm4(calendar_age_i[i], phi_i[c - 1], 1./sqrt(tau_i[c - 1]), 0);
                 cluster_prob[c - 1] *= observations_per_cluster_i[c - 1];
             }
-            logmarg = log_marginal_normal_gamma(calendar_age_i[i], mu_phi_i);
+            logmarg = _log_marginal_normal_gamma(calendar_age_i[i], mu_phi_i);
             cluster_prob[n_clust_i] = exp(logmarg) * alpha_i;
         }
         // Sample cluster ID for the new cluster
@@ -144,12 +140,12 @@ void PolyaUrnDPMM::update_phi_and_tau() {
     for (int c = 1; c <= n_clust_i; c++) {
         // Find out which observations belong in this cluster
         for (int j = 0; j < n_obs; j++) if (cluster_ids_i[j] == c) cluster_calendar_ages.push_back(calendar_age_i[j]);
-        update_cluster_phi_and_tau(c, cluster_calendar_ages);
+        _update_cluster_phi_and_tau(c, cluster_calendar_ages);
         cluster_calendar_ages.clear();
     }
 }
 
-double PolyaUrnDPMM::alpha_log_likelihood(double alpha_value){
+double PolyaUrnDPMM::_alpha_log_likelihood(double alpha_value){
     double log_likelihood = n_clust_i * log(alpha_value);
     int c_shift;
 
@@ -162,7 +158,7 @@ double PolyaUrnDPMM::alpha_log_likelihood(double alpha_value){
     return log_likelihood;
 }
 
-double PolyaUrnDPMM::calculate_density_sample(int sample_id, double calendar_age_BP) {
+double PolyaUrnDPMM::_calculate_density_sample(int sample_id, double calendar_age_BP) {
     double logmarg, density_sample = 0.;
 
     for (int c = 0; c < n_clust[sample_id]; c++) {
@@ -170,7 +166,7 @@ double PolyaUrnDPMM::calculate_density_sample(int sample_id, double calendar_age
                                  * dnorm4(calendar_age_BP, phi[sample_id][c], 1. / sqrt(tau[sample_id][c]), 0);
     }
     // The predictive density for a new observation is a scaled t-distribution
-    logmarg = log_marginal_normal_gamma(calendar_age_BP, mu_phi[sample_id]);
+    logmarg = _log_marginal_normal_gamma(calendar_age_BP, mu_phi[sample_id]);
     density_sample += alpha[sample_id] * exp(logmarg);
     density_sample /= n_obs + alpha[sample_id];
 

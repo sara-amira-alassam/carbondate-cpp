@@ -1,30 +1,43 @@
-//
-// Created by Sara Al-Assam on 20/03/2023.
-//
-#include <cmath>
-#include "helpers.h"
 #include "PosteriorDensityOutput.h"
+#include "log.h"
+#include "plain_text.h"
 
-// Creates an object suitable for printing out the posterior calendar age density for each
-// determination, taking the following arguments:
-// * ident:  The index for the determination corresponding to this posterior
-// * offset: The offset to use for indexing the total model output
-//           (e.g. if other models have been specified in the input file in addition to this one)
-// * resolution:
-//      The resolution to use for determining the probability curve. Always rounded up to the
-//      nearest whole number.
-// * posterior_calendar_ages: A list of sampled calendar ages for this determination, in calAD
+/*
+ * Creates an object suitable for printing out the posterior calendar age density for each
+ * determination, taking the following arguments:
+ * - ident:  The index for the determination corresponding to this posterior
+ * - date_name: The name given to the data point, or an empty string if no name is given
+ * - rc_age: The radiocarbon determination
+ * - rc_sig: The error for the radiocarbon determination
+ * - f14c_age: True if the radiocarbon determination is F14C age, false otherwise
+ * - offset: The offset to use for indexing the total model output
+ *          (e.g. if other models have been specified in the input file in addition to this one)
+ * - resolution:
+ *    The resolution to use for determining the probability curve. Always rounded up to the
+ *    nearest whole number.
+ * - quantile_ranges: True if quantile ranges should be used, false otherwise
+ * - log_ranges: A vector of length 3, denoting whether the ranges should be logged for each of the range probabilities
+ * - posterior_calendar_ages: A list of sampled calendar ages for this determination, in calAD
+ */
 PosteriorDensityOutput::PosteriorDensityOutput(
         int ident,
+        const std::string& date_name,
+        double rc_age,
+        double rc_sig,
+        bool f14c_age,
         int offset,
         double resolution,
         bool quantile_ranges,
         const std::vector<bool> &log_ranges,
         const std::vector<double> &posterior_calendar_ages_AD)
-        : _log_ranges(log_ranges), DensityOutput(ident + offset + 1, ceil(resolution)) {
+        : _log_ranges(log_ranges), DensityOutput(ident + offset + 1, resolution) {
 
-    // TODO: log or warn if ignoring a resolution that is less than 1.
-    // TODO: Why can't the resolution be less than 1?? Try and change this
+    if (date_name.length() > 0)
+        _label = date_name;
+    else if (f14c_age)
+        _label = "R_F14C(" + to_string(rc_age, 6) + "," + to_string(rc_sig, 8) + ")";
+    else
+        _label = "R_Date(" + to_string(rc_age, 4) + "," + to_string(rc_sig, 4) + ")";
 
     unsigned n = posterior_calendar_ages_AD.size();
     double min_calendar_age = posterior_calendar_ages_AD[0];
@@ -38,13 +51,12 @@ PosteriorDensityOutput::PosteriorDensityOutput(
     }
     _start_calAD = floor(min_calendar_age - resolution / 2.0);
 
-    int num_breaks = (int) ceil((max_calendar_age - min_calendar_age) / resolution) + 2;
     double break_start = _start_calAD - resolution / 2.0;
-    std::vector<double> _probability(num_breaks, 0);
-    for (int i = 0; i < n; i++) {
-        _probability[(int) ((posterior_calendar_ages_AD[i] - break_start) / resolution)]++;
-    }
-    set_probability(_probability);
+    int num_breaks = (int) ceil((max_calendar_age - break_start) / resolution);
+    std::vector<double> probability(num_breaks, 0);
+    for (int i = 0; i < n; i++) probability[(int) ((posterior_calendar_ages_AD[i] - break_start) / resolution)]++;
+    _set_probability(probability);
+
     _mean_calAD = mean(posterior_calendar_ages_AD);
     _median_calAD = median(posterior_calendar_ages_AD);
     _sigma_calAD = sigma(posterior_calendar_ages_AD, _mean_calAD);
@@ -59,12 +71,11 @@ PosteriorDensityOutput::PosteriorDensityOutput(
             _ranges.push_back(range);
         }
     } else {
-        for (double probability : _range_probabilities) {
-            _ranges.push_back(get_ranges_by_intercepts(probability));
+        for (double range_probability : _range_probabilities) {
+            _ranges.push_back(get_ranges_by_intercepts(range_probability));
         }
     }
 }
-
 
 // Returns the area under the probability curve if we ignore all values below the cut-off
 // Also populates the vector ranges, where each entry contains
@@ -88,8 +99,7 @@ double PosteriorDensityOutput::find_probability_and_ranges_for_cut_off(
             range_probability += (y1 + cut_off) * dx / 2.;
             range_probability *= _prob_norm;
             if (range_probability > min_prob) {
-                ranges.push_back(
-                        std::vector<double> {x_intercept_1, x_intercept_2, range_probability});
+                ranges.push_back(std::vector<double> {x_intercept_1, x_intercept_2, range_probability});
                 total_probability += range_probability;
             }
             range_probability = 0;
@@ -130,8 +140,9 @@ std::vector<std::vector<double>> PosteriorDensityOutput::get_ranges_by_intercept
     return ranges;
 }
 
-std::string PosteriorDensityOutput::range_lines(int &comment_index) {
-    std::string range_lines;
+std::string PosteriorDensityOutput::_range_lines(int &comment_index) {
+    std::string range_lines, comment, log_lines = "Posterior " + _label + "\n";
+    std::vector<double> text_ranges;
 
     for (int i = 0; i < _ranges.size(); i++) {
         std::string range_string = "range[" + std::to_string(i + 1) + "]";
@@ -140,19 +151,25 @@ std::string PosteriorDensityOutput::range_lines(int &comment_index) {
         }
         range_lines += _output_prefix + "." + range_string + "=[];\n";
         for (int j = 0; j < _ranges[i].size(); j++) {
-            range_lines += output_line(range_string + "[" + std::to_string(j) + "]", _ranges[i][j]);
+            range_lines += _output_line(range_string + "[" + std::to_string(j) + "]", _ranges[i][j]);
         }
         if (_log_ranges[i]) {
-            range_lines += comment_line(
-                    "  " + to_percent_string(_range_probabilities[i]) + " probability", comment_index);
+            comment = "  " + to_percent_string(_range_probabilities[i]) + " probability";
+            range_lines += _comment_line(comment, comment_index);
+            log_lines += comment + "\n";
             for (std::vector<double> & range : _ranges[i]) {
-                std::string comment = "    " + std::to_string(int (round(range[0]))) + "AD";
+                comment = "    " + std::to_string(int (round(range[0]))) + "AD";
                 comment += " (" + to_percent_string(range[2] / 100.) + ") ";
                 comment += std::to_string(int (round(range[1]))) + "AD";
-                range_lines += comment_line(comment, comment_index);
+                range_lines += _comment_line(comment, comment_index);
+                log_lines += comment + "\n";
             }
+            text_ranges.push_back(_ranges[i][0][0]);
+            text_ranges.push_back(_ranges[i][_ranges[i].size() - 1][1]);
         }
     }
+    update_log_file(log_lines.substr(0, log_lines.length() - 2)); // Remove the last carriage return
+    if (!text_ranges.empty()) update_text_file(_label, text_ranges);
     return range_lines;
 }
 

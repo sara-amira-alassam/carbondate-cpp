@@ -2,61 +2,45 @@
 #include <cstdio>
 #include <fstream>
 
-void create_work_file(const std::string& file_prefix) {
-    std::string filepath = file_prefix + ".work";
-
-    std::ofstream file(filepath);
-    if (file.is_open()) {
-        file.close();
-    } else {
-        throw UnableToCreateWorkFileException();
-    }
+std::string work_file_path() {
+    return project_name + ".work";
 }
 
-void update_work_file_mcmc(const std::string& file_prefix, double done, int iterations) {
-    std::string filepath = file_prefix + ".work";
-
-    std::ofstream file(filepath, std::ios::trunc);
-    if (file.is_open()) {
-        std::string version = CARBONDATE_VERSION;
-        std::string work_lines = "work.program=\"Carbondate " + version + "\";\n";
-        work_lines += "work.operation=\"MCMC\";\n";
-        work_lines += "work.done=" + to_string(done * 100., 3) + "; work.passes=" + std::to_string(iterations) + "; ";
-        work_lines += "work.ok=100; \n";
-        file << work_lines << std::endl;
-        file.close();
-    } else {
-        throw UnableToWriteToWorkFileException();
-    }
+void create_work_file() {
+    std::ofstream file(work_file_path());
+    if (!file.is_open()) throw UnableToCreateWorkFileException();
+    file.close();
 }
 
-void update_work_file_postprocessing(const std::string& file_prefix, int n_iter){
-    std::string filepath = file_prefix + ".work";
+void update_work_file_mcmc(double done, int iterations) {
+    std::ofstream file(work_file_path(), std::ios::trunc);
+    if (!file.is_open()) throw UnableToWriteToWorkFileException();
 
-    std::ofstream file(filepath, std::ios::trunc);
-    if (file.is_open()) {
-        std::string version = CARBONDATE_VERSION;
-        std::string work_lines = "work.program=\"Carbondate " + version + "\";\n";
-        work_lines += "work.operation=\"Post-processing\";\n";
-        work_lines += "work.done=100.0; work.passes=" + std::to_string(n_iter) + "; ";
-        work_lines += "work.ok=100; \n";
-        file << work_lines << std::endl;
-        file.close();
-    } else {
-        throw UnableToWriteToWorkFileException();
-    }
+    std::string work_lines = "work.program=\"" + carbondate_short_reference() + "\";\n";
+    work_lines += "work.operation=\"MCMC\";\n";
+    work_lines += "work.done=" + to_string(done * 100., 3) + "; work.passes=" + std::to_string(iterations) + "; ";
+    work_lines += "work.ok=100; \n";
+    file << work_lines << std::endl;
+    file.close();
 }
 
-void check_for_work_file(const std::string& file_prefix) {
-    std::string filepath = file_prefix + ".work";
-    std::ifstream file(filepath.c_str());
-    if (!file.good()) {
-        throw WorkFileRemovedException();
-    }
+void update_work_file_postprocessing(int n_iter){
+    std::ofstream file(work_file_path(), std::ios::trunc);
+    if (!file.is_open()) throw UnableToWriteToWorkFileException();
+
+    std::string work_lines = "work.program=\"" + carbondate_short_reference() + "\";\n";
+    work_lines += "work.operation=\"Post-processing\";\n";
+    work_lines += "work.done=100.0; work.passes=" + std::to_string(n_iter) + "; ";
+    work_lines += "work.ok=100; \n";
+    file << work_lines << std::endl;
+    file.close();
 }
 
-void remove_work_file(const std::string& file_prefix) {
-    std::string filepath = file_prefix + ".work";
+void check_for_work_file() {
+    std::ifstream file(work_file_path().c_str());
+    if (!file.good()) throw WorkFileRemovedException();
+}
 
-    std::remove(filepath.c_str());
+void remove_work_file() {
+    std::remove(work_file_path().c_str());
 }

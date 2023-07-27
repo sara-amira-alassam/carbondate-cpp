@@ -1,32 +1,33 @@
-#include <iostream>
-#include <utility>
-#include "helpers.h"
 #include "PredictiveDensityOutput.h"
 
-// Creates an object suitable for printing out the predictive calendar age density for all
-// determinations, taking the following arguments:
-// * n_obs:  The number of observations (this is used for normalization)
-// * offset: The offset to use for indexing the total model output
-//           (e.g. if other models have been specified in the input file in addition to this one)
-// * resolution: The resolution to use for determining the probability curve
-// * mean_density: The mean of the sampled densities
-// * ci_lower, ci_upper: The 1-sigma confidence intervals of the sampled densities
+/*
+ * Creates an object suitable for printing out the predictive calendar age density for all
+ * determinations, taking the following arguments:
+ * - n_obs:  The number of observations (this is used for normalization)
+ * - offset: The offset to use for indexing the total model output
+ *           (e.g. if other models have been specified in the input file in addition to this one)
+ * - resolution: The resolution to use for determining the probability curve
+ * - model_name: The name given to the model by the user
+ * - cal_age_AD: A vector of the calendar ages to use
+ * - mean_density: The mean of the sampled densities
+ * - ci_lower, ci_upper: The 1-sigma confidence intervals of the sampled densities
+ */
 PredictiveDensityOutput::PredictiveDensityOutput(
-        int n_obs, int offset, double resolution, std::string name,
+        int n_obs, int offset, double resolution, std::string model_name,
         const std::vector<double>& cal_age_AD,
         const std::vector<double>& mean_density,
         const std::vector<double>& ci_lower,
         const std::vector<double>& ci_upper)
-        : _n_obs(n_obs), _name(std::move(name)), DensityOutput(offset, resolution) {
+        : _n_obs(n_obs), _name(std::move(model_name)), DensityOutput(offset, resolution) {
 
     if (cal_age_AD[1] - cal_age_AD[0] != resolution) {
         // We don't expect this to happen, but best to double-check
-        std::cerr << "Resolution should be " + std::to_string(resolution);
-        std::cerr << " but is " + std::to_string(cal_age_AD[1] - cal_age_AD[0]);
-        exit(1);
+        throw DensityOutputException(
+                "Resolution should be " + std::to_string(resolution) +
+                " but is " + std::to_string(cal_age_AD[1] - cal_age_AD[0]));
     }
 
-    set_probability(mean_density);
+    _set_probability(mean_density);
     set_confidence_intervals(ci_lower, ci_upper);
 
     _start_calAD = cal_age_AD[0];
@@ -40,8 +41,8 @@ PredictiveDensityOutput::PredictiveDensityOutput(
     _sigma_calAD = sigma(cal_age_AD, normalised_density, _mean_calAD);
 }
 
-std::vector<std::string> PredictiveDensityOutput::get_output_lines() {
-    std::vector<std::string> output_lines = DensityOutput::get_output_lines();
+std::vector<std::string> PredictiveDensityOutput::_get_output_lines() {
+    std::vector<std::string> output_lines = DensityOutput::_get_output_lines();
     std::string model_line;
     double upper_lim = _start_calAD + _resolution * (double) _probability.size();
     model_line = "model.element[" + std::to_string(_index) + "]= ";
@@ -63,9 +64,9 @@ std::vector<std::string> PredictiveDensityOutput::get_output_lines() {
 
     output_lines.emplace_back(model_line);
     output_lines.emplace_back(ci_line);
-    output_lines.push_back(variable_line("name", _name));
-    output_lines.push_back(variable_line("op", "NP_Model"));
-    output_lines.push_back(output_line("probNorm", _prob_norm * _n_obs));
+    output_lines.push_back(_variable_line("name", _name));
+    output_lines.push_back(_variable_line("op", "NP_Model"));
+    output_lines.push_back(_output_line("probNorm", _prob_norm * _n_obs));
     return output_lines;
 }
 
@@ -81,6 +82,6 @@ void PredictiveDensityOutput::set_confidence_intervals(
     }
 }
 
-std::string PredictiveDensityOutput::range_lines(int &comment_index) {
+std::string PredictiveDensityOutput::_range_lines(int &comment_index) {
     return _output_prefix + ".range=[];\n";
 }
