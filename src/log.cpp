@@ -1,7 +1,9 @@
 #include <fstream>
 #include "log.h"
 
-#ifndef LOG_PREFIX
+#ifdef OXCAL_RELEASE
+#define LOG_PREFIX ""
+#else
 #define LOG_PREFIX "../output/"
 #endif
 

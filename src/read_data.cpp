@@ -5,15 +5,21 @@
 #include "csv_helpers.h"
 #include "log.h"
 
-#ifndef CALIBRATION_DATA_PREFIX
+#ifdef OXCAL_RELEASE
+#define CALIBRATION_DATA_PREFIX ""
+#else
 #define CALIBRATION_DATA_PREFIX "../oxcal/"
 #endif
 
-#ifndef DATA_PREFIX
+#ifdef OXCAL_RELEASE
+#define DATA_PREFIX ""
+#else
 #define DATA_PREFIX "../data/"
 #endif
 
-#ifndef OUTPUT_PREFIX
+#ifdef OXCAL_RELEASE
+#define OUTPUT_PREFIX ""
+#else
 #define OUTPUT_PREFIX "../output/"
 #endif
 

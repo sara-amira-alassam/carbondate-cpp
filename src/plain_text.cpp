@@ -1,7 +1,9 @@
 #include <fstream>
 #include "plain_text.h"
 
-#ifndef TEXT_PREFIX
+#ifdef OXCAL_RELEASE
+#define TEXT_PREFIX ""
+#else
 #define TEXT_PREFIX "../output/"
 #endif
 
