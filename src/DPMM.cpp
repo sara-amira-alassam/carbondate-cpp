@@ -69,7 +69,9 @@ void DPMM::calibrate(int n_iter, int n_thin) {
         check_for_work_file();
         _perform_update_step();
         if (i % n_thin == 0) {
+#ifndef OXCAL_RELEASE
             update_progress_bar(i * 1. / n_iter);
+#endif
             _store_current_values(i / n_thin);
         }
         if (i % n_work_update == 0) update_work_file_mcmc(double (i) / n_iter, i);
