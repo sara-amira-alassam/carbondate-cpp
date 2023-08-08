@@ -2,19 +2,12 @@ Options()
 {
     Resolution=10;
     Curve="intcal20.14c";
-    Cubic=FALSE;
-    RawData=TRUE;
     UseF14C=TRUE;
-    BCAD=TRUE;
-    Intercept=TRUE;
     Floruit=FALSE;
     SD1=TRUE;
     SD2=FALSE;
     SD3=TRUE;
-    ConvergenceData=TRUE;
-    UniformSpanPrior=TRUE;
     kIterations=10;
-    Ensembles=9;
 };
  Plot()
  {

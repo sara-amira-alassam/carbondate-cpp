@@ -8,7 +8,7 @@
 #ifdef OXCAL_RELEASE
 #define CALIBRATION_DATA_PREFIX ""
 #else
-#define CALIBRATION_DATA_PREFIX "../oxcal/"
+#define CALIBRATION_DATA_PREFIX "../curves/"
 #endif
 
 #ifdef OXCAL_RELEASE

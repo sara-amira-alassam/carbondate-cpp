@@ -13,11 +13,12 @@ std::string text_file_path() {
 
 void initialize_text_file() {
     std::string filepath = text_file_path();
-
+#ifdef OXCAL_RELEASE  // We only expect the file to exist already if running on OxCal
     std::ofstream file(filepath, std::fstream::in);
     if (!file.is_open()) throw UnableToFindTextFileException(filepath);
 
     file.close();
+#endif
 }
 
 void update_text_file(const std::string& label, const std::vector<double>& values) {

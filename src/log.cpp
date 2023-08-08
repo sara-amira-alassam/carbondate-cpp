@@ -18,10 +18,12 @@ std::string log_file_path() {
 void initialize_log_file() {
     std::string filepath = log_file_path();
 
+#ifdef OXCAL_RELEASE  // We only expect the file to exist already if running on OxCal
     std::ofstream file(filepath, std::fstream::in);
     if (!file.is_open()) throw UnableToFindLogFileException(filepath);
-
     file.close();
+#endif
+
     update_log_file(carbondate_long_reference());
 }
 
