@@ -1,8 +1,7 @@
   Options()
   {
-   Resolution=10;
+   Resolution=5;
    Curve="intcal20.14c";
-   UseF14C=FALSE;
    Floruit=FALSE;
    SD1=TRUE;
    SD2=TRUE;
