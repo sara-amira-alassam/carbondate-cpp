@@ -1,3 +1,14 @@
+Options()
+{
+    Resolution=10;
+    Curve="intcal20.14c";
+    UseF14C=TRUE;
+    Floruit=FALSE;
+    SD1=TRUE;
+    SD2=FALSE;
+    SD3=TRUE;
+    kIterations=100;
+};
 Plot()
  {
   NP_Model("Kerr")
