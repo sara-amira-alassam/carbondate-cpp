@@ -1,3 +1,4 @@
+#include <cmath>
 #include "PosteriorDensityOutput.h"
 #include "log.h"
 #include "plain_text.h"
