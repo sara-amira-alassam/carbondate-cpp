@@ -30,6 +30,7 @@ public:
 class DensityOutput {
 protected:
     std::vector<double> _probability;
+    std::vector<double> _smoothed_probability;
     std::string _output_var;
     std::string _output_prefix;
     int _index;

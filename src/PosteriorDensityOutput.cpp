@@ -112,6 +112,22 @@ double PosteriorDensityOutput::find_probability_and_ranges_for_cut_off(
     return total_probability;
 }
 
+// Merges any ranges which are separated by a distance less than the current resolution
+std::vector<std::vector<double>> PosteriorDensityOutput::simplify_ranges(std::vector<std::vector<double>> &ranges) {
+    std::vector<std::vector<double>> new_ranges;
+
+    new_ranges.push_back(ranges[0]);
+    for (int i = 1; i < ranges.size(); i++) {
+        if (ranges[i][0] - ranges[i - 1][1] >= _resolution) {
+            new_ranges.push_back(ranges[i]);
+        } else {
+            new_ranges[new_ranges.size() - 1][1] = ranges[i][1];
+            new_ranges[new_ranges.size() - 1][2] += ranges[i][2];
+        }
+    }
+    return new_ranges;
+}
+
 // Finds the calendar age ranges between which the probability matches the provided probability
 // where the points with the highest probability are chosen first. Returns the result as a
 // vector of vectors, where each entry contains
@@ -138,6 +154,7 @@ std::vector<std::vector<double>> PosteriorDensityOutput::get_ranges_by_intercept
             a = p;
         }
     }
+    ranges = simplify_ranges(ranges);
     return ranges;
 }
 
