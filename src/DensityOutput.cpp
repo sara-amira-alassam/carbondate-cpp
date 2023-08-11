@@ -82,6 +82,13 @@ void DensityOutput::_set_probability(const std::vector<double>& probability) {
     // Scale so that the maximum value of the density is 1.
     for (double & prob : _probability) prob /= _prob_max;
     _prob_norm = _prob_max / (prob_total * _resolution);
+
+    _smoothed_probability.resize(_probability.size());
+    int last = (int) _probability.size() - 1;
+    _smoothed_probability[0] = (2. * _probability[0] + _probability[1]) / 3.;
+    for (int i = 1; i < last; i++)
+        _smoothed_probability[i] = (_probability[i - 1] + _probability[i] + _probability[i + 1]) / 3.;
+    _smoothed_probability[last - 1] = (_probability[last - 1] + 2. * _probability[last]) / 3.;
 }
 
 
