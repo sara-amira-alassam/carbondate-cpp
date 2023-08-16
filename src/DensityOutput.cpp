@@ -2,12 +2,6 @@
 #include <fstream>
 #include "DensityOutput.h"
 
-#ifdef OXCAL_RELEASE
-#define OUTPUT_PREFIX ""
-#else
-#define OUTPUT_PREFIX "../output/"
-#endif
-
 /*
  * Creates an object suitable for printing density output in the format expected by the OxCal frontend.
  * Note that this class does not have enough information for printing a specific type of density, instead one of the
@@ -20,7 +14,7 @@ DensityOutput::DensityOutput(int index, double resolution)
 }
 
 void DensityOutput::print() {
-    std::string file_path = OUTPUT_PREFIX + project_name + ".js";
+    std::string file_path = project_directory + project_name + ".js";
     std::ofstream output_file;
     output_file.open(file_path, std::ios_base::app);
     if (! output_file.is_open()) throw UnableToWriteToOutputFileException(file_path);

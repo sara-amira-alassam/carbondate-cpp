@@ -1,44 +1,48 @@
 #include <fstream>
+#include <sstream>
 #include <regex>
 #include <set>
 #include "read_data.h"
 #include "csv_helpers.h"
 #include "log.h"
 
-#ifdef OXCAL_RELEASE
-#define CALIBRATION_DATA_PREFIX ""
-#else
-#define CALIBRATION_DATA_PREFIX "../curves/"
-#endif
-
-#ifdef OXCAL_RELEASE
-#define DATA_PREFIX ""
-#else
-#define DATA_PREFIX "../data/"
-#endif
-
-#ifdef OXCAL_RELEASE
-#define OUTPUT_PREFIX ""
-#else
-#define OUTPUT_PREFIX "../output/"
-#endif
-
 const std::set<std::string> modern_intcal_curves = {"intcal04.14c", "intcal09.14c", "intcal13.14c", "intcal20.14c"};
 const std::set<std::string> old_intcal_curves = {"intcal98.14c"};
 const std::set<std::string> custom_curves = {"HOBS2022.14c"};
 
+std::string calling_directory;
 std::string project_name;
+std::string project_directory;
+
+std::string get_path(const std::string& full_path) {
+
+    size_t last_slash_pos = full_path.rfind('/');
+    std::string path = full_path.substr(0, last_slash_pos + 1);
+
+    return path;
+}
 
 /* Must be called before any other calls - this sets the global variable `project_name` which is used to write to
  * the various output files during execution, and to know which input file to read */
 void read_arguments(int argc, char* argv[]) {
     if (argc < 2)
         throw IncorrectArgumentsException();
+    calling_directory = get_path(argv[0]);
+    project_directory = get_path(argv[1]);
+
     project_name = argv[1];
+    std::regex project_name_regex(R"(/([^/]+)\.oxcal$)");
+    std::smatch matches;
+
+    if (regex_search(project_name, matches, project_name_regex)) {
+        if (matches.size() > 1) project_name = matches[1].str();
+    } else {
+        throw IncorrectArgumentsException();
+    }
 }
 
 std::string oxcal_file_path() {
-    return DATA_PREFIX + project_name + ".oxcal";
+    return project_directory + project_name + ".oxcal";
 }
 
 /*
@@ -55,8 +59,11 @@ void read_calibration_curve(
         std::vector<double>& cc_c14_age,
         std::vector<double>& cc_c14_sig) {
 
-    const std::string calibration_curve_path = CALIBRATION_DATA_PREFIX + calibration_curve_name;
-
+#ifdef OXCAL_RELEASE
+    const std::string calibration_curve_path = calling_directory + calibration_curve_name;
+#else
+    const std::string calibration_curve_path = "../curves/" + calibration_curve_name;
+#endif
     // Check we can read the file
     std::fstream file(calibration_curve_path, std::ios::in);
     if(!file.is_open()) throw UnableToReadCalibrationCurveException(calibration_curve_path);
@@ -158,7 +165,7 @@ int read_output_offset(const std::string& model_name) {
     std::regex np_output_regex(R"(ocd\[([0-9]+)\].name\s*=\s*["'])" + model_name + R"(["'];)");
     std::smatch np_model_match;
 
-    std::string output_file_path = OUTPUT_PREFIX + project_name + ".js";
+    std::string output_file_path = project_directory + project_name + ".js";
     std::fstream file(output_file_path, std::ios::in);
     if(!file.is_open()) throw UnableToReadOutputFileException(output_file_path);
 
