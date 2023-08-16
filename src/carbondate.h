@@ -9,7 +9,7 @@
 #include <string>
 #include "helpers.h"
 
-extern std::string project_name;
+extern std::string project_name, project_directory;
 
 class CarbondateException: public std::exception {
 public:

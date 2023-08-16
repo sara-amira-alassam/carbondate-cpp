@@ -1,14 +1,8 @@
 #include <fstream>
 #include "plain_text.h"
 
-#ifdef OXCAL_RELEASE
-#define TEXT_PREFIX ""
-#else
-#define TEXT_PREFIX "../output/"
-#endif
-
 std::string text_file_path() {
-    return TEXT_PREFIX + project_name + ".txt";
+    return project_directory + project_name + ".txt";
 }
 
 void initialize_text_file() {

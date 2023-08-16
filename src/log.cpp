@@ -1,14 +1,8 @@
 #include <fstream>
 #include "log.h"
 
-#ifdef OXCAL_RELEASE
-#define LOG_PREFIX ""
-#else
-#define LOG_PREFIX "../output/"
-#endif
-
 std::string log_file_path() {
-    return LOG_PREFIX + project_name + ".log";
+    return project_directory + project_name + ".log";
 }
 
 /*
