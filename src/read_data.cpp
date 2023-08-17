@@ -178,6 +178,60 @@ int read_output_offset(const std::string& model_name) {
     throw UnableToDetermineOutputOffsetException(output_file_path, model_name);
 }
 
+
+/* Reads in the options from the oxcal data file. If any of the options are not found in the file
+ * then the value will not be altered from the original value. Currently, it will populate the
+ * following option variables provided as arguments:
+ * - iterations: The number of iterations for the DPMM
+ * - resolution: The resolution used for outputting the predictive and posterior density
+ * - ranges: A vector of 3 values denoting whether to log the 68.3%, 95.4% and 99.7% ranges
+ * - quantile ranges: False to use HPD ranges, True to simply work out a single quantile range
+ * - calibration_curve_name: Which calibration curve to use
+ */
+void read_default_options_from_data_file(
+        int &iterations,
+        double &resolution,
+        std::vector<bool> &ranges,
+        bool &quantile_ranges,
+        std::string &calibration_curve_name
+        ) {
+    std::string filepath = calling_directory + "OxCal.dat";
+    std::fstream file(filepath, std::ios::in);
+    if(!file.is_open()) throw UnableToReadDefaultOptionsFileException(filepath);
+
+    std::regex option_regex(R"(-(\w)(.*))");
+    std::smatch option_match;
+    std::string line, option, value;
+    std::set<std::string> allowed_calibration_curves;
+    allowed_calibration_curves.insert(modern_intcal_curves.begin(), modern_intcal_curves.end());
+    allowed_calibration_curves.insert(old_intcal_curves.begin(), old_intcal_curves.end());
+    allowed_calibration_curves.insert(custom_curves.begin(), custom_curves.end());
+
+    while (getline(file, line)) {
+        if (regex_search(line, option_match, option_regex)) {
+            option = option_match[1];
+            value = option_match[2];
+            if (option == "i") {
+                resolution = std::stod(value);
+            } else if (option == "f") {
+                iterations = std::stoi(value) * 1000;
+            } else if (option == "s") {
+                ranges[value[0] - 49] = value[1] == '1'; // Subtract by 49 to convert ascii value for 1, 2, 3 to integer
+            } else if (option == "h") {
+                quantile_ranges = value == "1";
+            } else if (option == "c") {
+                if (allowed_calibration_curves.count(value) == 0) {
+                    printf(
+                            "The calibration curve %s is not recognised. Default %s is being used.\n",
+                            value.c_str(), calibration_curve_name.c_str());
+                } else {
+                    calibration_curve_name = value;
+                }
+            }
+        }
+    }
+}
+
 /* Reads in the options from the oxcal data file. If any of the options are not found in the file
  * then the value will not be altered from the original value. Currently, it will populate the
  * following option variables provided as arguments:
@@ -188,7 +242,7 @@ int read_output_offset(const std::string& model_name) {
  * - use_f14c: Whether to perform the calculations in f14c space
  * - calibration_curve_name: Which calibration curve to use
  */
-void read_options(
+void read_options_from_oxcal_file(
         int &iterations,
         double &resolution,
         std::vector<bool> &ranges,

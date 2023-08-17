@@ -12,11 +12,12 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> date_name;
     PolyaUrnDPMM dpmm;
 
-    // The following relate to options that may be overwritten in the call below to read_options()
-    int num_iterations = 1e5;
-    double output_resolution = 5;
-    std::vector<bool> log_ranges {true, true, false}; // log 1, 2, 3 s.d. ranges respectively?
-    bool quantile_ranges = false, use_f14c = true;
+    // The following relate to options that are read in from the OxCal.dat file, and also may be overwritten in the
+    // call below to read_options_from_oxcal_file()
+    int num_iterations;
+    double output_resolution;
+    std::vector<bool> log_ranges(3); // log 1, 2, 3 s.d. ranges respectively?
+    bool quantile_ranges, use_f14c = true; // use_f14c is the only hard-coded option
 
     try {
         read_arguments(argc, argv);
@@ -29,7 +30,10 @@ int main(int argc, char* argv[]) {
             return 0;
         }
         output_offset = read_output_offset(model_name);
-        read_options(num_iterations, output_resolution, log_ranges, quantile_ranges, use_f14c, calibration_curve);
+        read_default_options_from_data_file(
+                num_iterations, output_resolution, log_ranges, quantile_ranges, calibration_curve);
+        read_options_from_oxcal_file(
+                num_iterations, output_resolution, log_ranges, quantile_ranges, use_f14c, calibration_curve);
         read_calibration_curve(calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
 
         if (use_f14c) {
