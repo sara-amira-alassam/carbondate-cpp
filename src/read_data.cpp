@@ -8,7 +8,6 @@
 
 const std::set<std::string> modern_intcal_curves = {"intcal04.14c", "intcal09.14c", "intcal13.14c", "intcal20.14c"};
 const std::set<std::string> old_intcal_curves = {"intcal98.14c"};
-const std::set<std::string> custom_curves = {"HOBS2022.14c"};
 
 std::string calling_directory;
 std::string project_name;
@@ -77,11 +76,6 @@ void read_calibration_curve(
         cc_cal_age = get_csv_data_from_column(&file, 0, ' ');
         cc_c14_age = get_csv_data_from_column(&file, 3, ' ');
         cc_c14_sig = get_csv_data_from_column(&file, 4, ' ');
-        for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
-    } else if (custom_curves.count(calibration_curve_name) == 1) {
-        cc_cal_age = get_csv_data_from_column(&file, 0, '\t');
-        cc_c14_age = get_csv_data_from_column(&file, 3, '\t');
-        cc_c14_sig = get_csv_data_from_column(&file, 4, '\t');
         for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
     }
 }
@@ -205,7 +199,6 @@ void read_default_options_from_data_file(
     std::set<std::string> allowed_calibration_curves;
     allowed_calibration_curves.insert(modern_intcal_curves.begin(), modern_intcal_curves.end());
     allowed_calibration_curves.insert(old_intcal_curves.begin(), old_intcal_curves.end());
-    allowed_calibration_curves.insert(custom_curves.begin(), custom_curves.end());
 
     while (getline(file, line)) {
         if (regex_search(line, option_match, option_regex)) {
@@ -258,7 +251,6 @@ void read_options_from_oxcal_file(
     std::set<std::string> allowed_calibration_curves;
     allowed_calibration_curves.insert(modern_intcal_curves.begin(), modern_intcal_curves.end());
     allowed_calibration_curves.insert(old_intcal_curves.begin(), old_intcal_curves.end());
-    allowed_calibration_curves.insert(custom_curves.begin(), custom_curves.end());
 
     std::string filepath = oxcal_file_path();
     std::fstream file(filepath, std::ios::in);
