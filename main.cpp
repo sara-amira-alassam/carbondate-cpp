@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
             posterior_density.print();
         }
     } catch (const CarbondateException& ex) {
-        std::cerr << "Exception caught: " << ex.what() << std::endl;
+        std::cout << "Exception caught: " << ex.what() << std::endl;
         remove_work_file();
         return 1;
     }
