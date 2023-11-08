@@ -6,9 +6,6 @@
 #include "csv_helpers.h"
 #include "log.h"
 
-const std::set<std::string> modern_intcal_curves = {"intcal04.14c", "intcal09.14c", "intcal13.14c", "intcal20.14c"};
-const std::set<std::string> old_intcal_curves = {"intcal98.14c"};
-
 std::string calling_directory;
 std::string project_name;
 std::string project_directory;
@@ -68,15 +65,15 @@ void read_calibration_curve(
     if(!file.is_open()) throw UnableToReadCalibrationCurveException(calibration_curve_path);
 
     update_log_file("Reading calibration data from " + calibration_curve_name);
-    if (modern_intcal_curves.count(calibration_curve_name) == 1) {
-        cc_cal_age = get_csv_data_from_column(&file, 0, ',');
-        cc_c14_age = get_csv_data_from_column(&file, 1, ',');
-        cc_c14_sig = get_csv_data_from_column(&file, 2, ',');
-    } else if (old_intcal_curves.count(calibration_curve_name) == 1) {
+    if (calibration_curve_name == "intcal98.14c") {
         cc_cal_age = get_csv_data_from_column(&file, 0, ' ');
         cc_c14_age = get_csv_data_from_column(&file, 3, ' ');
         cc_c14_sig = get_csv_data_from_column(&file, 4, ' ');
         for (double & cal_age : cc_cal_age) cal_age = 1950. - cal_age;
+    } else {
+        cc_cal_age = get_csv_data_from_column(&file, 0, ',');
+        cc_c14_age = get_csv_data_from_column(&file, 1, ',');
+        cc_c14_sig = get_csv_data_from_column(&file, 2, ',');
     }
 }
 
@@ -196,9 +193,6 @@ void read_default_options_from_data_file(
     std::regex option_regex(R"(-(\w)(.*))");
     std::smatch option_match;
     std::string line, option, value;
-    std::set<std::string> allowed_calibration_curves;
-    allowed_calibration_curves.insert(modern_intcal_curves.begin(), modern_intcal_curves.end());
-    allowed_calibration_curves.insert(old_intcal_curves.begin(), old_intcal_curves.end());
 
     while (getline(file, line)) {
         if (regex_search(line, option_match, option_regex)) {
@@ -213,13 +207,7 @@ void read_default_options_from_data_file(
             } else if (option == "h") {
                 quantile_ranges = value == "1";
             } else if (option == "c") {
-                if (allowed_calibration_curves.count(value) == 0) {
-                    printf(
-                            "The calibration curve %s is not recognised. Default %s is being used.\n",
-                            value.c_str(), calibration_curve_name.c_str());
-                } else {
-                    calibration_curve_name = value;
-                }
+                calibration_curve_name = value;
             }
         }
     }
@@ -247,10 +235,8 @@ void read_options_from_oxcal_file(
     std::regex options_regex(R"(Options\(\s*\))");
     std::regex option_regex(R"((\w+)=['"]*([^'"]+)['"]*;)");
     bool options_block = false;
-    std::smatch option_match;
-    std::set<std::string> allowed_calibration_curves;
-    allowed_calibration_curves.insert(modern_intcal_curves.begin(), modern_intcal_curves.end());
-    allowed_calibration_curves.insert(old_intcal_curves.begin(), old_intcal_curves.end());
+    std::smatch option_match, m;
+    std::regex allowed_calibration_curve_regex(R"(intcal[0-9]+\.14c)");
 
     std::string filepath = oxcal_file_path();
     std::fstream file(filepath, std::ios::in);
@@ -279,10 +265,10 @@ void read_options_from_oxcal_file(
             } else if (option == "UseF14C") {
                 use_f14c = value == "TRUE";
             } else if (option == "Curve") {
-                if (allowed_calibration_curves.count(value) == 0) {
-                    printf(
-                            "The calibration curve %s is not recognised. Default %s is being used.\n",
-                            value.c_str(), calibration_curve_name.c_str());
+                if (!regex_search(value, m, allowed_calibration_curve_regex)) {
+                    std::string log_string = "The calibration curve " + value;
+                    log_string += " is not recognised.\nDefault " + calibration_curve_name + " is being used.\n";
+                    update_log_file(log_string);
                 } else {
                     calibration_curve_name = value;
                 }
