@@ -8,6 +8,13 @@ private:
     std::string _error_message = "Incorrect arguments - correct usage: carbondate [project_name]";
 };
 
+class UnableToReadDefaultOptionsFileException : public CarbondateException {
+public:
+    explicit UnableToReadDefaultOptionsFileException(const std::string& file_path) {
+        _error_message = "Unable to read file with default options at " + file_path;
+    }
+};
+
 class UnableToReadCalibrationCurveException : public CarbondateException {
 public:
     explicit UnableToReadCalibrationCurveException(const std::string& calibration_curve_name) {
@@ -61,11 +68,19 @@ bool read_oxcal_data(
 
 int read_output_offset(const std::string& model_name);
 
-void read_options(
+void read_default_options_from_data_file(
         int &iterations,
         double &resolution,
         std::vector<bool> &ranges,
-        bool &quantile_range,
+        bool &quantile_ranges,
+        std::string &calibration_curve_name
+);
+
+void read_options_from_oxcal_file(
+        int &iterations,
+        double &resolution,
+        std::vector<bool> &ranges,
+        bool &quantile_ranges,
         bool &use_f14c,
         std::string &calibration_curve_name);
 
