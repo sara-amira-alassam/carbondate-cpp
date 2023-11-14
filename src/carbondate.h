@@ -9,7 +9,7 @@
 #include <string>
 #include "helpers.h"
 
-extern std::string project_name, project_directory;
+extern std::string project_name, project_directory, oxcal_version;
 
 class CarbondateException: public std::exception {
 public:
@@ -21,10 +21,10 @@ protected:
 };
 
 inline std::string carbondate_short_reference() {
-    return "Carbondate v" + (std::string) CARBONDATE_VERSION;
+    return "carbondate v" + (std::string) CARBONDATE_VERSION;
 }
 
 inline std::string carbondate_long_reference() {
-    return "Carbondate v" + (std::string) CARBONDATE_VERSION + " TJ Heaton (2023)";
+    return oxcal_version + " & carbondate v" + (std::string) CARBONDATE_VERSION + " Heaton (2023)";
 }
 #endif //CARBONDATE_CARBONDATE_INTERNAL_H

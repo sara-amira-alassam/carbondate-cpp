@@ -9,6 +9,7 @@
 std::string calling_directory;
 std::string project_name;
 std::string project_directory;
+std::string oxcal_version;
 
 std::string get_path(const std::string& full_path) {
 
@@ -167,6 +168,24 @@ int read_output_offset(const std::string& model_name) {
         }
     }
     throw UnableToDetermineOutputOffsetException(output_file_path, model_name);
+}
+
+
+void read_oxcal_version() {
+    std::string line, model_index;
+    std::regex oxcal_version_regex(R"(ocd\[0\].ref\s*=\s*["'](.*)["'];)");
+    std::smatch oxcal_version_match;
+
+    std::string output_file_path = project_directory + project_name + ".js";
+    std::fstream file(output_file_path, std::ios::in);
+    if(!file.is_open()) throw UnableToReadOutputFileException(output_file_path);
+
+    oxcal_version = "OxCal, Bronk Ramsey (2021)"; // Used if we cannot find the version in the output
+    while (getline(file, line)) {
+        if (regex_search(line, oxcal_version_match, oxcal_version_regex)) {
+            oxcal_version = oxcal_version_match[1];
+        }
+    }
 }
 
 

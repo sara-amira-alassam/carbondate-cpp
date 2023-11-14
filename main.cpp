@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     const double quantile_edge_width = 0.1586553; // 1-sigma interval
     int output_offset;  // This takes into account any results calculated by Oxcal before the NP model data
     std::vector<double> c14_age, c14_sig, f14c_age, f14c_sig;  // Input data - radiocarbon ages and errors
-    std::string model_name, calibration_curve = "intcal20.14c";
+    std::string model_name, calibration_curve = "intcal20.14c", oxcal_version;
     std::vector<double> cc_cal_age, cc_c14_age, cc_c14_sig;
     std::vector<std::string> date_name;
     PolyaUrnDPMM dpmm;
@@ -35,6 +35,7 @@ int main(int argc, char* argv[]) {
         read_options_from_oxcal_file(
                 num_iterations, output_resolution, log_ranges, quantile_ranges, use_f14c, calibration_curve);
         read_calibration_curve(calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
+        read_oxcal_version();
 
         if (use_f14c) {
             if (f14c_age.empty()) convert_to_f14c_age(c14_age, c14_sig, f14c_age, f14c_sig);
