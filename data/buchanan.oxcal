@@ -1,3 +1,7 @@
+ Options()
+ {
+     kIterations=100;
+ };
  Plot()
  {
   NP_Model("Buchanan")
