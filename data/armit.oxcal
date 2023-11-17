@@ -1,3 +1,8 @@
+  Options()
+  {
+      kIterations=1000;
+      Resolution=10;
+  };
  Plot()
  {
   NP_Model("Armit")
