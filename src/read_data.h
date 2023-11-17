@@ -84,6 +84,7 @@ void read_options_from_oxcal_file(
         std::vector<bool> &ranges,
         bool &quantile_ranges,
         bool &use_f14c,
-        std::string &calibration_curve_name);
+        std::string &calibration_curve_name,
+        int &seed);
 
 #endif //CARBONDATE_READ_DATA_H

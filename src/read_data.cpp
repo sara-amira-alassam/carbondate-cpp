@@ -248,7 +248,8 @@ void read_options_from_oxcal_file(
         std::vector<bool> &ranges,
         bool &quantile_ranges,
         bool &use_f14c,
-        std::string &calibration_curve_name) {
+        std::string &calibration_curve_name,
+        int &seed) {
 
     std::string line, option, value, end_of_section = "};";
     std::regex options_regex(R"(Options\(\s*\))");
@@ -291,6 +292,8 @@ void read_options_from_oxcal_file(
                 } else {
                     calibration_curve_name = value;
                 }
+            } else if (option == "RandomNumberSeed") {
+                seed = std::stoi(value);
             }
         }
     }

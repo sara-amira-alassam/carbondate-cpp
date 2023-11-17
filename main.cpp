@@ -19,6 +19,11 @@ int main(int argc, char* argv[]) {
     std::vector<bool> log_ranges(3); // log 1, 2, 3 s.d. ranges respectively?
     bool quantile_ranges, use_f14c = true; // use_f14c is the only hard-coded option
 
+    // This option is for the random number seed, it will not be documented so only used by developers.
+    // The default is zero (so the seed is chosen based on the time i.e. different for every run), but it can
+    // be set to a non-zero integer for reproducible results.
+    int seed = 0;
+
     try {
         read_arguments(argc, argv);
         create_work_file();
@@ -33,16 +38,16 @@ int main(int argc, char* argv[]) {
         read_default_options_from_data_file(
                 num_iterations, output_resolution, log_ranges, quantile_ranges, calibration_curve);
         read_options_from_oxcal_file(
-                num_iterations, output_resolution, log_ranges, quantile_ranges, use_f14c, calibration_curve);
+                num_iterations, output_resolution, log_ranges, quantile_ranges, use_f14c, calibration_curve, seed);
         read_calibration_curve(calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
         read_oxcal_version();
 
         if (use_f14c) {
             if (f14c_age.empty()) convert_to_f14c_age(c14_age, c14_sig, f14c_age, f14c_sig);
-            dpmm.initialise(f14c_age, f14c_sig, true, cc_cal_age, cc_c14_age, cc_c14_sig, 1);
+            dpmm.initialise(f14c_age, f14c_sig, true, cc_cal_age, cc_c14_age, cc_c14_sig, seed);
         } else {
             if (c14_age.empty()) convert_to_c14_age(f14c_age, f14c_sig, c14_age, c14_sig);
-            dpmm.initialise(c14_age, c14_sig, false, cc_cal_age, cc_c14_age, cc_c14_sig, 1);
+            dpmm.initialise(c14_age, c14_sig, false, cc_cal_age, cc_c14_age, cc_c14_sig, seed);
         }
         dpmm.calibrate(num_iterations, 10);
 
