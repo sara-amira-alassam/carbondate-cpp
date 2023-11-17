@@ -68,6 +68,8 @@ bool read_oxcal_data(
 
 int read_output_offset(const std::string& model_name);
 
+void read_oxcal_version();
+
 void read_default_options_from_data_file(
         int &iterations,
         double &resolution,
@@ -82,6 +84,7 @@ void read_options_from_oxcal_file(
         std::vector<bool> &ranges,
         bool &quantile_ranges,
         bool &use_f14c,
-        std::string &calibration_curve_name);
+        std::string &calibration_curve_name,
+        int &seed);
 
 #endif //CARBONDATE_READ_DATA_H

@@ -9,6 +9,7 @@
 std::string calling_directory;
 std::string project_name;
 std::string project_directory;
+std::string oxcal_version;
 
 std::string get_path(const std::string& full_path) {
 
@@ -170,6 +171,24 @@ int read_output_offset(const std::string& model_name) {
 }
 
 
+void read_oxcal_version() {
+    std::string line, model_index;
+    std::regex oxcal_version_regex(R"(ocd\[0\].ref\s*=\s*["'](.*)["'];)");
+    std::smatch oxcal_version_match;
+
+    std::string output_file_path = project_directory + project_name + ".js";
+    std::fstream file(output_file_path, std::ios::in);
+    if(!file.is_open()) throw UnableToReadOutputFileException(output_file_path);
+
+    oxcal_version = "OxCal, Bronk Ramsey (2021)"; // Used if we cannot find the version in the output
+    while (getline(file, line)) {
+        if (regex_search(line, oxcal_version_match, oxcal_version_regex)) {
+            oxcal_version = oxcal_version_match[1];
+        }
+    }
+}
+
+
 /* Reads in the options from the oxcal data file. If any of the options are not found in the file
  * then the value will not be altered from the original value. Currently, it will populate the
  * following option variables provided as arguments:
@@ -229,7 +248,8 @@ void read_options_from_oxcal_file(
         std::vector<bool> &ranges,
         bool &quantile_ranges,
         bool &use_f14c,
-        std::string &calibration_curve_name) {
+        std::string &calibration_curve_name,
+        int &seed) {
 
     std::string line, option, value, end_of_section = "};";
     std::regex options_regex(R"(Options\(\s*\))");
@@ -272,6 +292,8 @@ void read_options_from_oxcal_file(
                 } else {
                     calibration_curve_name = value;
                 }
+            } else if (option == "RandomNumberSeed") {
+                seed = std::stoi(value);
             }
         }
     }
