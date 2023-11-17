@@ -1,7 +1,8 @@
   Options()
   {
-      kIterations=500;
+      kIterations=1000;
       Resolution=10;
+      RandomNumberSeed=1;
   };
  Plot()
  {
