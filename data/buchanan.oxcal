@@ -1,6 +1,7 @@
  Options()
  {
-     kIterations=100;
+     kIterations=1000;
+     Resolution=10;
  };
  Plot()
  {
