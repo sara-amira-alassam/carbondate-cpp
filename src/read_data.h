@@ -4,8 +4,10 @@
 #include "carbondate.h"
 
 class IncorrectArgumentsException : public CarbondateException {
-private:
-    std::string _error_message = "Incorrect arguments - correct usage: carbondate [project_name]";
+public:
+    explicit IncorrectArgumentsException() {
+        _error_message = "Incorrect arguments - correct usage: carbondate [project_name].oxcal";
+    }
 };
 
 class UnableToReadDefaultOptionsFileException : public CarbondateException {
