@@ -2,7 +2,7 @@ MAKE := make
 MKFLAGS =
 
 CC := g++
-CCFLAGS := -std=c++11 -O2 -DOXCAL_RELEASE
+CCFLAGS := -std=c++11 -O2 -DOXCAL_RELEASE -pthread
 
 OBJ = DPMM.o DensityOutput.o PolyaUrnDPMM.o PosteriorDensityOutput.o PredictiveDensityOutput.o WalkerDPMM.o csv_helpers.o helpers.o log.o plain_text.o read_data.o sort.o work.o
 OBJ := $(patsubst %,obj/%,$(OBJ))

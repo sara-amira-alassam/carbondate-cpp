@@ -6,6 +6,7 @@ OBJ := $(OBJ) bessel_k.o choose.o dchisq.o dhyper.o dnorm.o fmax2.o lbeta.o pbet
 OBJ := $(patsubst %,../obj/%,$(OBJ))
 
 CC := gcc
+CCFLAGS := -O2 -DMATHLIB_STANDALONE -pthread
 
 .PHONY: clean all
 
@@ -16,7 +17,7 @@ all: ../libRmath.a
 
 ../obj/%.o: %.c include/Rmath.h
 	mkdir -p ../obj/
-	$(CC) -c $< -Iinclude -Iinclude/R_ext -DMATHLIB_STANDALONE -o $@
+	$(CC) -c $< -Iinclude -Iinclude/R_ext $(CCFLAGS) -o $@
 
 clean:
 	-rm $(OBJ) ../libRmath.a
