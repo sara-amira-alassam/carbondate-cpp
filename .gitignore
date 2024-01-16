@@ -8,4 +8,4 @@ cmake-build-*
 *.txt
 obj
 ex
-Rmath.a
+libRmath.a

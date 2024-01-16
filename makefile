@@ -2,26 +2,31 @@ MAKE := make
 MKFLAGS =
 
 CC := g++
-CCFLAGS := -std=c++11 -O2
+CCFLAGS := -std=c++11 -O2 -DOXCAL_RELEASE
 
 OBJ = DPMM.o DensityOutput.o PolyaUrnDPMM.o PosteriorDensityOutput.o PredictiveDensityOutput.o WalkerDPMM.o csv_helpers.o helpers.o log.o plain_text.o read_data.o sort.o work.o
 OBJ := $(patsubst %,obj/%,$(OBJ))
 
-.PHONY: clean all Rmath carbondate
+.PHONY: clean all Rmath
 
-all: Rmath carbondate
+all: Rmath ex/carbondate
 
-Rmath Rmath.a:
+Rmath libRmath.a:
 	cd Rmath; $(MAKE) $(MKFLAGS)
 
-carbondate: obj/main.o $(OBJ)
-	g++ -o carbondate $(CCFLAGS) obj/main.o $(OBJ) Rmath.a
+ex/carbondate: obj/main.o $(OBJ)
+	mkdir -p ex/
+	cp Oxcal.dat ex/
+	cp curves/intcal* ex/
+	$(CC) -o ex/carbondate $(CCFLAGS) obj/main.o $(OBJ) libRmath.a
 
 obj/main.o:
-	g++ -c $(CCFLAGS) main.cpp -IRmath/include -o obj/main.o
+	mkdir -p obj/
+	$(CC) -c $(CCFLAGS) main.cpp -IRmath/include -o obj/main.o
 
-obj/%.o: src/%.cpp
-	g++ -c $(CCFLAGS) $< -Iinclude -IRmath/include -o $@
+obj/%.o: src/%.cpp src/%.h
+	mkdir -p obj/
+	$(CC) -c $(CCFLAGS) $< -Iinclude -IRmath/include -o $@
 
 clean:
-	-rm -rf obj ex Rmath.a Rmath/*.o
+	-rm -rf obj ex libRmath.a
