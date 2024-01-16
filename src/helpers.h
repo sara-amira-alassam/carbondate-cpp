@@ -1,6 +1,7 @@
 #ifndef CARBONDATE_HELPERS_H
 #define CARBONDATE_HELPERS_H
 #include <vector>
+#include "sort.h"
 
 double mean(const std::vector<double>& vec);
 double mean(const std::vector<double>& vec, const std::vector<double>& probability);
@@ -17,8 +18,6 @@ void edge_quantiles(
         std::vector<double>& vec, double edge_width, double& lower_quantile, double& upper_quantile);
 void get_sample_ids(std::vector<int>& ans, int start_index, int finish_index);
 int sample_integer(unsigned n, std::vector<double> prob, bool one_based);
-void rsort_with_index(double *x, int *indx,int n);
-void revsort(double *a, int *ib, int n);
 void update_progress_bar(double progress);
 double to_calAD(double year_calPB);
 std::string to_string(double var, int max_digits);

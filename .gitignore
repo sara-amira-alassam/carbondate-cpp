@@ -6,3 +6,6 @@
 cmake-build-*
 *.log
 *.txt
+obj
+ex
+libRmath.a
