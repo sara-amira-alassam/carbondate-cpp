@@ -3,12 +3,6 @@
 
 #include "carbondate.h"
 
-class UnableToFindTextFileException : public CarbondateException {
-public:
-    explicit UnableToFindTextFileException(const std::string& file_path) {
-        _error_message = "Unable to find text file at " + file_path;
-    }
-};
 
 class UnableToWriteToTextFileException : public CarbondateException {
 public:

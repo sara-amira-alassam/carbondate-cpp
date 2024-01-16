@@ -145,7 +145,7 @@ std::vector<std::vector<double>> PosteriorDensityOutput::get_ranges_by_intercept
     for (int i = 0; i < max_iter; i++) {
         p = (a + b) / 2.;
         current_probability = find_probability_and_ranges_for_cut_off(p, ranges);
-        if (abs(current_probability - probability) < 1e-4) {
+        if (fabs(current_probability - probability) < 1e-4) {
             break;
         }
         if (current_probability < probability) {

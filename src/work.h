@@ -4,18 +4,24 @@
 #include "carbondate.h"
 
 class WorkFileRemovedException : public CarbondateException {
-private:
-    std::string _error_message = "Work file removed whilst program is running";
+public:
+    explicit WorkFileRemovedException(const std::string& file_path) {
+        _error_message = "Work file at " + file_path + " removed whilst program is running";
+    }
 };
 
 class UnableToCreateWorkFileException : public CarbondateException {
-private:
-    std::string _error_message = "Could not create a writeable work file";
+public:
+    explicit UnableToCreateWorkFileException(const std::string& file_path) {
+        _error_message = "Unable to create writable work file at " + file_path;
+    }
 };
 
 class UnableToWriteToWorkFileException : public CarbondateException {
-private:
-    std::string _error_message = "Could not write to the work file";
+public:
+    explicit UnableToWriteToWorkFileException(const std::string& file_path) {
+        _error_message = "Unable to write to work file at " + file_path;
+    }
 };
 
 void create_work_file();
