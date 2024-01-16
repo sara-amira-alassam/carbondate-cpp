@@ -9,3 +9,5 @@ cmake-build-*
 obj
 ex
 libRmath.a
+.idea
+CMakeLists.txt
