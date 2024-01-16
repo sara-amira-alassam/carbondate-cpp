@@ -25,6 +25,6 @@ inline std::string carbondate_short_reference() {
 }
 
 inline std::string carbondate_long_reference() {
-    return oxcal_version + " & carbondate v" + (std::string) CARBONDATE_VERSION + " Heaton (2023)";
+    return oxcal_version + "; carbondate v" + (std::string) CARBONDATE_VERSION + " Heaton (2023)";
 }
 #endif //CARBONDATE_CARBONDATE_INTERNAL_H

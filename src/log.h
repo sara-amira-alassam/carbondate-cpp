@@ -3,12 +3,6 @@
 
 #include "carbondate.h"
 
-class UnableToFindLogFileException : public CarbondateException {
-public:
-    explicit UnableToFindLogFileException(const std::string& file_path) {
-        _error_message = "Unable to find log file at " + file_path;
-    }
-};
 
 class UnableToWriteToLogFileException : public CarbondateException {
 public:
