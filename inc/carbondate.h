@@ -1,7 +1,7 @@
 #ifndef CARBONDATE_CARBONDATE_H
 #define CARBONDATE_CARBONDATE_H
 
-#include "../src/carbondate.h"
+#include "../src/carbondate_internal.h"
 #include "../src/WalkerDPMM.h"
 #include "../src/PolyaUrnDPMM.h"
 #include "../src/read_data.h"

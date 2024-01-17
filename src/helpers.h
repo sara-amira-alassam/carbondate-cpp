@@ -1,5 +1,6 @@
 #ifndef CARBONDATE_HELPERS_H
 #define CARBONDATE_HELPERS_H
+
 #include <vector>
 #include "sort.h"
 

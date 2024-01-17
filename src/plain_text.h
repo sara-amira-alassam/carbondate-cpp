@@ -1,7 +1,7 @@
 #ifndef CARBONDATE_PLAIN_TEXT_H
 #define CARBONDATE_PLAIN_TEXT_H
 
-#include "carbondate.h"
+#include "carbondate_internal.h"
 
 
 class UnableToWriteToTextFileException : public CarbondateException {

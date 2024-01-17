@@ -1,7 +1,7 @@
 #ifndef CARBONDATE_READ_DATA_H
 #define CARBONDATE_READ_DATA_H
 
-#include "carbondate.h"
+#include "carbondate_internal.h"
 
 class IncorrectArgumentsException : public CarbondateException {
 public:

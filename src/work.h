@@ -1,7 +1,7 @@
 #ifndef CARBONDATE_WORK_H
 #define CARBONDATE_WORK_H
 
-#include "carbondate.h"
+#include "carbondate_internal.h"
 
 class WorkFileRemovedException : public CarbondateException {
 public:

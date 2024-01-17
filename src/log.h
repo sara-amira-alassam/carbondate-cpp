@@ -1,7 +1,7 @@
 #ifndef CARBONDATE_LOG_H
 #define CARBONDATE_LOG_H
 
-#include "carbondate.h"
+#include "carbondate_internal.h"
 
 
 class UnableToWriteToLogFileException : public CarbondateException {

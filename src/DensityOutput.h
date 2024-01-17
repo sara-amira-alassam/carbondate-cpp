@@ -1,6 +1,6 @@
 #ifndef CARBONDATE_DENSITYOUTPUT_H
 #define CARBONDATE_DENSITYOUTPUT_H
-#include "carbondate.h"
+#include "carbondate_internal.h"
 
 class UnableToWriteToOutputFileException : public CarbondateException {
 public:
