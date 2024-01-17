@@ -1,5 +1,6 @@
 #ifndef CARBONDATE_PREDICTIVEDENSITYOUTPUT_H
 #define CARBONDATE_PREDICTIVEDENSITYOUTPUT_H
+
 #include "DensityOutput.h"
 
 class PredictiveDensityOutput : public DensityOutput {
