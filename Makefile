@@ -1,5 +1,4 @@
 MAKE := make
-MKFLAGS =
 
 SRCS := DPMM.c DensityOutput.c PolyaUrnDPMM.c PosteriorDensityOutput.c PredictiveDensityOutput.c WalkerDPMM.c csv_helpers.c helpers.c log.c plain_text.c read_data.c sort.c work.c
 OBJS := $(patsubst %.c,obj/%.o,$(SRCS))
@@ -14,7 +13,7 @@ INC := -IRmath/include
 all: Rmath ex/carbondate
 
 Rmath libRmath.a:
-	cd Rmath; $(MAKE) $(MKFLAGS)
+	cd Rmath; $(MAKE)
 
 ex/carbondate: obj/main.o $(OBJS)
 	mkdir -p ex/
