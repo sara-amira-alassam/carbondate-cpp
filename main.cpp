@@ -3,7 +3,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 #include <iostream>
 #include "inc/carbondate.h"
-#include <chrono>
 
 int main(int argc, char* argv[]) {
 
@@ -57,10 +56,7 @@ int main(int argc, char* argv[]) {
             if (c14_age.empty()) convert_to_c14_age(f14c_age, f14c_sig, c14_age, c14_sig);
             dpmm.initialise(c14_age, c14_sig, false, cc_cal_age, cc_c14_age, cc_c14_sig, seed);
         }
-        auto start = std::chrono::high_resolution_clock::now();
         dpmm.calibrate(num_iterations, n_thin);
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> duration = end - start;
 
         std::cout << "Execution time: " << duration.count() << " seconds." << std::endl;
 
