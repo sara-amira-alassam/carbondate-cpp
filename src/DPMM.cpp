@@ -52,7 +52,7 @@ void DPMM::initialise(
     convert_to_f14c_age(calcurve.c14_age, calcurve.c14_sig, calcurve.f14c_age, calcurve.f14c_sig);
 
     _interpolate_calibration_curve();
-    _initialise_storage();
+    _resize_storage();
     _initialise_calendar_age_and_spd_ranges();
     _initialise_hyperparameters();
     _initialise_clusters();
@@ -67,9 +67,13 @@ void DPMM::initialise(
  */
 void DPMM::calibrate(int n_iter, int n_thin) {
     n_out = n_iter/n_thin + 1;
-    _initialise_storage();
+    _resize_storage();
     for (int i = 1; i <= n_iter; i++) {
-        check_for_work_file();
+        if (!work_file_exists()) {
+            n_out = (i / n_thin) - 1;
+            _resize_storage();
+            return;
+        }
         _perform_update_step();
         if (i % n_thin == 0) {
 #ifndef OXCAL_RELEASE
@@ -157,7 +161,7 @@ std::vector<double> DPMM::get_posterior_calendar_ages(int ident) {
     return posterior_calendar_ages;
 }
 
-void DPMM::_initialise_storage() {
+void DPMM::_resize_storage() {
     calendar_age.resize(n_out);
     alpha.resize(n_out);
     mu_phi.resize(n_out);

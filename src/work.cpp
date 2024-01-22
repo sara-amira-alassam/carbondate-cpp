@@ -44,9 +44,10 @@ void update_work_file_postprocessing(int n_iter){
     file.close();
 }
 
-void check_for_work_file() {
+bool work_file_exists() {
     std::ifstream file(work_file_path().c_str());
-    if (!file.good()) throw WorkFileRemovedException(work_file_path());
+
+    return file.good();
 }
 
 void remove_work_file() {

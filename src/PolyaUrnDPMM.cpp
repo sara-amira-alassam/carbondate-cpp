@@ -3,8 +3,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 #include "PolyaUrnDPMM.h"
 
-void PolyaUrnDPMM::_initialise_storage(){
-    DPMM::_initialise_storage();
+void PolyaUrnDPMM::_resize_storage(){
+    DPMM::_resize_storage();
     observations_per_cluster.resize(n_out);
 }
 

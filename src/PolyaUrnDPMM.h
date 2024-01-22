@@ -18,7 +18,7 @@ private:
     std::vector<std::vector<int>> observations_per_cluster;
 
 private:
-    void _initialise_storage() override;
+    void _resize_storage() override;
     void _initialise_clusters() override;
     void _perform_update_step() override;
     void _store_current_values(int i) override;

@@ -79,7 +79,7 @@ protected:
     std::vector<double> spd_range_1_sigma = {0., 0.}, spd_range_2_sigma = {0., 0.}, spd_range_3_sigma = {0., 0.};
 
 protected:
-    virtual void _initialise_storage();
+    virtual void _resize_storage();
     void _initialise_calendar_age_and_spd_ranges();
     void _initialise_hyperparameters();
     virtual void _initialise_clusters();
