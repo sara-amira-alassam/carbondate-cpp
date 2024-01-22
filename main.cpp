@@ -58,8 +58,6 @@ int main(int argc, char* argv[]) {
         }
         dpmm.calibrate(num_iterations, n_thin);
 
-        std::cout << "Execution time: " << duration.count() << " seconds." << std::endl;
-
         update_work_file_postprocessing(num_iterations);
         DensityData predictive_density_data = dpmm.get_predictive_density(
                 n_posterior_samples, output_resolution, quantile_edge_width);
