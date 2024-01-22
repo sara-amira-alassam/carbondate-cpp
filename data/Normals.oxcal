@@ -3,6 +3,7 @@
       kIterations=1000;
       Resolution=10;
       RandomNumberSeed=1;
+      Curve="shcal04.14c";
   };
  Plot()
  {

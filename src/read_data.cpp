@@ -259,7 +259,7 @@ void read_options_from_oxcal_file(
     std::regex option_regex(R"((\w+)=['"]*([^'"]+)['"]*;)");
     bool options_block = false;
     std::smatch option_match, m;
-    std::regex allowed_calibration_curve_regex(R"(intcal[0-9]+\.14c)");
+    std::regex allowed_calibration_curve_regex(R"((intcal|shcal)[0-9]+\.14c)");
 
     std::string filepath = oxcal_file_path();
     std::fstream file(filepath, std::ios::in);
