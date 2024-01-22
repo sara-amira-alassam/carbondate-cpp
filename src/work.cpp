@@ -1,3 +1,6 @@
+/* carbondate Copyright (C) 2024 Timothy Heaton and Sara Al-Assam
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 #include "work.h"
 #include <cstdio>
 #include <fstream>
@@ -8,9 +11,12 @@ std::string work_file_path() {
 
 void create_work_file() {
     std::ofstream file(work_file_path());
-    if (!file.is_open()) {
-        throw UnableToCreateWorkFileException(work_file_path());
-    }
+    if (!file.is_open()) throw UnableToCreateWorkFileException(work_file_path());
+
+    std::string work_lines = "work.program=\"" + carbondate_short_reference() + "\";\n";
+    work_lines += "work.operation=\"Starting...\";\n";
+    work_lines += "work.done=0; work.passes=0; work.ok=100; \n";
+    file << work_lines << std::endl;
     file.close();
 }
 

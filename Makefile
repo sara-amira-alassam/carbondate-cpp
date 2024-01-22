@@ -19,6 +19,7 @@ ex/carbondate: obj/main.o $(OBJS)
 	mkdir -p ex/
 	cp Oxcal.dat ex/
 	cp curves/intcal* ex/
+	cp curves/shcal* ex/
 	$(CXX) -o ex/carbondate $(CXXFLAGS) obj/main.o $(OBJS) libRmath.a
 
 obj/main.o: main.cpp $(HEADERS) inc/carbondate.h

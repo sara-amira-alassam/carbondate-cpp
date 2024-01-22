@@ -24,7 +24,11 @@ inline std::string carbondate_short_reference() {
     return "carbondate v" + (std::string) CARBONDATE_VERSION;
 }
 
+inline std::string carbondate_full_reference() {
+    return "carbondate v" + (std::string) CARBONDATE_VERSION + " Heaton et al (2024)";
+}
+
 inline std::string carbondate_long_reference() {
-    return oxcal_version + "; carbondate v" + (std::string) CARBONDATE_VERSION + " Heaton (2023)";
+    return oxcal_version + "; carbondate v" + (std::string) CARBONDATE_VERSION + " Heaton (2024)";
 }
 #endif //CARBONDATE_CARBONDATE_INTERNAL_H

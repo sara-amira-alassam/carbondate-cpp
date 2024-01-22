@@ -1,3 +1,6 @@
+/* carbondate Copyright (C) 2024 Timothy Heaton and Sara Al-Assam
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 #include <fstream>
 #include "log.h"
 
@@ -12,7 +15,7 @@ std::string log_file_path() {
 void initialize_log_file() {
     std::string filepath = log_file_path();
 
-    update_log_file(carbondate_long_reference());
+    update_log_file(carbondate_full_reference());
 }
 
 /* Adds line to the log file. Note initialize_log_file() must be called once before any call to update the log file */

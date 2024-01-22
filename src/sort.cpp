@@ -1,3 +1,7 @@
+/* carbondate Copyright (C) 2024 Timothy Heaton and Sara Al-Assam
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>. */
+
 //
 // Taken from functions in R/src/main/sort.c with small modifications
 // (it does not seem that these functions are included in the standalone R library).

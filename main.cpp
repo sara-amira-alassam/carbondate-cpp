@@ -1,3 +1,6 @@
+/* carbondate Copyright (C) 2004 Timothy Heaton and Sara Al-Assam
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 #include <iostream>
 #include "inc/carbondate.h"
 
@@ -23,6 +26,8 @@ int main(int argc, char* argv[]) {
     // The default is zero (so the seed is chosen based on the time i.e. different for every run), but it can
     // be set to a non-zero integer for reproducible results.
     int seed = 0;
+
+    std::cout << carbondate_full_reference() << std::endl;
 
     try {
         read_arguments(argc, argv);
