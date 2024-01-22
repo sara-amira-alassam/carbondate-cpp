@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 
     // The following relate to options that are read in from the OxCal.dat file, and also may be overwritten in the
     // call below to read_options_from_oxcal_file()
-    int num_iterations;
+    int num_iterations = 1e5;
     double output_resolution;
     std::vector<bool> log_ranges(3); // log 1, 2, 3 s.d. ranges respectively?
     bool quantile_ranges, use_f14c = true; // use_f14c is the only hard-coded option
@@ -26,6 +26,9 @@ int main(int argc, char* argv[]) {
     // The default is zero (so the seed is chosen based on the time i.e. different for every run), but it can
     // be set to a non-zero integer for reproducible results.
     int seed = 0;
+
+    // How much to thin the samples
+    int n_thin = 10;
 
     std::cout << carbondate_full_reference() << std::endl;
 
@@ -40,8 +43,7 @@ int main(int argc, char* argv[]) {
             return 0;
         }
         output_offset = read_output_offset(model_name);
-        read_default_options_from_data_file(
-                num_iterations, output_resolution, log_ranges, quantile_ranges, calibration_curve);
+        read_default_options_from_data_file(output_resolution, log_ranges, quantile_ranges, calibration_curve);
         read_options_from_oxcal_file(
                 num_iterations, output_resolution, log_ranges, quantile_ranges, use_f14c, calibration_curve, seed);
         read_calibration_curve(calibration_curve, cc_cal_age, cc_c14_age, cc_c14_sig);
@@ -54,7 +56,9 @@ int main(int argc, char* argv[]) {
             if (c14_age.empty()) convert_to_c14_age(f14c_age, f14c_sig, c14_age, c14_sig);
             dpmm.initialise(c14_age, c14_sig, false, cc_cal_age, cc_c14_age, cc_c14_sig, seed);
         }
-        dpmm.calibrate(num_iterations, 10);
+        dpmm.calibrate(num_iterations, n_thin);
+
+        std::cout << "Execution time: " << duration.count() << " seconds." << std::endl;
 
         update_work_file_postprocessing(num_iterations);
         DensityData predictive_density_data = dpmm.get_predictive_density(

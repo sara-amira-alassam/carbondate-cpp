@@ -202,7 +202,6 @@ void read_oxcal_version() {
  * - calibration_curve_name: Which calibration curve to use
  */
 void read_default_options_from_data_file(
-        int &iterations,
         double &resolution,
         std::vector<bool> &ranges,
         bool &quantile_ranges,
@@ -222,8 +221,6 @@ void read_default_options_from_data_file(
             value = option_match[2];
             if (option == "i") {
                 resolution = std::stod(value);
-            } else if (option == "f") {
-                iterations = std::stoi(value) * 1000;
             } else if (option == "s") {
                 ranges[value[0] - 49] = value[1] == '1'; // Subtract by 49 to convert ascii value for 1, 2, 3 to integer
             } else if (option == "h") {

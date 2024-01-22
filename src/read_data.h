@@ -76,7 +76,6 @@ int read_output_offset(const std::string& model_name);
 void read_oxcal_version();
 
 void read_default_options_from_data_file(
-        int &iterations,
         double &resolution,
         std::vector<bool> &ranges,
         bool &quantile_ranges,

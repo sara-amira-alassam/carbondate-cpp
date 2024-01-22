@@ -6,12 +6,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
 #include "carbondate_internal.h"
 
-class WorkFileRemovedException : public CarbondateException {
-public:
-    explicit WorkFileRemovedException(const std::string& file_path) {
-        _error_message = "Work file at " + file_path + " removed whilst program is running";
-    }
-};
 
 class UnableToCreateWorkFileException : public CarbondateException {
 public:
@@ -33,7 +27,7 @@ void update_work_file_mcmc(double done, int iterations);
 
 void update_work_file_postprocessing(int iterations);
 
-void check_for_work_file();
+bool work_file_exists();
 
 void remove_work_file();
 
