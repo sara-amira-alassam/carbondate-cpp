@@ -15,7 +15,7 @@ std::string log_file_path() {
 void initialize_log_file() {
     std::string filepath = log_file_path();
 
-    update_log_file(carbondate_long_reference());
+    update_log_file(carbondate_full_reference());
 }
 
 /* Adds line to the log file. Note initialize_log_file() must be called once before any call to update the log file */
