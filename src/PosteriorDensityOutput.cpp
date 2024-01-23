@@ -93,7 +93,10 @@ double PosteriorDensityOutput::find_probability_and_ranges_for_cut_off(
     for (int i = 0; i < _probability.size() - 1; i++) {
         y1 = _probability[i];
         y2 = _probability[i + 1];
-        if (y1 <= cut_off and y2 > cut_off) {
+        if (i == 0 && y1 > cut_off) {
+            x_intercept_1 = _start_calAD + i * res;
+            range_probability = (y1 + y2) * res / 2.;
+        } else if (y1 <= cut_off and y2 > cut_off) {
             dx = res * (cut_off - y1) / (y2 - y1);
             x_intercept_1 = _start_calAD + i * res + dx;
             range_probability = (cut_off + y2) * (res - dx) / 2.;
@@ -109,6 +112,14 @@ double PosteriorDensityOutput::find_probability_and_ranges_for_cut_off(
             range_probability = 0;
         } else if (y1 > cut_off and y2 > cut_off) {
             range_probability += (y1 + y2) * res / 2.;
+        }
+        if (y2 > cut_off and i == _probability.size() - 2) {
+            x_intercept_2 = _start_calAD + (i + 1) * res;
+            range_probability *= _prob_norm;
+            if (range_probability > min_prob) {
+                ranges.push_back(std::vector<double> {x_intercept_1, x_intercept_2, range_probability});
+                total_probability += range_probability;
+            }
         }
     }
     for (std::vector<double> &range : ranges) range[2] *= 100.;
