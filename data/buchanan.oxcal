@@ -1,6 +1,6 @@
  Options()
  {
-     kIterations=1000;
+     kIterations=100;
      Resolution=10;
      RandomNumberSeed=1;
  };
