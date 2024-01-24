@@ -7,7 +7,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 #include <set>
 #include "read_data.h"
 #include "csv_helpers.h"
-#include "log.h"
+#include "write_data.h"
 
 std::string calling_directory;
 std::string project_name;

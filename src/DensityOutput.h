@@ -5,12 +5,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 #define CARBONDATE_DENSITYOUTPUT_H
 #include "carbondate_internal.h"
 
-class UnableToWriteToOutputFileException : public CarbondateException {
-public:
-    explicit UnableToWriteToOutputFileException(const std::string& file_path) {
-        _error_message = "Unable to write to output file " + file_path;
-    }
-};
 
 class DensityOutputException : public CarbondateException {
 public:
@@ -44,6 +38,9 @@ protected:
     double _mean_calAD = 0;
     double _sigma_calAD = 0;
     double _median_calAD = 0;
+    std::vector<std::string> _js_output_lines;
+    std::vector<std::string> _log_lines;
+    std::vector<std::string> _text_lines;
 
 protected:
     std::string _variable_line(const std::string& var_name, const std::string& var);
@@ -53,12 +50,15 @@ protected:
     void _set_probability(const std::vector<double>& probability);
 
 protected:
-    virtual std::vector<std::string> _get_output_lines();
+    virtual void _generate_output_lines();
     virtual std::string _range_lines(int &comment_index);
 
 public:
     DensityOutput(int index, double resolution);
-    void print();
+    void append_output(
+            std::vector<std::string> &js_output_lines,
+            std::vector<std::string> &log_lines,
+            std::vector<std::string> &text_lines);
 };
 
 

@@ -65,15 +65,10 @@ void DPMM::initialise(
  *  - n_iter: The number of iterations
  *  - n_thin: How often to store the current state of the DPMM
  */
-void DPMM::calibrate(int n_iter, int n_thin) {
+int DPMM::calibrate(int n_iter, int n_thin) {
     n_out = n_iter/n_thin + 1;
     _resize_storage();
     for (int i = 1; i <= n_iter; i++) {
-        if (!work_file_exists()) {
-            n_out = (i / n_thin) - 1;
-            _resize_storage();
-            return;
-        }
         _perform_update_step();
         if (i % n_thin == 0) {
 #ifndef OXCAL_RELEASE
@@ -81,8 +76,16 @@ void DPMM::calibrate(int n_iter, int n_thin) {
 #endif
             _store_current_values(i / n_thin);
         }
-        if (i % n_work_update == 0) update_work_file_mcmc(double (i) / n_iter, i);
+        if (i % n_work_update == 0) {
+            if (!work_file_exists()) {
+                n_out = i / n_thin + 1;
+                _resize_storage();
+                return i;
+            }
+            update_work_file_mcmc(double (i) / n_iter, i);
+        }
     }
+    return n_iter;
 }
 
 /*

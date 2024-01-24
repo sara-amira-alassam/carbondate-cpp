@@ -1,9 +1,9 @@
   Options()
   {
-      kIterations=1000;
+      kIterations=100;
       Resolution=10;
       RandomNumberSeed=1;
-      Curve="shcal04.14c";
+      Curve="intcal20.14c";
   };
  Plot()
  {

@@ -3,8 +3,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 #include <cmath>
 #include "PosteriorDensityOutput.h"
-#include "log.h"
-#include "plain_text.h"
 
 /*
  * Creates an object suitable for printing out the posterior calendar age density for each
@@ -93,7 +91,10 @@ double PosteriorDensityOutput::find_probability_and_ranges_for_cut_off(
     for (int i = 0; i < _probability.size() - 1; i++) {
         y1 = _probability[i];
         y2 = _probability[i + 1];
-        if (y1 <= cut_off and y2 > cut_off) {
+        if (i == 0 && y1 > cut_off) {
+            x_intercept_1 = _start_calAD + i * res;
+            range_probability = (y1 + y2) * res / 2.;
+        } else if (y1 <= cut_off and y2 > cut_off) {
             dx = res * (cut_off - y1) / (y2 - y1);
             x_intercept_1 = _start_calAD + i * res + dx;
             range_probability = (cut_off + y2) * (res - dx) / 2.;
@@ -109,6 +110,14 @@ double PosteriorDensityOutput::find_probability_and_ranges_for_cut_off(
             range_probability = 0;
         } else if (y1 > cut_off and y2 > cut_off) {
             range_probability += (y1 + y2) * res / 2.;
+        }
+        if (y2 > cut_off and i == _probability.size() - 2) {
+            x_intercept_2 = _start_calAD + (i + 1) * res;
+            range_probability *= _prob_norm;
+            if (range_probability > min_prob) {
+                ranges.push_back(std::vector<double> {x_intercept_1, x_intercept_2, range_probability});
+                total_probability += range_probability;
+            }
         }
     }
     for (std::vector<double> &range : ranges) range[2] *= 100.;
@@ -189,85 +198,16 @@ std::string PosteriorDensityOutput::_range_lines(int &comment_index) {
             text_ranges.push_back(_ranges[i][_ranges[i].size() - 1][1]);
         }
     }
-    update_log_file(log_lines.substr(0, log_lines.length() - 2)); // Remove the last carriage return
-    if (!text_ranges.empty()) update_text_file(_label, text_ranges);
+    _log_lines.push_back(log_lines.substr(0, log_lines.length() - 2)); // Remove the last carriage return
+    if (!text_ranges.empty()) _add_text_ranges(text_ranges);
     return range_lines;
 }
 
-// Finds the calendar age ranges between which the probability matches the provided probability
-// where the points with the highest probability are chosen first. Returns the result as a
-// vector of vectors, where each entry contains
-// [start_calAD, end_calAD, probability within this range]
-// arg `resolution` gives the resolution of the probability curve to use
-std::vector<std::vector<double>> PosteriorDensityOutput::get_ranges(double probability) {
-    double resolution = _resolution, sum_prob = 1 / (_prob_norm * _resolution);
-    std::vector<double> probability_interp(_probability.begin(), _probability.end());
-    int n = (int) _probability.size();
 
-    // TODO: Really we want to create a smoothed density from the posterior values but here we
-    // do a much simpler approximation of the histogram values
-    if (_resolution > 1.0) {
-        int scale_factor = floor(_resolution / 0.5);
-        resolution = _resolution / scale_factor;
-        sum_prob = 0.;
-        n = ((int) _probability.size() - 1) * scale_factor + 1;
-        probability_interp.resize(n, 0);
-        double cal_age_interp, cal_age_beg, cal_age_end;
-        for (int i = 0; i < _probability.size() - 1; i++) {
-            cal_age_beg = _start_calAD + i * _resolution;
-            cal_age_end = cal_age_beg + _resolution;
-            for (int j = 0; j < scale_factor; j++) {
-                cal_age_interp = cal_age_beg + j * resolution;
-                probability_interp[i * scale_factor + j] = interpolate_linear(
-                        cal_age_interp, cal_age_beg, cal_age_end, _probability[i], _probability[i + 1]);
-                sum_prob += probability_interp[i * scale_factor + j];
-            }
-        }
-        probability_interp[n - 1] = _probability[_probability.size() - 1];
-        sum_prob += probability_interp[n - 1];
-    }
-    for (int i = 0; i < n; i++) probability_interp[i] /= sum_prob;
+void PosteriorDensityOutput::_add_text_ranges(const std::vector<double> &values) {
+    std::string text_line = "@" + _label;
 
-    std::vector<std::vector<double>> ranges;
-    std::vector<double> current_range{0, 0, 0};
-    std::vector<double> sorted_probabilities(probability_interp.begin(), probability_interp.end());
-    // Don't bother to store ranges with probability less than this
-    const double min_prob = 0.005;
-    std::vector<int> perm(n);
-    int num_values = 0;
+    for (double value : values) text_line += "\t" + to_string(value, 4);
 
-    for (int i = 0; i < n; i++) perm[i] = i;
-    revsort(&sorted_probabilities[0], &perm[0], n);
-
-    double cumulative_prob= 0.;
-    for (int i = 0; i < n; i++) {
-        cumulative_prob += sorted_probabilities[i];
-        num_values++;
-        if (cumulative_prob > probability) {
-            break;
-        }
-    }
-
-    std::vector<int> included_values(perm.begin(), perm.begin() + num_values);
-    std::sort(included_values.begin(), included_values.end());
-    current_range[0] = _start_calAD + included_values[0] * resolution;
-    current_range[2] = probability_interp[included_values[0]];
-    for (int i = 1; i < num_values; i++) {
-        if (included_values[i] - included_values[i-1] > 1) {
-            current_range[1] = _start_calAD + included_values[i - 1] * resolution;
-            if (current_range[2] > min_prob) {
-                ranges.push_back(current_range);
-            }
-            current_range[0] = _start_calAD + included_values[i] * resolution;
-            current_range[2] = probability_interp[included_values[i]];
-        } else {
-            current_range[2] += probability_interp[included_values[i]];
-        }
-    }
-    // last range
-    if (current_range[2] > min_prob) {
-        current_range[1] = _start_calAD + included_values[num_values - 1] * resolution;
-        ranges.push_back(current_range);
-    }
-    return ranges;
+    _text_lines.push_back(text_line);
 }

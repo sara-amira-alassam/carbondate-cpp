@@ -1,8 +1,6 @@
 /* carbondate Copyright (C) 2024 Timothy Heaton and Sara Al-Assam
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. */
-#include <iostream>
-#include <fstream>
 #include "DensityOutput.h"
 
 /*
@@ -16,34 +14,40 @@ DensityOutput::DensityOutput(int index, double resolution)
     _output_prefix = _output_var + ".posterior";
 }
 
-void DensityOutput::print() {
-    std::string file_path = project_directory + project_name + ".js";
-    std::ofstream output_file;
-    output_file.open(file_path, std::ios_base::app);
-    if (! output_file.is_open()) throw UnableToWriteToOutputFileException(file_path);
-
-    for (const std::string& output_line : _get_output_lines()) output_file << output_line;
-    output_file.close();
+void DensityOutput::append_output(
+        std::vector<std::string> &js_output_lines,
+        std::vector<std::string> &log_lines,
+        std::vector<std::string> &text_lines) {
+    _generate_output_lines();
+    js_output_lines.insert(
+        js_output_lines.end(),
+        std::make_move_iterator(_js_output_lines.begin()),
+        std::make_move_iterator(_js_output_lines.end()));
+    log_lines.insert(
+            log_lines.end(),
+            std::make_move_iterator(_log_lines.begin()),
+            std::make_move_iterator(_log_lines.end()));
+    text_lines.insert(
+            text_lines.end(),
+            std::make_move_iterator(_text_lines.begin()),
+            std::make_move_iterator(_text_lines.end()));
 }
 
-std::vector<std::string> DensityOutput::_get_output_lines() {
-    std::vector<std::string> output_lines;
+void DensityOutput::_generate_output_lines() {
     int comment_index = 0;
 
-    output_lines.push_back("if(!" + _output_var + "){" + _output_var + "={};}\n");
-    output_lines.push_back(_variable_line("ref", carbondate_long_reference()));
-    output_lines.push_back(_output_prefix + "={};\n");
-    output_lines.push_back(_comment_line("Posterior ", comment_index));
-    output_lines.push_back(_range_lines(comment_index));
-    output_lines.push_back(_output_line("mean", _mean_calAD));
-    output_lines.push_back(_output_line("sigma", _sigma_calAD));
-    output_lines.push_back(_output_line("median", _median_calAD));
-    output_lines.push_back(_output_line("probNorm", _prob_norm));
-    output_lines.push_back(_output_line("start", _start_calAD));
-    output_lines.push_back(_output_line("resolution", _resolution));
-    output_lines.push_back(_output_line("prob", _probability));
-
-    return output_lines;
+    _js_output_lines.push_back("if(!" + _output_var + "){" + _output_var + "={};}\n");
+    _js_output_lines.push_back(_variable_line("ref", carbondate_long_reference()));
+    _js_output_lines.push_back(_output_prefix + "={};\n");
+    _js_output_lines.push_back(_comment_line("Posterior ", comment_index));
+    _js_output_lines.push_back(_range_lines(comment_index));
+    _js_output_lines.push_back(_output_line("mean", _mean_calAD));
+    _js_output_lines.push_back(_output_line("sigma", _sigma_calAD));
+    _js_output_lines.push_back(_output_line("median", _median_calAD));
+    _js_output_lines.push_back(_output_line("probNorm", _prob_norm));
+    _js_output_lines.push_back(_output_line("start", _start_calAD));
+    _js_output_lines.push_back(_output_line("resolution", _resolution));
+    _js_output_lines.push_back(_output_line("prob", _probability));
 }
 
 std::string DensityOutput::_comment_line(const std::string& comment, int& comment_index) {
