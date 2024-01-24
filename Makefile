@@ -1,6 +1,6 @@
 MAKE := make
 
-SRCS := DPMM.c DensityOutput.c PolyaUrnDPMM.c PosteriorDensityOutput.c PredictiveDensityOutput.c WalkerDPMM.c csv_helpers.c helpers.c log.c plain_text.c read_data.c sort.c work.c
+SRCS := DPMM.c DensityOutput.c PolyaUrnDPMM.c PosteriorDensityOutput.c PredictiveDensityOutput.c WalkerDPMM.c csv_helpers.c helpers.c js_output.c log.c plain_text.c read_data.c sort.c work.c
 OBJS := $(patsubst %.c,obj/%.o,$(SRCS))
 HEADERS := $(patsubst %.c,src/%.h,$(SRCS)) src/carbondate_internal.h
 

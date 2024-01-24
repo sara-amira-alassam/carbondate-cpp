@@ -28,6 +28,7 @@ private:
     std::vector<std::vector<double>> simplify_ranges(std::vector<std::vector<double>>& ranges);
     std::vector<std::vector<double>> get_ranges_by_intercepts(double probability);
     std::vector<std::vector<double>> get_ranges(double probability);
+    void _add_text_ranges(const std::vector<double>& values);
 };
 
 

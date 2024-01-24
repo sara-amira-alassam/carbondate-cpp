@@ -14,7 +14,6 @@ public:
     }
 };
 
-void initialize_text_file();
-void update_text_file(const std::string& label, const std::vector<double>& values);
+void update_text_file(const std::vector<std::string>& text_lines);
 
 #endif //CARBONDATE_PLAIN_TEXT_H

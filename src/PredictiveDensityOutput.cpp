@@ -44,8 +44,8 @@ PredictiveDensityOutput::PredictiveDensityOutput(
     _sigma_calAD = sigma(cal_age_AD, normalised_density, _mean_calAD);
 }
 
-std::vector<std::string> PredictiveDensityOutput::_get_output_lines() {
-    std::vector<std::string> output_lines = DensityOutput::_get_output_lines();
+void PredictiveDensityOutput::_generate_output_lines() {
+    DensityOutput::_generate_output_lines();
     std::string model_line;
     double upper_lim = _start_calAD + _resolution * (double) _probability.size();
     model_line = "model.element[" + std::to_string(_index) + "]= ";
@@ -65,12 +65,11 @@ std::vector<std::string> PredictiveDensityOutput::_get_output_lines() {
     }
     ci_line += "]};\n";
 
-    output_lines.emplace_back(model_line);
-    output_lines.emplace_back(ci_line);
-    output_lines.push_back(_variable_line("name", _name));
-    output_lines.push_back(_variable_line("op", "NP_Model"));
-    output_lines.push_back(_output_line("probNorm", _prob_norm * _n_obs));
-    return output_lines;
+    _js_output_lines.emplace_back(model_line);
+    _js_output_lines.emplace_back(ci_line);
+    _js_output_lines.push_back(_variable_line("name", _name));
+    _js_output_lines.push_back(_variable_line("op", "NP_Model"));
+    _js_output_lines.push_back(_output_line("probNorm", _prob_norm * _n_obs));
 }
 
 void PredictiveDensityOutput::set_confidence_intervals(

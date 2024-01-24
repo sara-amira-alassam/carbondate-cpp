@@ -16,5 +16,6 @@ public:
 
 void initialize_log_file();
 void update_log_file(const std::string& log_line);
+void update_log_file(const std::vector<std::string>& log_lines);
 
 #endif //CARBONDATE_LOG_H

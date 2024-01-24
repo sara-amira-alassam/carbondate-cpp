@@ -8,6 +8,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 #include "../src/WalkerDPMM.h"
 #include "../src/PolyaUrnDPMM.h"
 #include "../src/read_data.h"
+#include "../src/js_output.h"
 #include "../src/log.h"
 #include "../src/plain_text.h"
 #include "../src/PredictiveDensityOutput.h"

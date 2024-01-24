@@ -28,3 +28,15 @@ void update_log_file(const std::string& log_line) {
     file << log_line << std::endl;
     file.close();
 }
+
+
+void update_log_file(const std::vector<std::string>& log_lines) {
+    std::string filepath = log_file_path();
+
+    std::ofstream file(filepath, std::fstream::app);
+    if (!file.is_open()) throw UnableToWriteToLogFileException(filepath);
+
+    for (const std::string &log_line : log_lines)  file << log_line << std::endl;
+
+    file.close();
+}

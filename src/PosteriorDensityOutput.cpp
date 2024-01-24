@@ -3,8 +3,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 #include <cmath>
 #include "PosteriorDensityOutput.h"
-#include "log.h"
-#include "plain_text.h"
 
 /*
  * Creates an object suitable for printing out the posterior calendar age density for each
@@ -200,9 +198,18 @@ std::string PosteriorDensityOutput::_range_lines(int &comment_index) {
             text_ranges.push_back(_ranges[i][_ranges[i].size() - 1][1]);
         }
     }
-    update_log_file(log_lines.substr(0, log_lines.length() - 2)); // Remove the last carriage return
-    if (!text_ranges.empty()) update_text_file(_label, text_ranges);
+    _log_lines.push_back(log_lines.substr(0, log_lines.length() - 2)); // Remove the last carriage return
+    if (!text_ranges.empty()) _add_text_ranges(text_ranges);
     return range_lines;
+}
+
+
+void PosteriorDensityOutput::_add_text_ranges(const std::vector<double> &values) {
+    std::string text_line = "@" + _label;
+
+    for (double value : values) text_line += "\t" + to_string(value, 4);
+
+    _text_lines.push_back(text_line);
 }
 
 // Finds the calendar age ranges between which the probability matches the provided probability
